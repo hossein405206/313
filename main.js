@@ -8,11 +8,13 @@
 
 // ---------- داده‌های نمونه (بعداً از Google Sheet خوانده می‌شود) ----------
 
+const API_URL = "https://script.google.com/macros/s/AKfycbzZbipymnMNDsJSLgjF2-dwdc-v8AgZjv2WPmSX_bCSWx_tnVVsbQFYW8ZV8WwpuVSK/exec"
+
 // شماره مربی‌های از پیش ثبت‌شده. ورود فقط با شماره تلفن انجام می‌شود.
 const MENTOR_NUMBERS = [
-  "09120000000",
-  "09350000000",
-];
+  "09935661397"
+  "09165327073"
+ ];
 
 const SAMPLE_EVENTS = [
   {
