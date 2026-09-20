@@ -1,51 +1,27 @@
 /* ==========================================================
-حلقه شهید هادی ذوالفقاری — اسکریپت مشترک
+حلقه شهید هادی ذوالفقاری — main.js
 ========================================================== */
 (function () {
 'use strict';
 
-/* ============ config ============ */
-const MENTOR_NUMBERS = [
-'09120000000', // ← شماره مربیان واقعی را اینجا بگذارید
-'09131111111'
- ];
+/* ============ ⚙️ تنظیمات مهم ============ */
+// 🔴 این خط رو با URL خودت جایگزین کن (از Manage deployments):
+const API_URL = 'https://script.google.com/macros/s/AKfycbykIp_S-p5grZvgwLGCwaaajnG7lEbRfiTTu6epq5ATQXPLPtYTZDfUKECameopRDOf/exec';
+
+/* ============ داده‌های موقت (بعداً از شیت خونده می‌شن) ============ */
+const MENTOR_NUMBERS = ['09120000000', '09131111111'];
 
 const SAMPLE_EVENTS = [
-{
-id: 1,
-title: 'مسابقه فوتبال دستی',
-date: '۱۴۰۳/۱۲/۱۵',
-category: 'ورزشی',
-image: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&auto=format&fit=crop'
-},
-{
-id: 2,
-title: 'اردوی زیارتی مشهد مقدس',
-date: '۱۴۰۳/۱۲/۲۰',
-category: 'اردو',
-image: 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=600&auto=format&fit=crop'
-},
-{
-id: 3,
-title: 'کلاس حفظ قرآن کریم',
-date: 'هر پنج‌شنبه',
-category: 'تربیتی',
-image: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=600&auto=format&fit=crop'
-},
-{
-id: 4,
-title: 'شب شعر و ادبیات',
-date: '۱۴۰۳/۱۲/۲۵',
-category: 'فرهنگی',
-image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&auto=format&fit=crop'
-},
-{
-id: 5,
-title: 'مسابقات FIFA و PS5',
-date: 'پنج‌شنبه‌ها',
-category: 'ورزشی',
-image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop'
-}
+{ id: 1, title: 'مسابقه فوتبال دستی', date: '۱۴۰۳/۱۲/۱۵', category: 'ورزشی',
+image: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&auto=format&fit=crop' },
+{ id: 2, title: 'اردوی زیارتی مشهد مقدس', date: '۱۴۰۳/۱۲/۲۰', category: 'اردو',
+image: 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=600&auto=format&fit=crop' },
+{ id: 3, title: 'کلاس حفظ قرآن کریم', date: 'هر پنج‌شنبه', category: 'تربیتی',
+image: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=600&auto=format&fit=crop' },
+{ id: 4, title: 'شب شعر و ادبیات', date: '۱۴۰۳/۱۲/۲۵', category: 'فرهنگی',
+image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&auto=format&fit=crop' },
+{ id: 5, title: 'مسابقات FIFA و PS5', date: 'پنج‌شنبه‌ها', category: 'ورزشی',
+image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop' }
  ];
 
 const OFFICIALS = [
@@ -68,29 +44,17 @@ const OFFICIALS = [
  ];
 
 const WEEKLY_SCHEDULE = [
-{ day: 'شنبه', isToday: false, slots: [
+{ day: 'شنبه', slots: [
 { time: '18:00', title: 'کلاس قرآن', note: 'حاج آقا موسوی' },
-{ time: '19:30', title: 'هیئت هفتگی', note: 'سالن اصلی' }
- ]},
-{ day: 'یک‌شنبه', isToday: false, slots: [
-{ time: '17:30', title: 'تمرین فوتبال', note: 'سالن ورزشی' }
- ]},
-{ day: 'دوشنبه', isToday: false, slots: [
-{ time: '18:00', title: 'دوره تربیتی', note: 'کتاب «مرام»' }
- ]},
-{ day: 'سه‌شنبه', isToday: false, slots: [
-{ time: '19:00', title: 'جلسه مسئولین', note: 'اتاق مدیریت' }
- ]},
-{ day: 'چهارشنبه', isToday: false, slots: [
-{ time: '18:30', title: 'کلاس احکام', note: 'حجت‌الاسلام کریمی' }
- ]},
-{ day: 'پنج‌شنبه', isToday: false, slots: [
+{ time: '19:30', title: 'هیئت هفتگی', note: 'سالن اصلی' } ]},
+{ day: 'یک‌شنبه', slots: [ { time: '17:30', title: 'تمرین فوتبال', note: 'سالن ورزشی' } ]},
+{ day: 'دوشنبه', slots: [ { time: '18:00', title: 'دوره تربیتی', note: 'کتاب «مرام»' } ]},
+{ day: 'سه‌شنبه', slots: [ { time: '19:00', title: 'جلسه مسئولین', note: 'اتاق مدیریت' } ]},
+{ day: 'چهارشنبه', slots: [ { time: '18:30', title: 'کلاس احکام', note: 'حجت‌الاسلام کریمی' } ]},
+{ day: 'پنج‌شنبه', slots: [
 { time: '20:00', title: 'مسابقات PS5', note: 'همراه با جایزه' },
-{ time: '21:30', title: 'دعای کمیل', note: '' }
- ]},
-{ day: 'جمعه', isToday: false, slots: [
-{ time: '06:00', title: 'دعای ندبه', note: 'سالن اصلی' }
- ]}
+{ time: '21:30', title: 'دعای کمیل', note: '' } ]},
+{ day: 'جمعه', slots: [ { time: '06:00', title: 'دعای ندبه', note: 'سالن اصلی' } ]}
 ];
 
 /* ============ helpers ============ */
@@ -153,15 +117,11 @@ const start = () => { if (prefersReduced) return; stop(); timer = setInterval(ne
 const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
 
 dots.forEach(d => d.addEventListener('click', () => {
-setSlide(Number(d.dataset.index));
-start();
+setSlide(Number(d.dataset.index)); start();
 }));
 
 container.addEventListener('mouseenter', stop);
 container.addEventListener('mouseleave', start);
-container.addEventListener('focusin', stop);
-container.addEventListener('focusout', start);
-
 document.addEventListener('visibilitychange', () =>
 document.hidden ? stop() : start());
 
@@ -180,9 +140,9 @@ setSlide(0);
 start();
 }
 
-/* ============ مدال ورود مربیان (خودکار به همه صفحات تزریق می‌شود) ============ */
+/* ============ مدال ورود مربیان ============ */
 function injectMentorModal() {
-if ($('#loginModal')) return; const el = document.createElement('div'); el.className = 'modal'; el.id = 'loginModal'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'loginTitle'); el.innerHTML =
+if ($('#loginModal')) return; const el = document.createElement('div'); el.className = 'modal'; el.id = 'loginModal'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.innerHTML =
 <div class="modal-content">
 <div class="modal-header">
 <h3 id="loginTitle">ورود مربیان</h3>
@@ -230,13 +190,6 @@ if (e.target === modal || e.target.hasAttribute('data-close')) close();
 
 document.addEventListener('keydown', e => {
 if (e.key === 'Escape' && modal.classList.contains('active')) close();
-if (e.key === 'Tab' && modal.classList.contains('active')) {
-const f = modal.querySelectorAll('button, [href], input, select, textarea');
-if (!f.length) return;
-const first = f[0], last = f[f.length - 1];
-if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-}
 });
 
 form.addEventListener('submit', async e => {
@@ -247,25 +200,28 @@ showToast('شماره باید ۱۱ رقم و با ۰۹ شروع شود', 'error
 phoneInput.focus();
 return;
 }
+const btn = form.querySelector('button[type="submit"]');
+btn.disabled = true; btn.textContent = 'در حال بررسی...';
+
 try {
-if (typeof window.checkMentorLogin === 'function') {
 const ok = await window.checkMentorLogin(phone);
-if (ok === false) { showToast('این شماره در لیست مربیان نیست', 'error'); return; }
-} else if (!MENTOR_NUMBERS.includes(phone)) {
+if (!ok) {
 showToast('این شماره در لیست مربیان نیست', 'error');
 return;
 }
 close();
 showToast('خوش آمدید 🌿');
-// در نسخه بعد: location.href = 'mentor-panel.html';
+// بعداً: location.href = 'mentor-panel.html';
 } catch (err) {
 console.error(err);
 showToast('خطا در ارتباط با سرور', 'error');
+} finally {
+btn.disabled = false; btn.textContent = 'ورود';
 }
 });
 }
 
-/* ============ رندر فعالیت‌ها ============ */
+/* ============ فعالیت‌ها ============ */
 function initActivities() {
 const list = latex
 ('#activityList'); if (!list) return; const chips = 
@@ -279,15 +235,13 @@ const filtered = filter === 'all'
 : SAMPLE_EVENTS.filter(ev => ev.category === filter);
 
 if (!filtered.length) {
-list.innerHTML = <div class="empty"&gt; &lt;svg viewBox="0 0 24 24"&gt;&lt;path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/&gt;&lt;/svg&gt; &lt;p&gt;فعالیتی در این دسته یافت نشد&lt;/p&gt; &lt;/div>;
+list.innerHTML = <div class="empty"&gt;&lt;p&gt;فعالیتی در این دسته یافت نشد&lt;/p&gt;&lt;/div>;
 return;
 }
-
 list.innerHTML = filtered.map(ev => &lt;article class="activity-card"&gt; &lt;div class="thumb"&gt; &lt;img src="${ev.image}" alt="${ev.title}" loading="lazy"&gt; &lt;span class="badge"&gt;${ev.category}</span>
 </div>
 <div class="body">
-<h3>${ev.title}&lt;/h3&gt; &lt;div class="meta"&gt; &lt;svg viewBox="0 0 24 24"&gt;&lt;rect x="3" y="4" width="18" height="18" rx="2"/&gt;&lt;path d="M16 2v4M8 2v4M3 10h18"/&gt;&lt;/svg&gt; &lt;span&gt;${ev.date}</span>
-</div>
+<h3>${ev.title}&lt;/h3&gt; &lt;div class="meta"&gt;&lt;span&gt;${ev.date}</span></div>
 </div>
 </article>
 `).join('');
@@ -303,7 +257,7 @@ render();
 render();
 }
 
-/* ============ رندر مسئولین ============ */
+/* ============ مسئولین ============ */
 function initOfficials() {
 const grid = $('#officialsGrid'); if (!grid) return; grid.innerHTML = OFFICIALS.map(o =&gt;
 <div class="official-card">
@@ -311,13 +265,12 @@ const grid = $('#officialsGrid'); if (!grid) return; grid.innerHTML = OFFICIALS.
 <span class="role">${o.role}&lt;/span&gt; &lt;/div&gt;).join('');
 }
 
-/* ============ رندر برنامه هفتگی ============ */
+/* ============ برنامه هفتگی ============ */
 function initSchedule() {
 const wrap = `$('#weeklySchedule');
 if (!wrap) return;
 
-// امروز را خودکار مشخص کن
-const jsDay = new Date().getDay(); // 0=Sunday
+const jsDay = new Date().getDay();
 const map = ['یک‌شنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه','شنبه'];
 const today = map[jsDay];
 
@@ -327,7 +280,7 @@ const slotsHtml = day.slots.length
 ? day.slots.map(s => &lt;div class="slot"&gt; &lt;span class="time"&gt;${s.time}</span>
 <div class="desc">
 <strong>${s.title}&lt;/strong&gt; ${s.note ? <small&gt;${s.note}</small>: ''} &lt;/div&gt; &lt;/div>).join('')
-: <div class="slot"&gt;&lt;div class="desc"&gt;&lt;small&gt;برنامه‌ای برای این روز ثبت نشده&lt;/small&gt;&lt;/div&gt;&lt;/div>;
+: <div class="slot"&gt;&lt;div class="desc"&gt;&lt;small&gt;برنامه‌ای نیست&lt;/small&gt;&lt;/div&gt;&lt;/div>;
 
 return &lt;div class="day-block ${isToday ? 'today' : ''}">
 <div class="day-title">
@@ -362,12 +315,8 @@ if (input.files[0]) handleFile(input.files[0]);
 }
 
 function handleFile(file) {
-if (!file.type.startsWith('image/')) {
-showToast('فقط فایل تصویری مجاز است', 'error'); return;
-}
-if (file.size > 5 * 1024 * 1024) {
-showToast('حجم فایل بیشتر از ۵ مگابایت است', 'error'); return;
-}
+if (!file.type.startsWith('image/')) { showToast('فقط فایل تصویری مجاز است', 'error'); return; }
+if (file.size > 5 * 1024 * 1024) { showToast('حجم فایل بیشتر از ۵ مگابایت است', 'error'); return; }
 selectedFile = file;
 const reader = new FileReader();
 reader.onload = e => {
@@ -382,10 +331,12 @@ e.preventDefault();
 const data = {
 firstName: $('#firstName').value.trim(), lastName: $('#lastName').value.trim(),
 phone: $('#phone').value.trim(), fatherName: $('#fatherName').value.trim(),
-fatherPhone: `$('#fatherPhone').value.trim(),
-hasFile: !!selectedFile
+fatherPhone: `$('#fatherPhone').value.trim()
 };
 
+if (!data.firstName || !data.lastName || !data.fatherName) {
+showToast('نام‌ها را کامل وارد کنید', 'error'); return;
+}
 if (!/^09\d{9}latex
 /.test(data.phone)) { showToast('شماره همراه خود را درست وارد کنید', 'error'); return; } if (!/^09\d{9}
 
@@ -395,19 +346,14 @@ const btn = form.querySelector('button[type="submit"]');
 btn.disabled = true; btn.textContent = 'در حال ارسال...';
 
 try {
-if (typeof window.submitCampRegistration === 'function') {
 await window.submitCampRegistration(data, selectedFile);
-} else {
-await new Promise(r => setTimeout(r, 800));
-console.log('camp registration (offline):', data);
-}
 form.reset();
 preview.innerHTML = ''; preview.classList.remove('active');
 selectedFile = null;
 showToast('ثبت‌نام ارسال شد و در انتظار تایید مربی است ✓');
 } catch (err) {
 console.error(err);
-showToast('خطا در ارسال. دوباره تلاش کنید', 'error');
+showToast(err.message || 'خطا در ارسال. دوباره تلاش کنید', 'error');
 } finally {
 btn.disabled = false; btn.textContent = 'ثبت‌نام';
 }
@@ -423,8 +369,7 @@ form.addEventListener('submit', async e => {
 e.preventDefault();
 const data = {
 name: $('#fbName').value.trim(), phone: $('#fbPhone').value.trim(),
-category: `$('#fbCategory').value,
-message: $('#fbMessage').value.trim()
+category: $('#fbCategory').value, message: $('#fbMessage').value.trim()
 };
 if (!data.message) { showToast('متن پیام خالی است', 'error'); return; }
 
@@ -432,20 +377,75 @@ const btn = form.querySelector('button[type="submit"]');
 btn.disabled = true; btn.textContent = 'در حال ارسال...';
 
 try {
-if (typeof window.submitFeedback === 'function') {
 await window.submitFeedback(data);
-} else {
-await new Promise(r => setTimeout(r, 700));
-console.log('feedback (offline):', data);
-}
 form.reset();
 showToast('پیام شما ثبت شد. ممنون از همراهی‌تان 🌿');
 } catch (err) {
 console.error(err);
-showToast('خطا در ارسال پیام', 'error');
+showToast(err.message || 'خطا در ارسال پیام', 'error');
 } finally {
 btn.disabled = false; btn.textContent = 'ارسال پیام';
 }
+});
+}
+
+/* ============ اتصال به Google Apps Script ============ */
+
+window.checkMentorLogin = async (phone) => {
+const url = ``${API_URL}?action=checkMentor&phone=${encodeURIComponent(phone)}`;
+const res = await fetch(url);
+const j = await res.json();
+if (j && j.allowed) {
+try { sessionStorage.setItem('mentor_phone', phone); } catch(e){}
+try { sessionStorage.setItem('mentor_name', j.name || ''); } catch(e){}
+return true;
+}
+return false;
+};
+
+window.submitCampRegistration = async (data, file) => {
+const fd = new FormData();
+fd.append('action', 'registerCamp');
+fd.append('firstName', data.firstName || '');
+fd.append('lastName', data.lastName || '');
+fd.append('phone', data.phone || '');
+fd.append('fatherName', data.fatherName || '');
+fd.append('fatherPhone', data.fatherPhone || '');
+
+if (file) {
+const b64 = await fileToBase64Raw(file);
+fd.append('fileData', b64);
+fd.append('fileName', file.name);
+fd.append('fileMime', file.type || 'image/jpeg');
+}
+
+const res = await fetch(API_URL, { method: 'POST', body: fd });
+const j = await res.json();
+if (!j || !j.ok) throw new Error((j && j.error) || 'خطا در ثبت‌نام');
+return j;
+};
+
+window.submitFeedback = async (data) => {
+const res = await fetch(API_URL, {
+method: 'POST',
+headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+body: JSON.stringify({ action: 'feedback', ...data })
+});
+const j = await res.json();
+if (!j || !j.ok) throw new Error((j && j.error) || 'خطا در ارسال پیام');
+return j;
+};
+
+function fileToBase64Raw(file) {
+return new Promise((resolve, reject) => {
+const reader = new FileReader();
+reader.onload = () => {
+const s = String(reader.result || '');
+const i = s.indexOf(',');
+resolve(i >= 0 ? s.slice(i + 1) : s);
+};
+reader.onerror = reject;
+reader.readAsDataURL(file);
 });
 }
 
@@ -461,5 +461,5 @@ initRegisterForm();
 initFeedbackForm();
 });
 
-window.AppUtils = { showToast, MENTOR_NUMBERS, SAMPLE_EVENTS, OFFICIALS, WEEKLY_SCHEDULE };
+window.AppUtils = { showToast, MENTOR_NUMBERS, SAMPLE_EVENTS, OFFICIALS, WEEKLY_SCHEDULE, API_URL };
 })();
