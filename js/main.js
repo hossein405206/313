@@ -1,465 +1,836 @@
-/* ==========================================================
-حلقه شهید هادی ذوالفقاری — main.js
-========================================================== */
+/=======================================================
+   حلقه شهید هادی ذوالفقاری
+   فایل اصلی جاوااسکریپت — main.js
+   نسخه: 2.0
+   ========================================================== */
 (function () {
-'use strict';
+  'use strict';
+* ===
+  /* ==========================================================
+     1) تنظیمات
+     ========================================================== */
+  var CONFIG = {
+    API_URL: 'https://script.google.com/macros/s/AKfycbykIp_S-p5grZvgwLGCwaaajnG7lEbRfiTTu6epq5ATQXPLPtYTZDfUKECameopRDOf/exec',
+    CAROUSEL_INTERVAL: 4500,
+    TOAST_DURATION: 3200,
+    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+    DEBUG: true // اگه true باشه، لاگ‌های دقیق توی Console نمایش داده می‌شه
+  };
 
-/* ============ ⚙️ تنظیمات مهم ============ */
-// 🔴 این خط رو با URL خودت جایگزین کن (از Manage deployments):
-const API_URL = 'https://script.google.com/macros/s/AKfycbykIp_S-p5grZvgwLGCwaaajnG7lEbRfiTTu6epq5ATQXPLPtYTZDfUKECameopRDOf/exec';
+  /* ==========================================================
+     2) داده‌های نمونه
+     (بعداً از Google Sheets خوانده می‌شن)
+     ========================================================== */
+  var SAMPLE_EVENTS = [
+    { id: 1, title: 'مسابقه فوتبال دستی',        date: '۱۴۰۳/۱۲/۱۵', category: 'ورزشی',
+      image: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&auto=format&fit=crop' },
+    { id: 2, title: 'اردوی زیارتی مشهد مقدس',     date: '۱۴۰۳/۱۲/۲۰', category: 'اردو',
+      image: 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=600&auto=format&fit=crop' },
+    { id: 3, title: 'کلاس حفظ قرآن کریم',         date: 'هر پنج‌شنبه',   category: 'تربیتی',
+      image: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=600&auto=format&fit=crop' },
+    { id: 4, title: 'شب شعر و ادبیات',            date: '۱۴۰۳/۱۲/۲۵', category: 'فرهنگی',
+      image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&auto=format&fit=crop' },
+    { id: 5, title: 'مسابقات FIFA و PS5',         date: 'پنج‌شنبه‌ها',   category: 'ورزشی',
+      image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop' }
+  ];
 
-/* ============ داده‌های موقت (بعداً از شیت خونده می‌شن) ============ */
-const MENTOR_NUMBERS = ['09120000000', '09131111111'];
+  var OFFICIALS = [
+    { name: 'مهدی رضایی',    role: 'مسئول PS5' },
+    { name: 'حسین احمدی',    role: 'مسئول سیستم صوتی' },
+    { name: 'علی محمدی',      role: 'مسئول خرید' },
+    { name: 'رضا کریمی',      role: 'مسئول مسجد' },
+    { name: 'امیر حسینی',     role: 'مسئول کانون' },
+    { name: 'سعید نوری',      role: 'مسئول هیئت' },
+    { name: 'محمد صادقی',     role: 'مسئول مکبری' },
+    { name: 'یاسر تقوی',      role: 'مسئول آشپزخانه' },
+    { name: 'ابوالفضل رحیمی', role: 'مسئول تدارکات' },
+    { name: 'میلاد عباسی',    role: 'مسئول هماهنگی' },
+    { name: 'کاظم شریفی',     role: 'مسئول رسانه' },
+    { name: 'پویا مرادی',     role: 'مسئول اتاق رسانه' },
+    { name: 'حامد سلیمی',     role: 'مسئول ورزش' },
+    { name: 'دانیال اکبری',   role: 'مسئول VR' },
+    { name: 'سینا جوادی',     role: 'مسئول عکاسی' },
+    { name: 'رضا مهدوی',      role: 'مسئول حضور و غیاب' }
+  ];
 
-const SAMPLE_EVENTS = [
-{ id: 1, title: 'مسابقه فوتبال دستی', date: '۱۴۰۳/۱۲/۱۵', category: 'ورزشی',
-image: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&auto=format&fit=crop' },
-{ id: 2, title: 'اردوی زیارتی مشهد مقدس', date: '۱۴۰۳/۱۲/۲۰', category: 'اردو',
-image: 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=600&auto=format&fit=crop' },
-{ id: 3, title: 'کلاس حفظ قرآن کریم', date: 'هر پنج‌شنبه', category: 'تربیتی',
-image: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=600&auto=format&fit=crop' },
-{ id: 4, title: 'شب شعر و ادبیات', date: '۱۴۰۳/۱۲/۲۵', category: 'فرهنگی',
-image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&auto=format&fit=crop' },
-{ id: 5, title: 'مسابقات FIFA و PS5', date: 'پنج‌شنبه‌ها', category: 'ورزشی',
-image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop' }
- ];
+  var WEEKLY_SCHEDULE = [
+    { day: 'شنبه',    slots: [
+      { time: '18:00', title: 'کلاس قرآن',   note: 'حاج آقا موسوی' },
+      { time: '19:30', title: 'هیئت هفتگی',  note: 'سالن اصلی' } ]},
+    { day: 'یک‌شنبه', slots: [ { time: '17:30', title: 'تمرین فوتبال',   note: 'سالن ورزشی' } ]},
+    { day: 'دوشنبه',  slots: [ { time: '18:00', title: 'دوره تربیتی',    note: 'کتاب «مرام»' } ]},
+    { day: 'سه‌شنبه', slots: [ { time: '19:00', title: 'جلسه مسئولین',   note: 'اتاق مدیریت' } ]},
+    { day: 'چهارشنبه', slots: [ { time: '18:30', title: 'کلاس احکام',    note: 'حجت‌الاسلام کریمی' } ]},
+    { day: 'پنج‌شنبه', slots: [
+      { time: '20:00', title: 'مسابقات PS5',   note: 'همراه با جایزه' },
+      { time: '21:30', title: 'دعای کمیل',     note: '' } ]},
+    { day: 'جمعه',    slots: [ { time: '06:00', title: 'دعای ندبه', note: 'سالن اصلی' } ]}
+  ];
 
-const OFFICIALS = [
-{ name: 'مهدی رضایی', role: 'مسئول PS5' },
-{ name: 'حسین احمدی', role: 'مسئول سیستم صوتی' },
-{ name: 'علی محمدی', role: 'مسئول خرید' },
-{ name: 'رضا کریمی', role: 'مسئول مسجد' },
-{ name: 'امیر حسینی', role: 'مسئول کانون' },
-{ name: 'سعید نوری', role: 'مسئول هیئت' },
-{ name: 'محمد صادقی', role: 'مسئول مکبری' },
-{ name: 'یاسر تقوی', role: 'مسئول آشپزخانه' },
-{ name: 'ابوالفضل رحیمی', role: 'مسئول تدارکات' },
-{ name: 'میلاد عباسی', role: 'مسئول هماهنگی' },
-{ name: 'کاظم شریفی', role: 'مسئول رسانه' },
-{ name: 'پویا مرادی', role: 'مسئول اتاق رسانه' },
-{ name: 'حامد سلیمی', role: 'مسئول ورزش' },
-{ name: 'دانیال اکبری', role: 'مسئول VR' },
-{ name: 'سینا جوادی', role: 'مسئول عکاسی' },
-{ name: 'رضا مهدوی', role: 'مسئول حضور و غیاب' }
- ];
+  var MENTOR_NUMBERS = ['09120000000', '09131111111'];
 
-const WEEKLY_SCHEDULE = [
-{ day: 'شنبه', slots: [
-{ time: '18:00', title: 'کلاس قرآن', note: 'حاج آقا موسوی' },
-{ time: '19:30', title: 'هیئت هفتگی', note: 'سالن اصلی' } ]},
-{ day: 'یک‌شنبه', slots: [ { time: '17:30', title: 'تمرین فوتبال', note: 'سالن ورزشی' } ]},
-{ day: 'دوشنبه', slots: [ { time: '18:00', title: 'دوره تربیتی', note: 'کتاب «مرام»' } ]},
-{ day: 'سه‌شنبه', slots: [ { time: '19:00', title: 'جلسه مسئولین', note: 'اتاق مدیریت' } ]},
-{ day: 'چهارشنبه', slots: [ { time: '18:30', title: 'کلاس احکام', note: 'حجت‌الاسلام کریمی' } ]},
-{ day: 'پنج‌شنبه', slots: [
-{ time: '20:00', title: 'مسابقات PS5', note: 'همراه با جایزه' },
-{ time: '21:30', title: 'دعای کمیل', note: '' } ]},
-{ day: 'جمعه', slots: [ { time: '06:00', title: 'دعای ندبه', note: 'سالن اصلی' } ]}
-];
+  /* ==========================================================
+     3) ابزارهای کمکی
+     ========================================================== */
 
-/* ============ helpers ============ */
-const  = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  // انتخاب یک عنصر
+  function $(selector, root) {
+    return (root || document).querySelector(selector);
+  }
 
-/* ============ toast ============ */
-let toastTimer;
-function showToast(msg, type = 'success') {
-let el = $`('#appToast');
-if (!el) {
-el = document.createElement('div');
-el.id = 'appToast';
-el.className = 'toast';
-document.body.appendChild(el);
-}
-el.textContent = msg;
-el.classList.toggle('error', type === 'error');
-el.classList.add('show');
-clearTimeout(toastTimer);
-toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
-}
+  // انتخاب چند عنصر
+  function $$(selector, root) {
+    return Array.prototype.slice.call(
+      (root || document).querySelectorAll(selector)
+    );
+  }
 
-/* ============ هایلایت نوار پایین ============ */
-function highlightNav() {
-const path = location.pathname.split('/').pop() || 'index.html';
-`$('.bottom-nav .nav-item').forEach(item => {
-const href = item.getAttribute('href') || '';
-const on = href === path;
-item.classList.toggle('active', on);
-if (on) item.setAttribute('aria-current', 'page');
-else item.removeAttribute('aria-current');
-});
-}
+  // لاگ فقط در حالت دیباگ
+  function log() {
+    if (!CONFIG.DEBUG) return;
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift('[حلقه]');
+    console.log.apply(console, args);
+  }
 
-/* ============ کاروسل ============ */
-function initCarousel() {
-const slides = ('.dot');
-const container = $`('#carouselContainer');
-if (!container || slides.length < 2) return;
+  // لاگ خطا (همیشه)
+  function logError() {
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift('[حلقه-خطا]');
+    console.error.apply(console, args);
+  }
 
-const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let current = 0, timer = null;
+  // escape کردن HTML برای جلوگیری از XSS
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
-const setSlide = i => {
-if (i < 0 || i >= slides.length) return;
-slides.forEach((s, k) => {
-const on = k === i;
-s.classList.toggle('active', on);
-s.setAttribute('aria-hidden', String(!on));
-});
-dots.forEach((d, k) => {
-const on = k === i;
-d.classList.toggle('active', on);
-d.setAttribute('aria-selected', String(on));
-});
-current = i;
-};
-const next = () => setSlide((current + 1) % slides.length);
-const start = () => { if (prefersReduced) return; stop(); timer = setInterval(next, 4500); };
-const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+  // اعتبارسنجی شماره موبایل ایران
+  function isValidIranMobile(phone) {
+    return /^09[0-9]{9}$/.test(String(phone || '').trim());
+  }
 
-dots.forEach(d => d.addEventListener('click', () => {
-setSlide(Number(d.dataset.index)); start();
-}));
+  // تبدیل فایل به base64 خالص (بدون پیشوند)
+  function fileToBase64Raw(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var result = String(reader.result || '');
+        var commaIndex = result.indexOf(',');
+        resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
+      };
+      reader.onerror = function (e) { reject(e); };
+      reader.readAsDataURL(file);
+    });
+  }
 
-container.addEventListener('mouseenter', stop);
-container.addEventListener('mouseleave', start);
-document.addEventListener('visibilitychange', () =>
-document.hidden ? stop() : start());
+  /* ==========================================================
+     4) سیستم Toast
+     ========================================================== */
+  var toastTimer = null;
 
-let tx = 0;
-container.addEventListener('touchstart', e => {
-tx = e.changedTouches[0].clientX; stop();
-}, { passive: true });
-container.addEventListener('touchend', e => {
-const dx = e.changedTouches[0].clientX - tx;
-if (Math.abs(dx) > 40)
-setSlide((current + (dx < 0 ? 1 : -1) + slides.length) % slides.length);
-start();
-}, { passive: true });
+  function showToast(message, type) {
+    var el = $('#appToast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'appToast';
+      el.className = 'toast';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
 
-setSlide(0);
-start();
-}
+    el.textContent = message;
+    el.classList.toggle('error', type === 'error');
+    el.classList.add('show');
 
-/* ============ مدال ورود مربیان ============ */
-function injectMentorModal() {
-if ($('#loginModal')) return; const el = document.createElement('div'); el.className = 'modal'; el.id = 'loginModal'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.innerHTML =
-<div class="modal-content">
-<div class="modal-header">
-<h3 id="loginTitle">ورود مربیان</h3>
-<button type="button" class="close-btn" data-close aria-label="بستن">×</button>
-</div>
-<form id="mentorLoginForm" novalidate>
-<div class="form-group">
-<label for="phoneInput">شماره همراه مربی:</label>
-<input type="tel" id="phoneInput" class="form-control"
-placeholder="09123456789" dir="ltr" inputmode="numeric"
-autocomplete="tel" maxlength="11" required>
-</div>
-<button type="submit" class="btn-submit">ورود</button>
-</form>
-</div>`;
-document.body.appendChild(el);
-}
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      el.classList.remove('show');
+    }, CONFIG.TOAST_DURATION);
+  }
 
-function initMentorLogin() {
-injectMentorModal();
-const modal = latex
-('#loginModal'); const form = 
+  /* ==========================================================
+     5) هایلایت نوار ناوبری پایین
+     ========================================================== */
+  function highlightNav() {
+    var currentPath = location.pathname.split('/').pop() || 'index.html';
+    var items = $$('.bottom-nav .nav-item');
 
-('#mentorLoginForm');
-const phoneInput = $`('#phoneInput');
-let lastFocus = null;
+    items.forEach(function (item) {
+      var href = item.getAttribute('href') || '';
+      var isActive = (href === currentPath);
 
-const open = () => {
-lastFocus = document.activeElement;
-modal.classList.add('active');
-document.body.style.overflow = 'hidden';
-requestAnimationFrame(() => phoneInput && phoneInput.focus());
-};
-const close = () => {
-modal.classList.remove('active');
-document.body.style.overflow = '';
-if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
-};
+      item.classList.toggle('active', isActive);
 
-document.addEventListener('click', e => {
-const trigger = e.target.closest('[data-open-login], .nav-item[href="#"]');
-if (trigger) { e.preventDefault(); open(); return; }
-if (e.target === modal || e.target.hasAttribute('data-close')) close();
-});
+      if (isActive) {
+        item.setAttribute('aria-current', 'page');
+      } else {
+        item.removeAttribute('aria-current');
+      }
+    });
+  }
 
-document.addEventListener('keydown', e => {
-if (e.key === 'Escape' && modal.classList.contains('active')) close();
-});
+  /* ==========================================================
+     6) کاروسل صفحه‌ی خانه
+     ========================================================== */
+  function initCarousel() {
+    var container = $('#carouselContainer');
+    if (!container) return;
 
-form.addEventListener('submit', async e => {
-e.preventDefault();
-const phone = phoneInput.value.trim();
-if (!/^09\d{9}`$/.test(phone)) {
-showToast('شماره باید ۱۱ رقم و با ۰۹ شروع شود', 'error');
-phoneInput.focus();
-return;
-}
-const btn = form.querySelector('button[type="submit"]');
-btn.disabled = true; btn.textContent = 'در حال بررسی...';
+    var slides = $$('.carousel-slide', container);
+    var dots   = $$('.dot', container);
+    if (slides.length < 2) return;
 
-try {
-const ok = await window.checkMentorLogin(phone);
-if (!ok) {
-showToast('این شماره در لیست مربیان نیست', 'error');
-return;
-}
-close();
-showToast('خوش آمدید 🌿');
-// بعداً: location.href = 'mentor-panel.html';
-} catch (err) {
-console.error(err);
-showToast('خطا در ارتباط با سرور', 'error');
-} finally {
-btn.disabled = false; btn.textContent = 'ورود';
-}
-});
-}
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var currentIndex = 0;
+    var timerId = null;
 
-/* ============ فعالیت‌ها ============ */
-function initActivities() {
-const list = latex
-('#activityList'); if (!list) return; const chips = 
+    function setSlide(index) {
+      if (index < 0 || index >= slides.length) return;
 
-('.chip[data-filter]');
-let filter = 'all';
+      slides.forEach(function (slide, i) {
+        var isActive = (i === index);
+        slide.classList.toggle('active', isActive);
+        slide.setAttribute('aria-hidden', String(!isActive));
+      });
 
-const render = () => {
-const filtered = filter === 'all'
-? SAMPLE_EVENTS
-: SAMPLE_EVENTS.filter(ev => ev.category === filter);
+      dots.forEach(function (dot, i) {
+        var isActive = (i === index);
+        dot.classList.toggle('active', isActive);
+        dot.setAttribute('aria-selected', String(isActive));
+      });
 
-if (!filtered.length) {
-list.innerHTML = <div class="empty"&gt;&lt;p&gt;فعالیتی در این دسته یافت نشد&lt;/p&gt;&lt;/div>;
-return;
-}
-list.innerHTML = filtered.map(ev => &lt;article class="activity-card"&gt; &lt;div class="thumb"&gt; &lt;img src="${ev.image}" alt="${ev.title}" loading="lazy"&gt; &lt;span class="badge"&gt;${ev.category}</span>
-</div>
-<div class="body">
-<h3>${ev.title}&lt;/h3&gt; &lt;div class="meta"&gt;&lt;span&gt;${ev.date}</span></div>
-</div>
-</article>
-`).join('');
-};
+      currentIndex = index;
+    }
 
-chips.forEach(chip => chip.addEventListener('click', () => {
-chips.forEach(c => c.classList.remove('active'));
-chip.classList.add('active');
-filter = chip.dataset.filter;
-render();
-}));
+    function goNext() {
+      setSlide((currentIndex + 1) % slides.length);
+    }
 
-render();
-}
+    function startAuto() {
+      if (prefersReduced) return;
+      stopAuto();
+      timerId = setInterval(goNext, CONFIG.CAROUSEL_INTERVAL);
+    }
 
-/* ============ مسئولین ============ */
-function initOfficials() {
-const grid = $('#officialsGrid'); if (!grid) return; grid.innerHTML = OFFICIALS.map(o =&gt;
-<div class="official-card">
-<div class="avatar">{o.name}</h4>
-<span class="role">${o.role}&lt;/span&gt; &lt;/div&gt;).join('');
-}
+    function stopAuto() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
 
-/* ============ برنامه هفتگی ============ */
-function initSchedule() {
-const wrap = `$('#weeklySchedule');
-if (!wrap) return;
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () {
+        var idx = parseInt(dot.getAttribute('data-index'), 10);
+        if (!isNaN(idx)) {
+          setSlide(idx);
+          startAuto();
+        }
+      });
+    });
 
-const jsDay = new Date().getDay();
-const map = ['یک‌شنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه','شنبه'];
-const today = map[jsDay];
+    container.addEventListener('mouseenter', stopAuto);
+    container.addEventListener('mouseleave', startAuto);
 
-wrap.innerHTML = WEEKLY_SCHEDULE.map(day => {
-const isToday = day.day === today;
-const slotsHtml = day.slots.length
-? day.slots.map(s => &lt;div class="slot"&gt; &lt;span class="time"&gt;${s.time}</span>
-<div class="desc">
-<strong>${s.title}&lt;/strong&gt; ${s.note ? <small&gt;${s.note}</small>: ''} &lt;/div&gt; &lt;/div>).join('')
-: <div class="slot"&gt;&lt;div class="desc"&gt;&lt;small&gt;برنامه‌ای نیست&lt;/small&gt;&lt;/div&gt;&lt;/div>;
+    // توقف وقتی تب مخفی می‌شه
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stopAuto();
+      else startAuto();
+    });
 
-return &lt;div class="day-block ${isToday ? 'today' : ''}">
-<div class="day-title">
-${isToday ? '&lt;span class="today-tag"&gt;امروز&lt;/span&gt;' : ''} ${day.day}
-</div>
-${slotsHtml} &lt;/div>;
-}).join('');
-}
+    // پشتیبانی از swipe
+    var touchStartX = 0;
+    container.addEventListener('touchstart', function (e) {
+      touchStartX = e.changedTouches[0].clientX;
+      stopAuto();
+    }, { passive: true });
 
-/* ============ فرم ثبت‌نام اردو ============ */
-function initRegisterForm() {
-const form = $`('#registerForm');
-if (!form) return;
+    container.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) {
+        var direction = (dx < 0) ? 1 : -1;
+        setSlide((currentIndex + direction + slides.length) % slides.length);
+      }
+      startAuto();
+    }, { passive: true });
 
-const zone = $('#uploadZone'); const input = $('#fileInput');
-const preview = `$('#uploadPreview');
-let selectedFile = null;
+    setSlide(0);
+    startAuto();
+  }
 
-if (zone && input) {
-zone.addEventListener('click', () => input.click());
-['dragenter','dragover'].forEach(ev =>
-zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('dragover'); }));
-['dragleave','drop'].forEach(ev =>
-zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('dragover'); }));
-zone.addEventListener('drop', e => {
-const f = e.dataTransfer.files[0];
-if (f) handleFile(f);
-});
-input.addEventListener('change', () => {
-if (input.files[0]) handleFile(input.files[0]);
-});
-}
+  /* ==========================================================
+     7) مدال ورود مربیان
+     ========================================================== */
+  var modalState = { lastFocused: null };
 
-function handleFile(file) {
-if (!file.type.startsWith('image/')) { showToast('فقط فایل تصویری مجاز است', 'error'); return; }
-if (file.size > 5 * 1024 * 1024) { showToast('حجم فایل بیشتر از ۵ مگابایت است', 'error'); return; }
-selectedFile = file;
-const reader = new FileReader();
-reader.onload = e => {
-preview.innerHTML = <img src="${e.target.result}" alt="پیش‌نمایش">`;
-preview.classList.add('active');
-};
-reader.readAsDataURL(file);
-}
+  function injectMentorModal() {
+    if ($('#loginModal')) return;
 
-form.addEventListener('submit', async e => {
-e.preventDefault();
-const data = {
-firstName: $('#firstName').value.trim(), lastName: $('#lastName').value.trim(),
-phone: $('#phone').value.trim(), fatherName: $('#fatherName').value.trim(),
-fatherPhone: `$('#fatherPhone').value.trim()
-};
+    var modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'loginModal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'loginTitle');
 
-if (!data.firstName || !data.lastName || !data.fatherName) {
-showToast('نام‌ها را کامل وارد کنید', 'error'); return;
-}
-if (!/^09\d{9}latex
-/.test(data.phone)) { showToast('شماره همراه خود را درست وارد کنید', 'error'); return; } if (!/^09\d{9}
+    var html = '';
+    html += '<div class="modal-content">';
+    html +=   '<div class="modal-header">';
+    html +=     '<h3 id="loginTitle">ورود مربیان</h3>';
+    html +=     '<button type="button" class="close-btn" data-close aria-label="بستن">&times;</button>';
+    html +=   '</div>';
+    html +=   '<form id="mentorLoginForm" novalidate>';
+    html +=     '<div class="form-group">';
+    html +=       '<label for="phoneInput">شماره همراه مربی:</label>';
+    html +=       '<input type="tel" id="phoneInput" class="form-control"';
+    html +=         ' placeholder="09123456789" dir="ltr" inputmode="numeric"';
+    html +=         ' autocomplete="tel" maxlength="11" required>';
+    html +=     '</div>';
+    html +=     '<button type="submit" class="btn-submit">ورود</button>';
+    html +=   '</form>';
+    html += '</div>';
 
-/.test(data.fatherPhone)) { showToast('شماره همراه پدر را درست وارد کنید', 'error'); return; }
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+  }
 
-const btn = form.querySelector('button[type="submit"]');
-btn.disabled = true; btn.textContent = 'در حال ارسال...';
+  function openLoginModal() {
+    var modal = $('#loginModal');
+    if (!modal) return;
 
-try {
-await window.submitCampRegistration(data, selectedFile);
-form.reset();
-preview.innerHTML = ''; preview.classList.remove('active');
-selectedFile = null;
-showToast('ثبت‌نام ارسال شد و در انتظار تایید مربی است ✓');
-} catch (err) {
-console.error(err);
-showToast(err.message || 'خطا در ارسال. دوباره تلاش کنید', 'error');
-} finally {
-btn.disabled = false; btn.textContent = 'ثبت‌نام';
-}
-});
-}
+    modalState.lastFocused = document.activeElement;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
 
-/* ============ فرم پیشنهاد و انتقاد ============ */
-function initFeedbackForm() {
-const form = $`('#feedbackForm');
-if (!form) return;
+    setTimeout(function () {
+      var input = $('#phoneInput');
+      if (input) input.focus();
+    }, 100);
+  }
 
-form.addEventListener('submit', async e => {
-e.preventDefault();
-const data = {
-name: $('#fbName').value.trim(), phone: $('#fbPhone').value.trim(),
-category: $('#fbCategory').value, message: $('#fbMessage').value.trim()
-};
-if (!data.message) { showToast('متن پیام خالی است', 'error'); return; }
+  function closeLoginModal() {
+    var modal = $('#loginModal');
+    if (!modal) return;
 
-const btn = form.querySelector('button[type="submit"]');
-btn.disabled = true; btn.textContent = 'در حال ارسال...';
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
 
-try {
-await window.submitFeedback(data);
-form.reset();
-showToast('پیام شما ثبت شد. ممنون از همراهی‌تان 🌿');
-} catch (err) {
-console.error(err);
-showToast(err.message || 'خطا در ارسال پیام', 'error');
-} finally {
-btn.disabled = false; btn.textContent = 'ارسال پیام';
-}
-});
-}
+    if (modalState.lastFocused && typeof modalState.lastFocused.focus === 'function') {
+      modalState.lastFocused.focus();
+    }
+  }
 
-/* ============ اتصال به Google Apps Script ============ */
+  function initMentorLogin() {
+    injectMentorModal();
 
-window.checkMentorLogin = async (phone) => {
-const url = ``${API_URL}?action=checkMentor&phone=${encodeURIComponent(phone)}`;
-const res = await fetch(url);
-const j = await res.json();
-if (j && j.allowed) {
-try { sessionStorage.setItem('mentor_phone', phone); } catch(e){}
-try { sessionStorage.setItem('mentor_name', j.name || ''); } catch(e){}
-return true;
-}
-return false;
-};
+    var modal = $('#loginModal');
+    var form  = $('#mentorLoginForm');
+    var phoneInput = $('#phoneInput');
+    if (!modal || !form || !phoneInput) return;
 
-window.submitCampRegistration = async (data, file) => {
-const fd = new FormData();
-fd.append('action', 'registerCamp');
-fd.append('firstName', data.firstName || '');
-fd.append('lastName', data.lastName || '');
-fd.append('phone', data.phone || '');
-fd.append('fatherName', data.fatherName || '');
-fd.append('fatherPhone', data.fatherPhone || '');
+    // باز کردن مدال
+    document.addEventListener('click', function (e) {
+      var trigger = e.target.closest('[data-open-login], .nav-item[href="#"]');
+      if (trigger) {
+        e.preventDefault();
+        openLoginModal();
+        return;
+      }
+      if (e.target === modal || e.target.hasAttribute('data-close')) {
+        closeLoginModal();
+      }
+    });
 
-if (file) {
-const b64 = await fileToBase64Raw(file);
-fd.append('fileData', b64);
-fd.append('fileName', file.name);
-fd.append('fileMime', file.type || 'image/jpeg');
-}
+    // بستن با Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeLoginModal();
+      }
+    });
 
-const res = await fetch(API_URL, { method: 'POST', body: fd });
-const j = await res.json();
-if (!j || !j.ok) throw new Error((j && j.error) || 'خطا در ثبت‌نام');
-return j;
-};
+    // ارسال فرم
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-window.submitFeedback = async (data) => {
-const res = await fetch(API_URL, {
-method: 'POST',
-headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-body: JSON.stringify({ action: 'feedback', ...data })
-});
-const j = await res.json();
-if (!j || !j.ok) throw new Error((j && j.error) || 'خطا در ارسال پیام');
-return j;
-};
+      var phone = phoneInput.value.trim();
+      if (!isValidIranMobile(phone)) {
+        showToast('شماره باید ۱۱ رقم و با ۰۹ شروع شود', 'error');
+        phoneInput.focus();
+        return;
+      }
 
-function fileToBase64Raw(file) {
-return new Promise((resolve, reject) => {
-const reader = new FileReader();
-reader.onload = () => {
-const s = String(reader.result || '');
-const i = s.indexOf(',');
-resolve(i >= 0 ? s.slice(i + 1) : s);
-};
-reader.onerror = reject;
-reader.readAsDataURL(file);
-});
-}
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'در حال بررسی...';
 
-/* ============ boot ============ */
-document.addEventListener('DOMContentLoaded', () => {
-highlightNav();
-initCarousel();
-initMentorLogin();
-initActivities();
-initOfficials();
-initSchedule();
-initRegisterForm();
-initFeedbackForm();
-});
+      try {
+        var allowed = await checkMentorLogin(phone);
+        if (!allowed) {
+          showToast('این شماره در لیست مربیان نیست', 'error');
+          return;
+        }
 
-window.AppUtils = { showToast, MENTOR_NUMBERS, SAMPLE_EVENTS, OFFICIALS, WEEKLY_SCHEDULE, API_URL };
+        closeLoginModal();
+        showToast('خوش آمدید 🌿');
+        log('مربی وارد شد:', phone);
+
+        // در نسخه بعد:
+        // setTimeout(function(){ location.href = 'mentor-panel.html'; }, 800);
+
+      } catch (err) {
+        logError('خطا در ورود:', err);
+        showToast('خطا در ارتباط با سرور. دوباره تلاش کنید', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ورود';
+      }
+    });
+  }
+
+  /* ==========================================================
+     8) صفحه‌ی فعالیت‌ها
+     ========================================================== */
+  function renderActivityCard(event) {
+    var html = '';
+    html += '<article class="activity-card">';
+    html +=   '<div class="thumb">';
+    html +=     '<img src="' + escapeHtml(event.image) + '"';
+    html +=          ' alt="' + escapeHtml(event.title) + '" loading="lazy">';
+    html +=     '<span class="badge">' + escapeHtml(event.category) + '</span>';
+    html +=   '</div>';
+    html +=   '<div class="body">';
+    html +=     '<h3>' + escapeHtml(event.title) + '</h3>';
+    html +=     '<div class="meta">';
+    html +=       '<span>' + escapeHtml(event.date) + '</span>';
+    html +=     '</div>';
+    html +=   '</div>';
+    html += '</article>';
+    return html;
+  }
+
+  function initActivities() {
+    var list = $('#activityList');
+    if (!list) return;
+
+    var chips = $$('.chip[data-filter]');
+    var activeFilter = 'all';
+
+    function render() {
+      var filtered = (activeFilter === 'all')
+        ? SAMPLE_EVENTS
+        : SAMPLE_EVENTS.filter(function (ev) { return ev.category === activeFilter; });
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty"><p>فعالیتی در این دسته یافت نشد</p></div>';
+        return;
+      }
+
+      var html = filtered.map(renderActivityCard).join('');
+      list.innerHTML = html;
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        activeFilter = chip.getAttribute('data-filter') || 'all';
+        render();
+      });
+    });
+
+    render();
+  }
+
+  /* ==========================================================
+     9) صفحه‌ی مسئولین
+     ========================================================== */
+  function initOfficials() {
+    var grid = $('#officialsGrid');
+    if (!grid) return;
+
+    var html = OFFICIALS.map(function (person) {
+      var initial = person.name ? person.name.charAt(0) : '؟';
+      return ''
+        + '<div class="official-card">'
+        +   '<div class="avatar">' + escapeHtml(initial) + '</div>'
+        +   '<h4>' + escapeHtml(person.name) + '</h4>'
+        +   '<span class="role">' + escapeHtml(person.role) + '</span>'
+        + '</div>';
+    }).join('');
+
+    grid.innerHTML = html;
+  }
+
+  /* ==========================================================
+     10) برنامه‌ی هفتگی
+     ========================================================== */
+  function initSchedule() {
+    var wrap = $('#weeklySchedule');
+    if (!wrap) return;
+
+    var dayIndex = new Date().getDay();
+    var dayNames = ['یک‌شنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه','شنبه'];
+    var today = dayNames[dayIndex];
+
+    var html = WEEKLY_SCHEDULE.map(function (day) {
+      var isToday = (day.day === today);
+
+      var slotsHtml;
+      if (day.slots.length > 0) {
+        slotsHtml = day.slots.map(function (slot) {
+          return ''
+            + '<div class="slot">'
+            +   '<span class="time">' + escapeHtml(slot.time) + '</span>'
+            +   '<div class="desc">'
+            +     '<strong>' + escapeHtml(slot.title) + '</strong>'
+            +     (slot.note ? '<small>' + escapeHtml(slot.note) + '</small>' : '')
+            +   '</div>'
+            + '</div>';
+        }).join('');
+      } else {
+        slotsHtml = '<div class="slot"><div class="desc"><small>برنامه‌ای ثبت نشده</small></div></div>';
+      }
+
+      return ''
+        + '<div class="day-block' + (isToday ? ' today' : '') + '">'
+        +   '<div class="day-title">'
+        +     (isToday ? '<span class="today-tag">امروز</span>' : '')
+        +     escapeHtml(day.day)
+        +   '</div>'
+        +   slotsHtml
+        + '</div>';
+    }).join('');
+
+    wrap.innerHTML = html;
+  }
+
+  /* ==========================================================
+     11) فرم ثبت‌نام اردو
+     ========================================================== */
+  function initRegisterForm() {
+    var form = $('#registerForm');
+    if (!form) return;
+
+    var zone = $('#uploadZone');
+    var fileInput = $('#fileInput');
+    var preview = $('#uploadPreview');
+    var selectedFile = null;
+
+    // مدیریت آپلود
+    function handleFile(file) {
+      if (!file) return;
+
+      if (!file.type || file.type.indexOf('image/') !== 0) {
+        showToast('فقط فایل تصویری مجاز است', 'error');
+        return;
+      }
+      if (file.size > CONFIG.MAX_FILE_SIZE) {
+        showToast('حجم فایل بیشتر از ۵ مگابایت است', 'error');
+        return;
+      }
+
+      selectedFile = file;
+
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        if (preview) {
+          preview.innerHTML = '<img src="' + e.target.result + '" alt="پیش‌نمایش">';
+          preview.classList.add('active');
+        }
+      };
+      reader.readAsDataURL(file);
+
+      log('فایل انتخاب شد:', file.name, '(' + file.size + ' بایت)');
+    }
+
+    if (zone && fileInput) {
+      zone.addEventListener('click', function () { fileInput.click(); });
+
+      zone.addEventListener('dragenter', function (e) {
+        e.preventDefault(); zone.classList.add('dragover');
+      });
+      zone.addEventListener('dragover', function (e) {
+        e.preventDefault(); zone.classList.add('dragover');
+      });
+      zone.addEventListener('dragleave', function (e) {
+        e.preventDefault(); zone.classList.remove('dragover');
+      });
+      zone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+      });
+
+      fileInput.addEventListener('change', function () {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+      });
+    }
+
+    // ارسال فرم
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      var data = {
+        firstName:   ($('#firstName')   || {}).value || '',
+        lastName:    ($('#lastName')    || {}).value || '',
+        phone:       ($('#phone')       || {}).value || '',
+        fatherName:  ($('#fatherName')  || {}).value || '',
+        fatherPhone: ($('#fatherPhone') || {}).value || ''
+      };
+
+      // trim
+      Object.keys(data).forEach(function (k) { data[k] = data[k].trim(); });
+
+      // اعتبارسنجی
+      if (!data.firstName || !data.lastName) {
+        showToast('نام و نام خانوادگی را کامل وارد کنید', 'error');
+        return;
+      }
+      if (!data.fatherName) {
+        showToast('نام پدر را وارد کنید', 'error');
+        return;
+      }
+      if (!isValidIranMobile(data.phone)) {
+        showToast('شماره همراه خود را درست وارد کنید', 'error');
+        return;
+      }
+      if (!isValidIranMobile(data.fatherPhone)) {
+        showToast('شماره همراه پدر را درست وارد کنید', 'error');
+        return;
+      }
+
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'در حال ارسال...';
+
+      try {
+        var result = await submitCampRegistration(data, selectedFile);
+        log('نتیجه ثبت‌نام:', result);
+
+        form.reset();
+        if (preview) {
+          preview.innerHTML = '';
+          preview.classList.remove('active');
+        }
+        selectedFile = null;
+
+        showToast('ثبت‌نام ارسال شد و در انتظار تایید مربی است ✓');
+
+      } catch (err) {
+        logError('خطا در ثبت‌نام:', err);
+        var msg = err && err.message ? err.message : 'خطا در ارسال. دوباره تلاش کنید';
+        showToast(msg, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ثبت‌نام';
+      }
+    });
+  }
+
+  /* ==========================================================
+     12) فرم پیشنهاد و انتقاد
+     ========================================================== */
+  function initFeedbackForm() {
+    var form = $('#feedbackForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      var data = {
+        name:     (($('#fbName')     || {}).value || '').trim(),
+        phone:    (($('#fbPhone')    || {}).value || '').trim(),
+        category: ($('#fbCategory')  || {}).value || 'پیشنهاد',
+        message:  (($('#fbMessage')  || {}).value || '').trim()
+      };
+
+      if (!data.message) {
+        showToast('متن پیام خالی است', 'error');
+        return;
+      }
+      if (data.phone && !isValidIranMobile(data.phone)) {
+        showToast('شماره تماس نامعتبر است (اختیاری است)', 'error');
+        return;
+      }
+
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'در حال ارسال...';
+
+      try {
+        await submitFeedback(data);
+        form.reset();
+        showToast('پیام شما ثبت شد. ممنون از همراهی‌تان 🌿');
+      } catch (err) {
+        logError('خطا در ارسال پیام:', err);
+        var msg = err && err.message ? err.message : 'خطا در ارسال پیام';
+        showToast(msg, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ارسال پیام';
+      }
+    });
+  }
+
+  /* ==========================================================
+     13) لایه‌ی ارتباط با Google Apps Script
+     ========================================================== */
+
+  // ساخت URL با پارامتر
+  function buildUrl(params) {
+    var parts = [];
+    Object.keys(params).forEach(function (key) {
+      parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+    });
+    return CONFIG.API_URL + (CONFIG.API_URL.indexOf('?') >= 0 ? '&' : '?') + parts.join('&');
+  }
+
+  // درخواست POST با JSON
+  async function apiPost(payload) {
+    log('ارسال درخواست:', payload.action);
+    log('مقصد:', CONFIG.API_URL);
+
+    var res;
+    try {
+      res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+    } catch (networkErr) {
+      logError('خطای شبکه:', networkErr);
+      throw new Error('اتصال به سرور برقرار نشد. اینترنت را چک کنید');
+    }
+
+    log('پاسخ سرور - status:', res.status);
+
+    var text = await res.text();
+    log('پاسخ خام:', text.substring(0, 200));
+
+    var json;
+    try {
+      json = JSON.parse(text);
+    } catch (parseErr) {
+      logError('پاسخ JSON نامعتبر:', text);
+      throw new Error('پاسخ سرور نامعتبر بود');
+    }
+
+    if (!json.ok) {
+      throw new Error(json.error || 'خطای ناشناخته از سرور');
+    }
+
+    return json;
+  }
+
+  // ورود مربی
+  async function checkMentorLogin(phone) {
+    var url = buildUrl({
+      action: 'checkMentor',
+      phone: phone
+    });
+
+    log('بررسی ورود مربی:', phone);
+
+    var res = await fetch(url);
+    var json = await res.json();
+
+    if (json && json.allowed) {
+      try {
+        sessionStorage.setItem('mentor_phone', phone);
+        sessionStorage.setItem('mentor_name', json.name || '');
+      } catch (e) { /* ignore */ }
+      return true;
+    }
+    return false;
+  }
+
+  // ثبت‌نام اردو
+  async function submitCampRegistration(data, file) {
+    var payload = {
+      action:      'registerCamp',
+      firstName:   data.firstName,
+      lastName:    data.lastName,
+      phone:       data.phone,
+      fatherName:  data.fatherName,
+      fatherPhone: data.fatherPhone,
+      fileData:    '',
+      fileName:    '',
+      fileMime:    ''
+    };
+
+    if (file) {
+      try {
+        payload.fileData = await fileToBase64Raw(file);
+        payload.fileName = file.name;
+        payload.fileMime = file.type || 'image/jpeg';
+        log('عکس به base64 تبدیل شد - طول:', payload.fileData.length);
+      } catch (fileErr) {
+        logError('خطا در تبدیل فایل:', fileErr);
+        // ادامه می‌ده بدون عکس
+      }
+    }
+
+    return await apiPost(payload);
+  }
+
+  // ارسال پیام/انتقاد
+  async function submitFeedback(data) {
+    var payload = {
+      action:   'feedback',
+      name:     data.name,
+      phone:    data.phone,
+      category: data.category,
+      message:  data.message
+    };
+
+    return await apiPost(payload);
+  }
+
+  /* ==========================================================
+     14) راه‌اندازی
+     ========================================================== */
+  function boot() {
+    log('نسخه 2.0 در حال راه‌اندازی...');
+    log('API_URL:', CONFIG.API_URL);
+
+    try { highlightNav(); }    catch (e) { logError('highlightNav:', e); }
+    try { initCarousel(); }    catch (e) { logError('initCarousel:', e); }
+    try { initMentorLogin(); } catch (e) { logError('initMentorLogin:', e); }
+    try { initActivities(); }  catch (e) { logError('initActivities:', e); }
+    try { initOfficials(); }   catch (e) { logError('initOfficials:', e); }
+    try { initSchedule(); }    catch (e) { logError('initSchedule:', e); }
+    try { initRegisterForm(); } catch (e) { logError('initRegisterForm:', e); }
+    try { initFeedbackForm(); } catch (e) { logError('initFeedbackForm:', e); }
+
+    log('راه‌اندازی کامل شد ✓');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  /* ==========================================================
+     15) در معرض عموم (برای دیباگ و استفاده‌ی بعدی)
+     ========================================================== */
+  window.AppUtils = {
+    showToast: showToast,
+    CONFIG: CONFIG,
+    SAMPLE_EVENTS: SAMPLE_EVENTS,
+    OFFICIALS: OFFICIALS,
+    WEEKLY_SCHEDULE: WEEKLY_SCHEDULE,
+    checkMentorLogin: checkMentorLogin,
+    submitCampRegistration: submitCampRegistration,
+    submitFeedback: submitFeedback
+  };
+
 })();
