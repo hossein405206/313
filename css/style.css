@@ -67,14 +67,17 @@
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-background-color: #121212;
-color: var(--text-dark);
-font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
-display: flex;
-justify-content: center;
-min-height: 100vh;
-min-height: 100dvh;
-line-height: 1.6;
+  background: 
+    radial-gradient(circle at 20% 10%, #1a1a2e 0%, #0f0f1a 50%),
+    radial-gradient(circle at 80% 90%, #1a1420 0%, transparent 50%);
+  background-color: #121212;
+  color: var(--text-dark);
+  font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  line-height: 1.6;
 }
 
 img, svg { display: block; max-width: 100%; }
