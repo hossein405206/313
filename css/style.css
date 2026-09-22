@@ -3,33 +3,64 @@
 ========================================================== */
 
 :root {
---bg-cream: #F6EFE1;
---bg-card: #FFFFFF;
---teal-primary: #146B66;
---teal-dark: #0D4F4B;
---teal-soft: rgba(20, 107, 102, 0.10);
---gold-ochre: #C79B3B;
---gold-soft: rgba(199, 155, 59, 0.12);
---navy-dark: #223A5E;
---text-dark: #2B2620;
---text-muted: #6E6459;
---border-soft: #E2D7C3;
---danger: #B2452E;
+  /* ═══ پالت اصلی ═══ */
+  --bg-cream:      #FAF4E6;   /* کرم گرم — آرامش */
+  --bg-cream-soft: #F3EAD5;   /* کرم روشن‌تر */
+  --bg-card:       #FFFFFF;
 
---header-h: 65px;
---nav-h: 65px;
---header-border: 3px;
---nav-border: 2px;
---shell-max: 480px;
+  /* ═══ رنگ‌های اصلی ═══ */
+  --teal-primary:  #0F6B62;   /* فیروزه‌ای عمیق */
+  --teal-dark:     #0A4A44;
+  --teal-light:    #1B8A7E;
+  --teal-soft:     rgba(15, 107, 98, 0.10);
+  --teal-glow:     rgba(15, 107, 98, 0.18);
 
---r-sm: 8px;
---r-md: 14px;
---r-lg: 18px;
---r-arch: 24px 24px 8px 8px;
+  /* ═══ رنگ‌های تأکیدی ═══ */
+  --gold-ochre:    #D4A438;   /* طلایی زعفرانی */
+  --gold-soft:     rgba(212, 164, 56, 0.14);
+  --gold-glow:     rgba(212, 164, 56, 0.30);
 
---sh-sm: 0 2px 6px rgba(0,0,0,0.06);
---sh-md: 0 4px 12px rgba(20, 107, 102, 0.12);
---sh-lg: 0 10px 25px rgba(0,0,0,0.18);
+  --burgundy:      #8B2E3E;   /* زرشکی انار — برای CTA */
+  --burgundy-dark: #6B1F2C;
+  --burgundy-soft: rgba(139, 46, 62, 0.10);
+
+  /* ═══ رنگ‌های ساختاری ═══ */
+  --navy-dark:     #1E2F4A;
+  --navy-deep:     #14213A;
+
+  /* ═══ متن ═══ */
+  --text-dark:     #2B2620;
+  --text-muted:    #7A6F5F;
+  --text-soft:     #9A9080;
+
+  /* ═══ مرزها ═══ */
+  --border-soft:   #E6D9BD;
+  --border-gold:   rgba(212, 164, 56, 0.35);
+
+  /* ═══ وضعیت‌ها ═══ */
+  --success:       #2E7D5B;
+  --warning:       #C77E1E;
+  --danger:        #A83A2E;
+
+  /* ═══ ارتفاع‌ها ═══ */
+  --header-h:      68px;
+  --nav-h:         68px;
+  --header-border: 3px;
+  --nav-border:    2px;
+  --shell-max:     480px;
+
+  /* ═══ شعاع‌ها ═══ */
+  --r-sm:  8px;
+  --r-md:  14px;
+  --r-lg:  18px;
+  --r-xl:  22px;
+  --r-arch: 24px 24px 10px 10px;
+
+  /* ═══ سایه‌ها ═══ */
+  --sh-sm: 0 2px 8px rgba(139, 105, 60, 0.08);
+  --sh-md: 0 6px 16px rgba(139, 105, 60, 0.12);
+  --sh-lg: 0 12px 28px rgba(30, 47, 74, 0.18);
+  --sh-gold: 0 6px 20px rgba(212, 164, 56, 0.25);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
