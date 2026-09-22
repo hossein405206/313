@@ -87,17 +87,20 @@ a { color: inherit; text-decoration: none; }
 
 /* ===== شل موبایلی ===== */
 .app-container {
-width: 100%;
-max-width: var(--shell-max);
-background-color: var(--bg-cream);
-min-height: 100vh;
-min-height: 100dvh;
-position: relative;
-padding-top: calc(var(--header-h) + var(--header-border) + 14px);
-padding-bottom: calc(var(--nav-h) + var(--nav-border) + 24px);
-box-shadow: 0 0 25px rgba(0,0,0,0.4);
-display: flex;
-flex-direction: column;
+  width: 100%;
+  max-width: var(--shell-max);
+  background-color: var(--bg-cream);
+  background-image: 
+    radial-gradient(circle at 100% 0%, var(--gold-soft) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, var(--teal-soft) 0%, transparent 40%);
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  padding-top: calc(var(--header-h) + var(--header-border) + 14px);
+  padding-bottom: calc(var(--nav-h) + var(--nav-border) + 24px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 80px rgba(212, 164, 56, 0.06);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== هدر ===== */
