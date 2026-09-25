@@ -1,0 +1,297 @@
+/* ============================================================================
+   مسئولین — استایل اختصاصی
+   ============================================================================ */
+
+.officials-page {
+  --font-display: 'Aref Ruqaa', serif;
+  --font-body: 'Vazirmatn', sans-serif;
+}
+
+/* ─── آمار بالای صفحه ─── */
+.officials-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px 10px;
+  background: linear-gradient(160deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast) var(--ease-smooth);
+}
+
+.stat-box:hover {
+  background: var(--gold-soft);
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--teal-600);
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ─── بخش‌بندی ─── */
+.officials-section {
+  margin-bottom: 26px;
+}
+
+.officials-section.hidden {
+  display: none;
+}
+
+.section-count {
+  margin-right: auto;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--gold-soft);
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+}
+
+.section-title--gold::before {
+  background: linear-gradient(180deg, var(--gold-500), var(--gold-700));
+}
+
+/* ─── کارت مسئول ─── */
+.officials-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.official-card {
+  position: relative;
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 16px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform var(--t-base) var(--ease-out),
+              box-shadow var(--t-base) var(--ease-smooth),
+              border-color var(--t-base) var(--ease-smooth);
+  overflow: hidden;
+}
+
+.official-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold-500), transparent);
+  opacity: 0.6;
+  transition: opacity var(--t-base) var(--ease-smooth);
+}
+
+.official-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sh-md);
+  border-color: var(--gold-500);
+}
+
+.official-card:hover::before {
+  opacity: 1;
+}
+
+.official-card .avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  margin-bottom: 10px;
+  border: 2.5px solid var(--gold-300);
+  box-shadow: 0 4px 12px rgba(15, 107, 98, 0.25);
+  transition: transform var(--t-base) var(--ease-spring);
+}
+
+.official-card:hover .avatar {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.official-card h4 {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.official-card .role {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--teal-600);
+  background: var(--teal-soft);
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-teal);
+  line-height: 1.5;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.official-card .contact-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--teal-600);
+  background: var(--bg-card);
+  border: 1px solid var(--border-teal);
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  text-decoration: none;
+  transition: all var(--t-fast) var(--ease-smooth);
+}
+
+.official-card .contact-btn:hover {
+  background: var(--teal-500);
+  color: #FFF;
+  border-color: var(--teal-500);
+}
+
+.official-card .contact-btn svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ─── کارت‌های ویژه ─── */
+.officials-grid--special .official-card {
+  background: linear-gradient(160deg, #FBF4E0 0%, #F5E5B8 100%);
+  border: 2px solid var(--gold-500);
+  box-shadow: var(--sh-sm), 0 0 0 3px var(--gold-soft);
+}
+
+.officials-grid--special .official-card::before {
+  background: linear-gradient(90deg, var(--gold-500), var(--gold-700));
+  opacity: 1;
+}
+
+.officials-grid--special .official-card .avatar {
+  background: linear-gradient(135deg, var(--gold-500), var(--gold-700));
+  border-color: #FFF;
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.officials-grid--special .official-card h4 {
+  color: var(--gold-700);
+}
+
+.officials-grid--special .official-card .role {
+  background: rgba(212, 164, 56, 0.18);
+  color: var(--gold-700);
+  border-color: var(--gold-300);
+}
+
+.officials-grid--special .official-card .contact-btn {
+  color: var(--gold-700);
+  border-color: var(--gold-300);
+}
+
+.officials-grid--special .official-card .contact-btn:hover {
+  background: var(--gold-500);
+  color: #FFF;
+  border-color: var(--gold-500);
+}
+
+/* ─── باکس ورود مسئولین ─── */
+.official-login-box {
+  margin-top: 24px;
+  padding: 20px 16px;
+  background: linear-gradient(160deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  text-align: center;
+  box-shadow: var(--sh-sm);
+}
+
+.official-login-box h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--teal-600);
+  margin-bottom: 6px;
+}
+
+.official-login-box p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+/* ─── ورودی کد مسئول ─── */
+.form-control--code {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  font-size: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
+
+/* ─── موبایل کوچک ─── */
+@media (max-width: 360px) {
+  .officials-stats {
+    padding: 12px 8px;
+    gap: 6px;
+  }
+  .stat-num {
+    font-size: 1.4rem;
+  }
+  .official-card {
+    padding: 14px 8px 12px;
+  }
+  .official-card .avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.15rem;
+  }
+  }
