@@ -1,0 +1,366 @@
+/* ============================================================================
+   ورود / ثبت‌نام — استایل اختصاصی
+   ============================================================================ */
+
+.auth-page {
+  --font-display: 'Aref Ruqaa', serif;
+  --font-body: 'Vazirmatn', sans-serif;
+  --font-code: 'Courier New', 'Vazirmatn', monospace;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   مراحل
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-step {
+  display: none;
+  animation: authFadeIn var(--t-slow) var(--ease-out);
+}
+
+.auth-step.active {
+  display: block;
+}
+
+@keyframes authFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   قهرمان
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-hero {
+  text-align: center;
+  padding: 20px 16px 24px;
+}
+
+.auth-hero__icon {
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 16px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-soft), var(--gold-soft));
+  border: 2px solid var(--border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(15, 107, 98, 0.15);
+}
+
+.auth-hero__icon svg {
+  width: 38px;
+  height: 38px;
+  stroke: var(--teal-500);
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.auth-hero__icon--gold {
+  background: linear-gradient(135deg, var(--gold-soft), var(--teal-soft));
+  border-color: var(--gold-500);
+}
+
+.auth-hero__icon--gold svg {
+  stroke: var(--gold-600);
+}
+
+.auth-hero__icon--success {
+  background: linear-gradient(135deg, var(--status-success-soft), var(--teal-soft));
+  border-color: rgba(46, 125, 91, 0.4);
+}
+
+.auth-hero__icon--success svg {
+  stroke: var(--status-success);
+  stroke-width: 2.5;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--teal-600);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.auth-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   فرم شماره موبایل
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-form {
+  padding: 0 4px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
+
+.auth-phone-input {
+  font-family: var(--font-code);
+  letter-spacing: 2px;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   نمایش شماره (مرحله ۲)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-phone-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+}
+
+.auth-phone-display__label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.auth-phone-display__value {
+  flex: 1;
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  color: var(--teal-600);
+  direction: ltr;
+  text-align: left;
+  font-weight: 700;
+}
+
+.auth-phone-display__edit {
+  background: none;
+  border: none;
+  color: var(--burgundy-500);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--r-xs);
+  transition: background var(--t-fast) var(--ease-smooth);
+}
+
+.auth-phone-display__edit:hover {
+  background: var(--burgundy-soft);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   نمایش کد ۵ رقمی
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-code {
+  margin: 8px 0 16px;
+  padding: 22px 14px;
+  background: linear-gradient(160deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 2px solid var(--gold-500);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-md), 0 0 0 4px var(--gold-soft);
+  text-align: center;
+}
+
+.auth-code__digits {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  direction: ltr;
+}
+
+.auth-code__digits .digit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 58px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-soft);
+  border-radius: var(--r-md);
+  font-family: var(--font-code);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--teal-600);
+  box-shadow: inset 0 -3px 0 var(--gold-soft);
+  transition: all var(--t-base) var(--ease-smooth);
+}
+
+.auth-code__digits .digit.filled {
+  border-color: var(--gold-500);
+  background: linear-gradient(180deg, #FFF, var(--gold-50));
+  animation: digitPop 0.4s var(--ease-spring);
+}
+
+@keyframes digitPop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.auth-code__timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-cream-deep);
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+}
+
+.auth-code__timer svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.auth-code__timer.warning {
+  color: var(--status-danger);
+  background: var(--status-danger-soft);
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+.auth-code__timer.expired {
+  color: var(--status-danger);
+  background: var(--status-danger-soft);
+  animation: none;
+}
+
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   راهنما (مرحله ۲)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  margin-bottom: 16px;
+}
+
+.auth-instructions__step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.auth-instructions__num {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   دکمه‌ها
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-text {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease-smooth);
+  text-align: center;
+}
+
+.btn-text:hover {
+  color: var(--teal-600);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   یادداشت
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.auth-note {
+  text-align: center;
+  margin-top: 20px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.auth-note a {
+  color: var(--teal-600);
+  text-decoration: underline;
+  text-decoration-color: var(--gold-300);
+  text-underline-offset: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   موبایل کوچک
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 360px) {
+  .auth-code__digits { gap: 5px; }
+  .auth-code__digits .digit {
+    width: 40px;
+    height: 52px;
+    font-size: 1.5rem;
+  }
+  .auth-hero__icon {
+    width: 70px;
+    height: 70px;
+  }
+  .auth-title { font-size: 1.3rem; }
+  .auth-phone-display { font-size: 0.8rem; }
+    }
