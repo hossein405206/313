@@ -1,96 +1,199 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#146B66">
-<title>ثبت‌نام اردو | حلقه شهید هادی ذوالفقاری</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0F6B62">
+  <title>ثبت‌نام اردو | کانون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="app-container">
-<header class="app-header">
-<a href="index.html" class="header-back" aria-label="بازگشت">
-<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-</a>
-<h1>ثبت‌نام اردو</h1>
-</header>
 
-<main class="page">
-<h2 class="section-title">فرم ثبت‌نام</h2>
-<p class="section-subtitle">
-پس از ارسال، درخواست شما در وضعیت «در انتظار تایید» قرار می‌گیرد و توسط مربی بررسی می‌شود.
-</p>
+  <div class="app-container">
 
-<form id="registerForm" novalidate>
-<div class="form-group">
-<label for="firstName">نام <span class="req">*</span></label>
-<input type="text" id="firstName" class="form-control" placeholder="مثلاً محمد" required>
-</div>
+    <header class="app-header">
+      <a href="index.html" class="header-back" aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+      <h1>ثبت‌نام اردو</h1>
+    </header>
 
-<div class="form-group">
-<label for="lastName">نام خانوادگی <span class="req">*</span></label>
-<input type="text" id="lastName" class="form-control" placeholder="مثلاً رضایی" required>
-</div>
+    <main class="page">
 
-<div class="form-group">
-<label for="phone">شماره همراه شما <span class="req">*</span></label>
-<input type="tel" id="phone" class="form-control" placeholder="09xxxxxxxxx"
-dir="ltr" inputmode="numeric" maxlength="11" required>
-</div>
+      <h2 class="section-title">فرم ثبت‌نام</h2>
+      <p class="section-subtitle">
+        پس از ارسال، درخواستت در وضعیت «در انتظار تایید» قرار می‌گیره و توسط مربی بررسی می‌شه.
+      </p>
 
-<div class="form-group">
-<label for="fatherName">نام پدر <span class="req">*</span></label>
-<input type="text" id="fatherName" class="form-control" placeholder="مثلاً حسین" required>
-</div>
+      <!-- ═══ هشدار ورود ═══ -->
+      <div class="register-login-hint hidden" id="loginHint">
+        <div class="register-login-hint__icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="register-login-hint__body">
+          <strong>وارد نشدی</strong>
+          <span>اگه وارد بشی، اطلاعاتت خودکار پر می‌شه</span>
+        </div>
+        <a href="login.html" class="register-login-hint__btn">ورود</a>
+      </div>
 
-<div class="form-group">
-<label for="fatherPhone">شماره همراه پدر <span class="req">*</span></label>
-<input type="tel" id="fatherPhone" class="form-control" placeholder="09xxxxxxxxx"
-dir="ltr" inputmode="numeric" maxlength="11" required>
-</div>
+      <form id="registerForm" novalidate>
 
-<div class="form-group">
-<label>عکس رضایت‌نامه پدر <span class="req"></span></label>
-<div class="upload-zone" id="uploadZone" role="button" tabindex="0"
-aria-label="آپلود عکس رضایت‌نامه">
-<div class="upload-icon">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-<polyline points="17 8 12 3 7 8"/>
-<line x1="12" y1="3" x2="12" y2="15"/>
-</svg>
-</div>
-<p>عکس را اینجا بکشید یا کلیک کنید</p>
-<small>فرمت JPG یا PNG — حداکثر ۵ مگابایت</small>
-</div>
-<input type="file" id="fileInput" accept="image/" hidden>
-<div class="upload-preview" id="uploadPreview"></div>
-</div>
+        <!-- ═══ انتخاب اردو ═══ -->
+        <div class="form-group">
+          <label for="campSelect">انتخاب اردو <span class="req">*</span></label>
+          <select id="campSelect" class="form-control" required>
+            <option value="">در حال بارگذاری...</option>
+          </select>
+          <small class="form-hint">اردویی که می‌خوای توش شرکت کنی رو انتخاب کن</small>
+        </div>
 
-<button type="submit" class="btn-submit" style="margin-top:8px;">ثبت‌نام</button>
-</form>
-</main>
+        <!-- ═══ اطلاعات شخصی ═══ -->
+        <h3 class="form-section-title">اطلاعات شخصی</h3>
 
-<nav class="bottom-nav" aria-label="ناوبری اصلی">
-<a href="index.html" class="nav-item">
-<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-<span>خانه</span>
-</a>
-<a href="activities.html" class="nav-item">
-<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-<span>فعالیت‌ها</span>
-</a>
-<button type="button" class="nav-item" data-open-login>
-<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-<span>ورود مربیان</span>
-</button>
-</nav>
-</div>
+        <div class="form-group">
+          <label for="firstName">نام <span class="req">*</span></label>
+          <input type="text" id="firstName" class="form-control" placeholder="مثلاً محمد" required>
+        </div>
 
-<script src="js/main.js" defer></script>
+        <div class="form-group">
+          <label for="lastName">نام خانوادگی <span class="req">*</span></label>
+          <input type="text" id="lastName" class="form-control" placeholder="مثلاً رضایی" required>
+        </div>
+
+        <div class="form-group">
+          <label for="nationalCode">کد ملی</label>
+          <input type="text" id="nationalCode" class="form-control" placeholder="0012345678"
+                 dir="ltr" inputmode="numeric" maxlength="10">
+        </div>
+
+        <div class="form-group">
+          <label for="phone">شماره همراه شما <span class="req">*</span></label>
+          <input type="tel" id="phone" class="form-control" placeholder="09xxxxxxxxx"
+                 dir="ltr" inputmode="numeric" maxlength="11" required>
+        </div>
+
+        <!-- ═══ اطلاعات پدر ═══ -->
+        <h3 class="form-section-title">اطلاعات پدر</h3>
+
+        <div class="form-group">
+          <label for="fatherName">نام پدر <span class="req">*</span></label>
+          <input type="text" id="fatherName" class="form-control" placeholder="مثلاً حسین" required>
+        </div>
+
+        <div class="form-group">
+          <label for="fatherPhone">شماره همراه پدر <span class="req">*</span></label>
+          <input type="tel" id="fatherPhone" class="form-control" placeholder="09xxxxxxxxx"
+                 dir="ltr" inputmode="numeric" maxlength="11" required>
+        </div>
+
+        <!-- ═══ رضایت‌نامه ═══ -->
+        <h3 class="form-section-title">رضایت‌نامه پدر</h3>
+
+        <div class="form-group">
+          <label>عکس رضایت‌نامه <span class="req">*</span></label>
+          <div class="upload-zone" id="uploadZone" role="button" tabindex="0"
+               aria-label="آپلود عکس رضایت‌نامه">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p>عکس رو اینجا بکش یا کلیک کن</p>
+            <small>فرمت JPG یا PNG — حداکثر ۵ مگابایت</small>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" hidden>
+          <div class="upload-preview" id="uploadPreview"></div>
+        </div>
+
+        <!-- ═══ ارسال ═══ -->
+        <button type="submit" class="btn-submit" style="margin-top:8px;">
+          ثبت‌نام
+        </button>
+
+      </form>
+
+    </main>
+
+    <nav class="bottom-nav" aria-label="ناوبری اصلی">
+      <a href="index.html" class="nav-item">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>خانه</span>
+      </a>
+      <a href="activities.html" class="nav-item">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>فعالیت‌ها</span>
+      </a>
+      <button type="button" class="nav-item" data-open-login>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>ورود</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script src="js/main.js" defer></script>
+  <script>
+    /* ========================================================================
+       Auto-fill از پروفایل کاربر
+       ======================================================================== */
+    (function () {
+      'use strict';
+
+      function autoFill() {
+        // اگه KanoonApp آماده نیست، صبر کن
+        if (!window.KanoonApp || !window.KanoonApp.session) {
+          setTimeout(autoFill, 100);
+          return;
+        }
+
+        var member = window.KanoonApp.session.getMember();
+        var hint = document.getElementById('loginHint');
+
+        if (!member) {
+          // کاربر وارد نشده
+          if (hint) hint.classList.remove('hidden');
+          return;
+        }
+
+        // پر کردن خودکار فیلدها
+        var fields = {
+          firstName:    member.firstName    || '',
+          lastName:     member.lastName     || '',
+          nationalCode: member.nationalCode || '',
+          phone:        member.phone        || '',
+          fatherName:   member.fatherName   || '',
+          fatherPhone:  member.fatherPhone  || ''
+        };
+
+        var keys = Object.keys(fields);
+        for (var i = 0; i < keys.length; i++) {
+          var el = document.getElementById(keys[i]);
+          if (el && !el.value) {
+            el.value = fields[keys[i]];
+          }
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoFill);
+      } else {
+        autoFill();
+      }
+
+    })();
+  </script>
 </body>
 </html>
