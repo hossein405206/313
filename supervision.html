@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0F6B62">
+  <title>نظارت | کانون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/supervision.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <header class="app-header">
+      <a href="officials.html" class="header-back" aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+      <h1>پنل نظارت</h1>
+    </header>
+
+    <main class="page">
+
+      <!-- ═══ خلاصه ═══ -->
+      <section class="sup-summary">
+        <div class="sup-summary__box">
+          <span class="sup-summary__label">تاریخ</span>
+          <strong id="sessionDate">—</strong>
+        </div>
+        <div class="sup-summary__box">
+          <span class="sup-summary__label">مسئول نظارت</span>
+          <strong id="officialName">—</strong>
+        </div>
+        <div class="sup-summary__box sup-summary__box--count">
+          <span class="sup-summary__label">اخطارهای امروز</span>
+          <strong id="todayWarnings">۰</strong>
+        </div>
+      </section>
+
+      <!-- ═══ فرم ثبت اخطار ═══ -->
+      <section class="sup-form-card">
+        <h2 class="section-title">ثبت اخطار جدید</h2>
+
+        <form id="warningForm" novalidate>
+
+          <div class="form-group">
+            <label for="officialSelect">مسئول موردنظر:</label>
+            <select id="officialSelect" class="form-control" required>
+              <option value="">در حال بارگذاری...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="warningText">متن اخطار:</label>
+            <textarea
+              id="warningText"
+              class="form-control"
+              placeholder="مثلاً: وظیفه‌ی محوله در جلسه‌ی دیشب انجام نشد"
+              maxlength="300"
+              required></textarea>
+            <small class="sup-char-count"><span id="charCount">۰</span> / ۳۰۰</small>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitWarning">
+            ثبت اخطار
+          </button>
+
+        </form>
+      </section>
+
+      <!-- ═══ لیست اخطارها ═══ -->
+      <section class="sup-history">
+        <h2 class="section-title">
+          اخطارهای اخیر
+          <small class="section-count" id="warningCount">۰</small>
+        </h2>
+
+        <div class="chips" role="tablist" aria-label="فیلتر اخطارها">
+          <button class="chip active" data-filter="all" role="tab">همه</button>
+          <button class="chip" data-filter="today" role="tab">امروز</button>
+          <button class="chip" data-filter="week" role="tab">این هفته</button>
+        </div>
+
+        <div class="sup-list" id="warningsList">
+          <div class="att-loading">
+            <div class="spinner"></div>
+            <span>در حال بارگذاری...</span>
+          </div>
+        </div>
+
+        <div class="empty hidden" id="warningsEmpty">
+          <p>اخطاری ثبت نشده</p>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="js/main.js" defer></script>
+  <script src="js/supervision.js" defer></script>
+</body>
+</html>
