@@ -1,0 +1,307 @@
+/* ============================================================================
+   پروفایل من — استایل اختصاصی
+   ============================================================================ */
+
+.profile-page {
+  --font-display: 'Aref Ruqaa', serif;
+  --font-body: 'Vazirmatn', sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   کارت هویت
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-hero {
+  text-align: center;
+  padding: 24px 16px 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(160deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-soft), transparent 70%);
+  pointer-events: none;
+}
+
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -50px; left: -50px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--teal-soft), transparent 70%);
+  pointer-events: none;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 14px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.1rem;
+  border: 3px solid var(--gold-300);
+  box-shadow: 0 6px 20px rgba(15, 107, 98, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--teal-600);
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-phone {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 5px 14px;
+  background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+  color: #FFF;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--r-pill);
+  box-shadow: 0 3px 10px var(--gold-glow);
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   آمار
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pstat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 6px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-md);
+  transition: transform var(--t-fast) var(--ease-smooth);
+}
+
+.pstat:hover {
+  transform: translateY(-2px);
+}
+
+.pstat__num {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--gold-600);
+  line-height: 1;
+}
+
+.pstat__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   اطلاعات
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-info {
+  margin-bottom: 20px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+  transition: border-color var(--t-fast) var(--ease-smooth),
+              transform var(--t-fast) var(--ease-smooth);
+}
+
+.info-row:hover {
+  border-color: var(--border-gold);
+  transform: translateX(-2px);
+}
+
+.info-row__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-soft), var(--gold-soft));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-teal);
+}
+
+.info-row__icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--teal-500);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.info-row__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-row__content small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.info-row__content strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   دکمه‌های پایین
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+.profile-actions .btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-text {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease-smooth);
+  text-align: center;
+}
+
+.btn-text:hover {
+  color: var(--burgundy-500);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   دکمه‌ی خروج در هدر
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.header-logout {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-circle);
+  background: rgba(255, 255, 255, 0.14);
+  border: none;
+  color: var(--text-invert);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease-smooth);
+}
+
+.header-logout:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.header-logout svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   موبایل کوچک
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 360px) {
+  .profile-avatar {
+    width: 78px;
+    height: 78px;
+    font-size: 1.8rem;
+  }
+  .profile-name {
+    font-size: 1.2rem;
+  }
+  .pstat__num {
+    font-size: 1.35rem;
+  }
+  .info-row {
+    padding: 10px 12px;
+  }
+  .info-row__icon {
+    width: 36px;
+    height: 36px;
+  }
+}
