@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0F6B62">
+  <title>ورود | کانون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <header class="app-header">
+      <a href="index.html" class="header-back" aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+      <h1>ورود به کارتابل</h1>
+    </header>
+
+    <main class="page auth-page">
+
+      <!-- ═══════════ مرحله ۱: شماره موبایل ═══════════ -->
+      <section class="auth-step active" data-step="1">
+
+        <div class="auth-hero">
+          <div class="auth-hero__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="2" width="14" height="20" rx="3"/>
+              <line x1="12" y1="18" x2="12" y2="18.01"/>
+            </svg>
+          </div>
+          <h2 class="auth-title">خوش آمدی 🌿</h2>
+          <p class="auth-subtitle">
+            برای ورود یا ثبت‌نام، شماره همراهت رو وارد کن
+          </p>
+        </div>
+
+        <form id="phoneForm" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="phoneInput">شماره همراه</label>
+            <input
+              type="tel"
+              id="phoneInput"
+              class="form-control auth-phone-input"
+              placeholder="09xxxxxxxxx"
+              dir="ltr"
+              inputmode="numeric"
+              autocomplete="tel"
+              maxlength="11"
+              required>
+            <small class="form-hint">شماره باید ۱۱ رقمی و با ۰۹ شروع بشه</small>
+          </div>
+
+          <button type="submit" class="btn-submit" id="phoneSubmit">
+            دریافت کد ورود
+          </button>
+        </form>
+
+        <p class="auth-note">
+          با ورود، <a href="contact.html">قوانین کانون</a> رو می‌پذیری
+        </p>
+
+      </section>
+
+      <!-- ═══════════ مرحله ۲: نمایش کد ═══════════ -->
+      <section class="auth-step" data-step="2">
+
+        <div class="auth-hero">
+          <div class="auth-hero__icon auth-hero__icon--gold">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h2 class="auth-title">کد ورود تو</h2>
+          <p class="auth-subtitle">
+            کد پایین رو به یکی از مربیان کانون بگو تا تایید کنه
+          </p>
+        </div>
+
+        <div class="auth-phone-display">
+          <span class="auth-phone-display__label">شماره:</span>
+          <span class="auth-phone-display__value" id="displayPhone">—</span>
+          <button type="button" class="auth-phone-display__edit" id="editPhoneBtn">
+            ویرایش
+          </button>
+        </div>
+
+        <div class="auth-code">
+          <div class="auth-code__digits" id="codeDisplay" dir="ltr">
+            <span class="digit">–</span>
+            <span class="digit">–</span>
+            <span class="digit">–</span>
+            <span class="digit">–</span>
+            <span class="digit">–</span>
+          </div>
+          <div class="auth-code__timer" id="codeTimer">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span id="timerText">۵:۰۰</span>
+          </div>
+        </div>
+
+        <div class="auth-instructions">
+          <div class="auth-instructions__step">
+            <span class="auth-instructions__num">۱</span>
+            <span>این کد رو به یکی از مربیان کانون بگو</span>
+          </div>
+          <div class="auth-instructions__step">
+            <span class="auth-instructions__num">۲</span>
+            <span>مربی بعد از تایید، بهت خبر می‌ده</span>
+          </div>
+          <div class="auth-instructions__step">
+            <span class="auth-instructions__num">۳</span>
+            <span>دکمه‌ی «ورود» رو بزن</span>
+          </div>
+        </div>
+
+        <div class="auth-actions">
+          <button type="button" class="btn-submit" id="verifyBtn">
+            مربی تایید کرد → ورود
+          </button>
+          <button type="button" class="btn-text" id="retryCodeBtn">
+            کد جدید بگیر
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ═══════════ مرحله ۳: خوش‌آمد ═══════════ -->
+      <section class="auth-step" data-step="3">
+
+        <div class="auth-hero">
+          <div class="auth-hero__icon auth-hero__icon--success">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h2 class="auth-title" id="welcomeTitle">خوش آمدی 🌿</h2>
+          <p class="auth-subtitle" id="welcomeSubtitle">
+            با موفقیت وارد شدی
+          </p>
+        </div>
+
+        <div class="auth-actions">
+          <a href="profile.html" class="btn-submit" id="goProfileBtn">
+            رفتن به پروفایل من
+          </a>
+          <a href="index.html" class="btn-text">
+            یا برگرد به صفحه‌ی اصلی
+          </a>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="js/main.js" defer></script>
+  <script src="js/auth.js" defer></script>
+</body>
+</html>
