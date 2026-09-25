@@ -1,0 +1,208 @@
+/* ============================================================================
+   نظارت — استایل اختصاصی
+   ============================================================================ */
+
+.sup-page {
+  --font-display: 'Aref Ruqaa', serif;
+  --font-body: 'Vazirmatn', sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   خلاصه‌ی بالا
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sup-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.sup-summary__box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: linear-gradient(160deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-xs);
+}
+
+.sup-summary__box--count {
+  grid-column: 1 / -1;
+  background: linear-gradient(160deg, #FBF4E0 0%, #F5E5B8 100%);
+  border-color: var(--gold-500);
+}
+
+.sup-summary__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.sup-summary__box strong {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--teal-600);
+}
+
+.sup-summary__box--count strong {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--gold-700);
+  line-height: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   فرم ثبت اخطار
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sup-form-card {
+  padding: 16px 14px 18px;
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  margin-bottom: 22px;
+  box-shadow: var(--sh-sm);
+}
+
+.sup-form-card .section-title {
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+.sup-form-card textarea.form-control {
+  min-height: 100px;
+}
+
+.sup-char-count {
+  display: block;
+  text-align: left;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  direction: ltr;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   لیست اخطارها
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sup-history {
+  padding-bottom: 30px;
+}
+
+.sup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ─── آیتم اخطار ─── */
+.sup-item {
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 14px 14px 12px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--t-fast) var(--ease-smooth),
+              box-shadow var(--t-fast) var(--ease-smooth);
+}
+
+.sup-item::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--status-danger), var(--burgundy-600));
+  opacity: 0.7;
+}
+
+.sup-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-sm);
+}
+
+.sup-item__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sup-item__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--status-danger-soft), var(--burgundy-soft));
+  border: 1.5px solid rgba(168, 58, 46, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sup-item__icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--status-danger);
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sup-item__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.sup-item__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-item__date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'Courier New', monospace;
+  direction: ltr;
+  text-align: right;
+}
+
+.sup-item__text {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  padding: 10px 12px;
+  background: var(--bg-cream-deep);
+  border-radius: var(--r-sm);
+  border-right: 3px solid var(--border-gold);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   موبایل کوچک
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 360px) {
+  .sup-summary__box {
+    padding: 10px 12px;
+  }
+  .sup-summary__box--count strong {
+    font-size: 1.4rem;
+  }
+  .sup-item {
+    padding: 12px 12px 10px;
+  }
+    }
