@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0F6B62">
+  <title>حضور و غیاب | کانون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/attendance.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <header class="app-header">
+      <a href="officials.html" class="header-back" aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+      <h1>حضور و غیاب</h1>
+    </header>
+
+    <main class="page">
+
+      <!-- ═══ خلاصه‌ی جلسه ═══ -->
+      <section class="att-summary">
+        <div class="att-summary__date">
+          <span class="att-summary__label">تاریخ جلسه</span>
+          <strong id="sessionDate">—</strong>
+        </div>
+        <div class="att-summary__official">
+          <span class="att-summary__label">مسئول</span>
+          <strong id="officialName">—</strong>
+        </div>
+      </section>
+
+      <!-- ═══ شمارنده‌ها ═══ -->
+      <section class="att-stats">
+        <div class="att-stat att-stat--present">
+          <span class="att-stat__num" id="countPresent">۰</span>
+          <span class="att-stat__label">حاضر</span>
+        </div>
+        <div class="att-stat att-stat--excused">
+          <span class="att-stat__num" id="countExcused">۰</span>
+          <span class="att-stat__label">موجه</span>
+        </div>
+        <div class="att-stat att-stat--absent">
+          <span class="att-stat__num" id="countAbsent">۰</span>
+          <span class="att-stat__label">غایب</span>
+        </div>
+      </section>
+
+      <!-- ═══ نوار ابزار ═══ -->
+      <div class="att-toolbar">
+        <input
+          type="search"
+          id="searchInput"
+          class="att-search"
+          placeholder="جستجوی اسم..."
+          autocomplete="off">
+        <button type="button" class="att-btn-all" id="markAllPresent">
+          همه حاضر
+        </button>
+      </div>
+
+      <!-- ═══ لیست اعضا ═══ -->
+      <section class="att-list" id="attendanceList">
+        <div class="att-loading">
+          <div class="spinner"></div>
+          <span>در حال بارگذاری...</span>
+        </div>
+      </section>
+
+      <!-- ═══ حالت خالی ═══ -->
+      <div class="empty hidden" id="attendanceEmpty">
+        <p>عضوی در لیست نیست</p>
+      </div>
+
+    </main>
+
+    <!-- ═══ دکمه ذخیره شناور ═══ -->
+    <div class="att-save-bar" id="saveBar">
+      <div class="att-save-bar__info">
+        <span id="saveProgress">۰ از ۰</span>
+      </div>
+      <button type="button" class="att-save-btn" id="saveBtn">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span>ذخیره</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script src="js/main.js" defer></script>
+  <script src="js/attendance.js" defer></script>
+</body>
+</html>
