@@ -929,3 +929,72 @@
   };
 
 })(window, document);
+
+
+/* ============================================================================
+   PRO UI — Tactile interaction layer
+   ============================================================================ */
+(function () {
+  'use strict';
+
+  function addRipple(target, event) {
+    if (!target || target.classList.contains('nav-item') && target.tagName === 'BUTTON') {
+      /* button nav still gets normal active physics; avoid visual noise there */
+    }
+    var rect = target.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height) * 1.35;
+    var x = (event.clientX || (rect.left + rect.width / 2)) - rect.left - size / 2;
+    var y = (event.clientY || (rect.top + rect.height / 2)) - rect.top - size / 2;
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = size + 'px';
+    ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    target.appendChild(ripple);
+    window.setTimeout(function () {
+      if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
+    }, 560);
+  }
+
+  function init() {
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    var selectors = [
+      '.menu-card', '.btn-submit', '.btn-secondary', '.social-btn',
+      '.contact-item', '.chip', '.upload-zone', '.header-auth',
+      '.header-back', '.header-logout', '.close-btn'
+    ];
+    var items = document.querySelectorAll(selectors.join(','));
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      if (window.getComputedStyle(item).position === 'static') item.style.position = 'relative';
+      item.style.overflow = 'hidden';
+      item.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        addRipple(this, e);
+      }, { passive: true });
+    }
+
+    /* وقتی صفحه اسکرول می‌شود، هدر اندکی جمع می‌شود؛ فقط سایه تغییر می‌کند */
+    var header = document.querySelector('.app-header');
+    if (header) {
+      var ticking = false;
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(function () {
+          header.classList.toggle('is-scrolled', window.scrollY > 8);
+          ticking = false;
+        });
+      }, { passive: true });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
