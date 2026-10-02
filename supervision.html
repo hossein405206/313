@@ -49,30 +49,10 @@
         <h2 class="section-title">ثبت اخطار جدید</h2>
 
         <form id="warningForm" novalidate>
-
-          <div class="form-group">
-            <label for="officialSelect">مسئول موردنظر:</label>
-            <select id="officialSelect" class="form-control" required>
-              <option value="">در حال بارگذاری...</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="warningText">متن اخطار:</label>
-            <textarea
-              id="warningText"
-              class="form-control"
-              placeholder="مثلاً: وظیفه‌ی محوله در جلسه‌ی دیشب انجام نشد"
-              maxlength="300"
-              required></textarea>
-            <small class="sup-char-count"><span id="charCount">۰</span> / ۳۰۰</small>
-          </div>
-
-          <button type="submit" class="btn-submit" id="submitWarning">
-            ثبت اخطار
-          </button>
-
-        </form>
+<div class="form-group"><label for="responsibilityInput">مسئولیت</label><input id="responsibilityInput" class="form-control" placeholder="مثلاً مسئول نظافت" required></div>
+<div class="form-group"><label for="memberSelect">نام مسئول</label><select id="memberSelect" class="form-control" required><option value="">در حال بارگذاری...</option></select></div>
+<div class="form-group"><label for="warningText">دلیل اخطار</label><textarea id="warningText" class="form-control" placeholder="دلیل اخطار را دقیق بنویس" maxlength="300" required></textarea><small class="sup-char-count"><span id="charCount">۰</span> / ۳۰۰</small></div>
+<button type="submit" class="btn-submit" id="submitWarning">ثبت اخطار</button></form>
       </section>
 
       <!-- ═══ لیست اخطارها ═══ -->
