@@ -970,7 +970,7 @@
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       if (window.getComputedStyle(item).position === 'static') item.style.position = 'relative';
-      item.style.overflow = item.style.overflow || 'hidden';
+      item.style.overflow = 'hidden';
       item.addEventListener('pointerdown', function (e) {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         addRipple(this, e);
