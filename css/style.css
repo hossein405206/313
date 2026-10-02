@@ -1941,3 +1941,357 @@ select.form-control {
   .stat-num,
   .pstat__num { font-size: 1.4rem; }
 }
+
+
+/* ============================================================================
+   26. PRO DEPTH SYSTEM — Product-grade interaction layer
+   ============================================================================
+   هدف: عمق واقعی و حس محصول، نه صرفاً سایه بیشتر
+   - elevation hierarchy
+   - tactile press states
+   - ambient light
+   - layered surfaces
+   - premium focus/ripple
+   - mobile-first / GPU-conscious
+   ============================================================================ */
+
+:root {
+  --depth-ambient-gold: rgba(212, 164, 56, .11);
+  --depth-ambient-navy: rgba(30, 47, 74, .08);
+  --surface-highlight: rgba(255, 255, 255, .72);
+  --surface-highlight-strong: rgba(255, 255, 255, .92);
+  --shadow-contact: 0 2px 4px rgba(30,47,74,.08), 0 6px 14px rgba(30,47,74,.07);
+  --shadow-float: 0 8px 18px rgba(30,47,74,.11), 0 18px 34px rgba(30,47,74,.08);
+  --shadow-float-gold: 0 10px 24px rgba(212,164,56,.12), 0 20px 42px rgba(30,47,74,.09);
+  --shadow-pressed: inset 0 2px 6px rgba(30,47,74,.13), inset 0 1px 1px rgba(30,47,74,.07), 0 1px 2px rgba(30,47,74,.06);
+}
+
+/* صفحه دیگر یک سطح تخت نیست */
+.app-container {
+  isolation: isolate;
+  overflow: clip;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12),
+    0 18px 50px rgba(0,0,0,.28),
+    0 34px 90px rgba(0,0,0,.20);
+}
+
+.app-container::before,
+.app-container::after {
+  content: '';
+  position: fixed;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(42px);
+  opacity: .55;
+  transform: translateZ(0);
+}
+.app-container::before {
+  top: 8%;
+  right: -130px;
+  background: var(--depth-ambient-gold);
+}
+.app-container::after {
+  bottom: 10%;
+  left: -140px;
+  background: var(--depth-ambient-navy);
+}
+
+/* هدر: شیشه کنترل‌شده، نه شیشه‌ای و شلوغ */
+.app-header {
+  background:
+    linear-gradient(135deg, rgba(30,47,74,.96), rgba(15,24,40,.985));
+  border-bottom-color: rgba(212,164,56,.92);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.08) inset,
+    0 6px 14px rgba(15,24,40,.20),
+    0 16px 34px rgba(15,24,40,.18);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+}
+.app-header::before {
+  background:
+    radial-gradient(circle at 50% -80%, rgba(255,255,255,.16), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.055), transparent 48%, rgba(0,0,0,.10));
+}
+
+/* عنوان‌های بخش: anchor بصری */
+.section-title {
+  position: relative;
+  isolation: isolate;
+  padding-inline-start: 13px;
+  text-shadow: 0 1px 0 rgba(255,255,255,.8);
+}
+.section-title::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 4px;
+  height: 70%;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, var(--gold-300), var(--gold-600));
+  box-shadow: 0 2px 8px rgba(212,164,56,.24);
+}
+
+/* کارت منوی اصلی: سه لایه واقعی */
+.menu-card {
+  isolation: isolate;
+  border-color: rgba(212,164,56,.27);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,242,228,.96));
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.92) inset,
+    0 1px 2px rgba(30,47,74,.05),
+    0 5px 12px rgba(30,47,74,.055);
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+.menu-card::after {
+  z-index: -1;
+  inset: 5px;
+  border-radius: 19px 19px 7px 7px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(212,164,56,.13), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.30), transparent 42%);
+  opacity: 1;
+  transition: opacity var(--t-base) var(--ease-smooth), transform var(--t-base) var(--ease-smooth);
+}
+.menu-card::before {
+  height: 2px;
+  opacity: .72;
+  box-shadow: 0 2px 7px rgba(212,164,56,.15);
+}
+.menu-card:hover {
+  transform: translateY(-5px) scale(1.012);
+  border-color: rgba(212,164,56,.56);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.95) inset,
+    0 5px 10px rgba(30,47,74,.08),
+    0 14px 28px rgba(30,47,74,.10),
+    0 24px 44px rgba(212,164,56,.10);
+}
+.menu-card:hover::after { transform: translateY(-2px); }
+.menu-card:active {
+  transform: translateY(2px) scale(.982);
+  border-color: rgba(184,136,42,.52);
+  box-shadow: var(--shadow-pressed);
+  transition-duration: 90ms;
+}
+.menu-card:focus-visible {
+  outline: 0;
+  box-shadow:
+    0 0 0 3px rgba(212,164,56,.22),
+    0 0 0 5px rgba(212,164,56,.10),
+    var(--shadow-float);
+}
+.menu-card .icon-wrapper {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.62);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.82) inset,
+    0 2px 5px rgba(30,47,74,.10),
+    0 6px 12px rgba(30,47,74,.07);
+  transition: transform 280ms var(--ease-spring), box-shadow 220ms var(--ease-out);
+}
+.menu-card .icon-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,.42), transparent 45%);
+  pointer-events: none;
+}
+.menu-card:hover .icon-wrapper {
+  transform: translateY(-2px) scale(1.08) rotate(-3deg);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.9) inset,
+    0 5px 10px rgba(30,47,74,.12),
+    0 9px 18px rgba(212,164,56,.12);
+}
+.menu-card:active .icon-wrapper { transform: scale(.96); }
+
+/* همه عناصر قابل لمس حس فشار واقعی دارند */
+.btn-submit,
+.btn-secondary,
+.btn-text,
+.social-btn,
+.contact-item,
+.chip,
+.nav-item,
+.header-auth,
+.header-back,
+.header-logout,
+.dot,
+.close-btn,
+.upload-zone {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-submit:active,
+.btn-secondary:active,
+.social-btn:active,
+.chip:active,
+.contact-item:active,
+.upload-zone:active {
+  transform: translateY(1px) scale(.985);
+}
+
+/* کارت‌های عمومی: فاصله از زمین */
+.card,
+.activity-card,
+.official-card,
+.contact-item,
+.empty,
+.register-login-hint {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.86) inset,
+    var(--shadow-contact);
+  transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 180ms ease;
+}
+.card:hover,
+.activity-card:hover,
+.official-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.92) inset,
+    var(--shadow-float);
+}
+
+/* دکمه‌های اصلی: سطح شناور */
+.btn-submit {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.18) inset,
+    0 4px 8px rgba(139,46,62,.18),
+    0 10px 22px rgba(139,46,62,.15);
+}
+.btn-submit:hover {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.22) inset,
+    0 6px 12px rgba(139,46,62,.22),
+    0 14px 28px rgba(139,46,62,.16);
+}
+.btn-submit:active {
+  transform: translateY(2px) scale(.985);
+  box-shadow:
+    inset 0 2px 6px rgba(82,22,32,.24),
+    0 1px 2px rgba(82,22,32,.14);
+}
+
+/* فرم‌ها: فیلد داخل صفحه فرو می‌رود */
+input,
+textarea,
+select {
+  background:
+    linear-gradient(180deg, #fff 0%, #fcfaf5 100%);
+  border-color: rgba(30,47,74,.14);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.9) inset,
+    0 2px 5px rgba(30,47,74,.035);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 0;
+  border-color: rgba(212,164,56,.72);
+  background: #fff;
+  box-shadow:
+    0 0 0 3px rgba(212,164,56,.12),
+    0 4px 12px rgba(30,47,74,.07),
+    0 1px 0 rgba(255,255,255,.95) inset;
+}
+
+/* نوار پایین به‌صورت یک قطعه شناور */
+.bottom-nav {
+  background:
+    linear-gradient(180deg, rgba(30,47,74,.975), rgba(15,24,40,.99));
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.07) inset,
+    0 -8px 18px rgba(15,24,40,.16),
+    0 -20px 40px rgba(15,24,40,.12);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+}
+.bottom-nav .nav-item {
+  position: relative;
+  transition: transform 180ms var(--ease-spring), color 180ms ease;
+}
+.bottom-nav .nav-item:not(.active):hover { transform: translateY(-2px); }
+.bottom-nav .nav-item:active { transform: translateY(2px) scale(.95); }
+.bottom-nav .nav-item.active svg {
+  filter: drop-shadow(0 3px 5px rgba(212,164,56,.30));
+}
+
+/* کاروسل به‌عنوان سطح قهرمان */
+.carousel-container {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.86) inset,
+    0 6px 14px rgba(30,47,74,.10),
+    0 16px 32px rgba(30,47,74,.10),
+    0 28px 52px rgba(212,164,56,.06);
+}
+.carousel-slide img {
+  transform: scale(1.035);
+  transition: transform 700ms var(--ease-out), filter 500ms ease;
+  filter: saturate(.96) contrast(1.02);
+}
+.carousel-slide.active img {
+  transform: scale(1.07);
+  filter: saturate(1.03) contrast(1.03);
+}
+.carousel-overlay {
+  background:
+    linear-gradient(180deg, transparent 20%, rgba(8,14,24,.08) 38%, rgba(8,14,24,.84) 100%);
+}
+
+/* ripple ساخته‌شده با JS */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0);
+  background: rgba(255,255,255,.38);
+  mix-blend-mode: screen;
+  animation: uiRipple 520ms var(--ease-out) forwards;
+}
+@keyframes uiRipple {
+  to { transform: scale(1); opacity: 0; }
+}
+
+/* کاهش حرکت = حذف عمق تزئینی، حفظ usability */
+@media (prefers-reduced-motion: reduce) {
+  .app-container::before,
+  .app-container::after { display: none; }
+  .menu-card:hover,
+  .card:hover,
+  .activity-card:hover,
+  .official-card:hover { transform: none; }
+}
+
+/* روی دستگاه‌های لمسی، hover باعث پرش ظاهری نشود */
+@media (hover: none) {
+  .menu-card:hover,
+  .card:hover,
+  .activity-card:hover,
+  .official-card:hover { transform: none; }
+  .menu-card:active { transform: translateY(2px) scale(.982); }
+}
+
+/* دسکتاپ: قاب اپ حس محصول را نگه می‌دارد */
+@media (min-width: 481px) {
+  body { padding: 18px 0; }
+  .app-container {
+    min-height: calc(100vh - 36px);
+    min-height: calc(100dvh - 36px);
+    border-radius: 24px;
+    overflow: clip;
+  }
+  .app-header,
+  .bottom-nav { max-width: 480px; }
+}
