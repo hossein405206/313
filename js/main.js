@@ -933,6 +933,29 @@
 })(window, document);
 
 
+
+/* ============================================================================
+   Home Events — رویدادهای زنده از Google Sheets / Drive
+   ============================================================================ */
+(function(){
+  'use strict';
+  function esc(s){return window.KanoonApp&&window.KanoonApp.api?String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}):String(s||'');}
+  function init(){
+    var root=document.getElementById('homeEvents'); if(!root||!window.KanoonApp)return;
+    window.KanoonApp.api.get({action:'listEvents'}).then(function(r){
+      var items=r.items||[];
+      if(!items.length){root.innerHTML='<div class="event-empty"><strong>فعلاً رویداد جدیدی ثبت نشده</strong><span>از پنل مربیان می‌توانی رویداد بعدی را اضافه کنی</span></div>';return}
+      root.innerHTML=items.slice(0,6).map(function(e,i){
+        return '<a class="home-event-slide '+(i===0?'active':'')+'" href="activities.html" aria-hidden="'+(i!==0)+'"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="'+(i===0?'eager':'lazy')+'"><div class="home-event-overlay"><span>'+esc(e.label||'رویداد')+'</span><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||e.date||'')+'</p><b>مشاهده جزئیات ←</b></div></a>';
+      }).join('');
+      if(items.length>1){
+        var n=0,slides=root.querySelectorAll('.home-event-slide');
+        setInterval(function(){slides[n].classList.remove('active');n=(n+1)%slides.length;slides[n].classList.add('active');for(var i=0;i<slides.length;i++)slides[i].setAttribute('aria-hidden',String(i!==n))},5000);
+      }
+    }).catch(function(){root.innerHTML='<div class="event-empty"><strong>رویدادها فعلاً در دسترس نیستند</strong></div>'});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
 /* ============================================================================
    PRO UI — Tactile interaction layer
    ============================================================================ */
