@@ -855,6 +855,7 @@ function dashboardData() {
       todayAttendance:todayAttendance.length,
       monthWarnings:warnings.length
     },
+    events:listEventsPublic(),
     registrations:regs.sort(byNewest).slice(0,50),
     attendance:attendance,
     warnings:warnings,
