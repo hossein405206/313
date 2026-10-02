@@ -2643,3 +2643,38 @@ body{
 .service-card:nth-child(2){transition-delay:30ms}.service-card:nth-child(3){transition-delay:60ms}
 .service-card:nth-child(4){transition-delay:90ms}.service-card:nth-child(5){transition-delay:120ms}.service-card:nth-child(6){transition-delay:150ms}
 @media(prefers-reduced-motion:reduce){.reveal-v2{opacity:1;transform:none;transition:none}}
+
+
+/* Touch focus hardening: mobile browsers must not paint a rectangular focus state
+   after a tap/scroll gesture. Keyboard users still get the accessible focus ring. */
+@media (hover: none) {
+  a:focus:not(:focus-visible),
+  button:focus:not(:focus-visible),
+  [role="button"]:focus:not(:focus-visible),
+  input:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible),
+  select:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none;
+  }
+
+  .menu-card:focus:not(:focus-visible),
+  .service-card:focus:not(:focus-visible),
+  .feature-card:focus:not(:focus-visible),
+  .quick-item:focus:not(:focus-visible) {
+    outline: none !important;
+  }
+}
+
+a, button {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+.menu-card,
+.service-card,
+.feature-card,
+.quick-item {
+  -webkit-user-select: none;
+  user-select: none;
+}
