@@ -2618,7 +2618,7 @@ body{
 .drawer-links a:first-child,.drawer-links a:hover{background:rgba(255,255,255,.07);color:#f0d278}
 .drawer-links a:first-child{border-right:2px solid #d5a83c}
 .drawer-links a>span{flex:1}
-.drawer-bottom{position:absolute;bottom:25px;right:20px;left:20px;text-align:center;color:#d2ad51;font:700 .85rem 'Aref Ruqaa}
+.drawer-bottom{position:absolute;bottom:25px;right:20px;left:20px;text-align:center;color:#d2ad51;font:700 .85rem 'Aref Ruqaa',serif}
 
 .ripple-v2{position:absolute;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.42);transform:scale(0);animation:rippleV2 .58s ease-out forwards}
 @keyframes rippleV2{to{transform:scale(1);opacity:0}}
@@ -2635,3 +2635,11 @@ body{
   .feature-card,.quick-item,.service-card,.hero-primary,.hero-secondary{transition:none}
   .app-drawer{transition:none}
 }
+
+
+.reveal-v2{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s var(--v2-spring)}
+.reveal-v2.is-visible{opacity:1;transform:none}
+.feature-card:nth-child(2){transition-delay:40ms}.feature-card:nth-child(3){transition-delay:80ms}
+.service-card:nth-child(2){transition-delay:30ms}.service-card:nth-child(3){transition-delay:60ms}
+.service-card:nth-child(4){transition-delay:90ms}.service-card:nth-child(5){transition-delay:120ms}.service-card:nth-child(6){transition-delay:150ms}
+@media(prefers-reduced-motion:reduce){.reveal-v2{opacity:1;transform:none;transition:none}}
