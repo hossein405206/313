@@ -113,7 +113,7 @@
 
     return ''
       + '<div class="att-item ' + hasStatus + '" data-phone="' + escapeHtml(phone) + '">'
-      +   '<div class="att-item__header">'
+      +   '<button type="button" class="att-remove" title="حذف عضو">×</button><div class="att-item__header">'
       +     '<div class="att-item__avatar">' + escapeHtml(initial) + '</div>'
       +     '<div class="att-item__name">' + escapeHtml(fullName) + '</div>'
       +     '<div class="att-item__index">' + toPersian(index + 1) + '</div>'
@@ -160,6 +160,9 @@
   }
 
   function attachListEvents() {
+    var removeBtns = $('.att-remove');
+    for (var rb = 0; rb < removeBtns.length; rb++) { (function(btn){ btn.addEventListener('click', async function(){ var item=btn.closest('.att-item'); var id=(state.members.find(function(m){return String(m.phone)===String(item.getAttribute('data-phone'))})||{}).id; if(!id)return; if(!confirm('این عضو از فهرست حذف شود؟'))return; var api=getAPI(); try{await api.post({action:'deleteMember',token:state.official.token,id:id}); toast('عضو حذف شد ✓'); await loadMembers();}catch(e){toast(e.message||'خطا در حذف','error');} });})(removeBtns[rb]); }
+
     var items = $$('.att-item');
     for (var i = 0; i < items.length; i++) {
       (function (item) {
@@ -236,6 +239,12 @@
      Filters & Tools
      ══════════════════════════════════════════════════════════════════════ */
 
+  function setupMemberModal() {
+    var btn=$('#addMemberBtn'), modal=$('#memberModal'), form=$('#memberForm'); if(!btn||!modal||!form)return;
+    btn.addEventListener('click',function(){Modal.open(modal)}); modal.addEventListener('click',function(e){if(e.target===modal||e.target.hasAttribute('data-close-modal'))Modal.close(modal)});
+    form.addEventListener('submit',async function(e){e.preventDefault();var api=getAPI();try{await api.post({action:'addMember',token:state.official.token,firstName:$('#memberFirst').value.trim(),lastName:$('#memberLast').value.trim(),phone:$('#memberPhone').value.trim()});toast('عضو اضافه شد ✓');form.reset();Modal.close(modal);loadMembers()}catch(err){toast(err.message||'خطا در افزودن','error')}});
+  }
+
   function setupSearch() {
     var input = $('#searchInput');
     if (!input) return;
@@ -283,7 +292,7 @@
       }
 
       var official = state.official;
-      if (!official) {
+      if (!official || !official.token) {
         toast('اول باید وارد بشی', 'error');
         return;
       }
@@ -302,6 +311,7 @@
         else if (rec.status === 'absent') statusFa = 'غیبت';
 
         records.push({
+          memberId: m.id,
           fullName: fullName,
           status: statusFa,
           note: rec.note || ''
@@ -320,7 +330,7 @@
       try {
         await api.post({
           action: 'saveAttendanceBatch',
-          officialCode: official.code,
+          token: official.token,
           date: todayISO(),
           records: records
         });
@@ -397,6 +407,7 @@
     if (nameEl) nameEl.textContent = state.official.name || 'مسئول';
 
     setupSearch();
+    setupMemberModal();
     setupMarkAll();
     setupSave();
     loadMembers();

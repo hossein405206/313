@@ -1,0 +1,1105 @@
+/* ============================================================================
+   313 / حلقه شهید هادی ذوالفقاری
+   Google Apps Script Backend v3
+   ----------------------------------------------------------------------------
+   این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
+
+   قبل از Deploy:
+   1) SPREADSHEET_ID را وارد کن
+   2) DRIVE_FOLDER_ID را وارد کن
+   3) تابع setup() را یک بار اجرا کن
+   4) کدهای پیش‌فرض ساخته‌شده در شیت «مسئولین» و «مربیان» را عوض کن
+   5) Deploy > New deployment > Web app
+      Execute as: Me
+      Who has access: Anyone
+   6) URL /exec را در js/main.js نگه دار یا با URL جدید جایگزین کن
+
+   ساختار داده‌ها در Google Sheets:
+   تنظیمات، مربیان، مسئولین، اعضا، رویدادها، اردوها،
+   ثبت‌نام‌ها، حضورغیاب، اخطارها، بازی
+   ============================================================================ */
+
+var CFG = {
+  SPREADSHEET_ID: 'PASTE_SPREADSHEET_ID_HERE',
+  DRIVE_FOLDER_ID: 'PASTE_DRIVE_FOLDER_ID_HERE',
+  TIMEZONE: 'Asia/Tehran',
+  TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
+  DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود'
+};
+
+var HEADERS = {
+  'تنظیمات': ['key','value'],
+  'مربیان': ['code','name','active','createdAt'],
+  'مسئولین': ['code','name','role','active','createdAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','active','createdAt'],
+  'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
+  'اردوها': ['id','title','status','createdAt'],
+  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
+  'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
+  'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
+  'بازی': ['weekKey','playerName','score','updatedAt']
+};
+
+/* -------------------------------------------------------------------------- */
+/* HTTP                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  try {
+    return json(handleGet(p));
+  } catch (err) {
+    return json({ ok: false, error: safeError(err) });
+  }
+}
+
+function doPost(e) {
+  try {
+    var raw = e && e.postData ? e.postData.contents : '{}';
+    var p = JSON.parse(raw || '{}');
+    return json(handlePost(p));
+  } catch (err) {
+    return json({ ok: false, error: safeError(err) });
+  }
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function safeError(err) {
+  return err && err.message ? err.message : String(err);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Setup                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function setup() {
+  var ss = getSS();
+  Object.keys(HEADERS).forEach(function(name) {
+    ensureSheet(ss, name, HEADERS[name]);
+  });
+
+  var settings = getSheet('تنظیمات');
+  if (!findRow(settings, 'key', 'gamePrize')) {
+    settings.appendRow(['gamePrize', CFG.DEFAULT_GAME_PRIZE]);
+  }
+
+  var coaches = getSheet('مربیان');
+  if (coaches.getLastRow() < 2) {
+    coaches.appendRow(['COACH-CHANGE-ME', 'مربی اصلی', true, nowIso()]);
+  }
+
+  var officials = getSheet('مسئولین');
+  if (officials.getLastRow() < 2) {
+    officials.appendRow(['ATT-CHANGE-ME', 'مسئول حضور و غیاب', 'حضور و غیاب', true, nowIso()]);
+    officials.appendRow(['SUP-CHANGE-ME', 'مسئول نظارت', 'نظارت', true, nowIso()]);
+  }
+
+  var camps = getSheet('اردوها');
+  if (camps.getLastRow() < 2) {
+    camps.appendRow([uid('CAMP'), 'اردوی مشهد', 'active', nowIso()]);
+  }
+
+  ensureSecret();
+
+  return { ok: true, message: 'راه‌اندازی اولیه انجام شد' };
+}
+
+/* -------------------------------------------------------------------------- */
+/* GET Actions                                                                */
+/* -------------------------------------------------------------------------- */
+
+function handleGet(p) {
+  var action = String(p.action || 'ping');
+
+  if (action === 'ping') return { ok: true, service: '313', version: '3.0' };
+
+  if (action === 'listEvents' || action === 'listActivities') {
+    return { ok: true, items: listEventsPublic() };
+  }
+
+  if (action === 'listCamps') {
+    return { ok: true, items: listCamps() };
+  }
+
+  if (action === 'listOfficials') {
+    return {
+      ok: true,
+      items: getSheetObjects('مسئولین')
+        .filter(function(r){ return truthy(r.active); })
+        .map(function(r){
+          return { name: r.name, role: r.role, type: 'official' };
+        })
+    };
+  }
+
+  if (action === 'verifyOfficialCode') {
+    var official = verifyOfficialCode(String(p.code || '').trim().toUpperCase());
+    if (!official) throw new Error('کد مسئولیت نامعتبر است');
+    return { ok: true, official: officialPublic(official), token: issueToken(official.roleCode, official.code) };
+  }
+
+  if (action === 'verifyCoachCode') {
+    var coach = verifyCoachCode(String(p.code || '').trim().toUpperCase());
+    if (!coach) throw new Error('کد مربی نامعتبر است');
+    return { ok: true, coach: { name: coach.name }, token: issueToken('coach', coach.code) };
+  }
+
+  if (action === 'listMembers') {
+    var auth = requireToken(p.token, ['attendance','coach']);
+    return { ok: true, items: listActiveMembers(), role: auth.role };
+  }
+
+  if (action === 'getAttendanceToday') {
+    requireToken(p.token, ['attendance']);
+    var date = currentDate();
+    return {
+      ok: true,
+      date: date,
+      locked: hasAttendanceDate(date),
+      items: attendanceForDate(date)
+    };
+  }
+
+  if (action === 'listMonthlyAttendance') {
+    requireToken(p.token, ['coach']);
+    var month = String(p.month || currentMonth());
+    if (month !== currentMonth()) throw new Error('مربی فقط به اطلاعات ماه جاری دسترسی دارد');
+    return {
+      ok: true,
+      month: month,
+      items: attendanceForMonth(month)
+    };
+  }
+
+  if (action === 'listWarnings') {
+    var warnAuth = requireToken(p.token, ['supervision','coach']);
+    var requestedMonth = String(p.month || currentMonth());
+    if (requestedMonth !== currentMonth()) {
+      throw new Error('فقط اطلاعات ماه جاری قابل مشاهده است');
+    }
+    return {
+      ok: true,
+      month: requestedMonth,
+      items: warningsForMonth(requestedMonth),
+      role: warnAuth.role
+    };
+  }
+
+  if (action === 'listRegistrations') {
+    if (p.token) {
+      requireToken(p.token, ['coach']);
+      return { ok: true, items: getSheetObjects('ثبت‌نام‌ها').sort(byNewest) };
+    }
+    if (p.memberPhone) {
+      return {
+        ok: true,
+        items: getSheetObjects('ثبت‌نام‌ها')
+          .filter(function(r){ return String(r.phone) === String(p.memberPhone); })
+          .sort(byNewest)
+      };
+    }
+    throw new Error('دسترسی نامعتبر');
+  }
+
+  if (action === 'getDashboard') {
+    requireToken(p.token, ['coach']);
+    return dashboardData();
+  }
+
+  if (action === 'getGameData') {
+    var week = currentWeekKey();
+    var prize = getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE;
+    return {
+      ok: true,
+      weekKey: week,
+      prize: prize,
+      leaderboard: leaderboardForWeek(week),
+      previousWinner: previousWinner()
+    };
+  }
+
+  return { ok: false, error: 'عملیات شناخته نشد: ' + action };
+}
+
+/* -------------------------------------------------------------------------- */
+/* POST Actions                                                               */
+/* -------------------------------------------------------------------------- */
+
+function handlePost(p) {
+  var action = String(p.action || '');
+
+  if (action === 'generateLoginCode') {
+    return generateLoginCode(String(p.phone || '').trim());
+  }
+
+  if (action === 'verifyLoginCode') {
+    return verifyLoginCode(String(p.phone || '').trim(), String(p.code || '').trim());
+  }
+
+  if (action === 'updateMember') {
+    requireToken(p.token, ['member']);
+    return updateMember(p);
+  }
+
+  if (action === 'registerCamp') {
+    return registerCamp(p);
+  }
+
+  if (action === 'uploadEventImage') {
+    requireToken(p.token, ['coach']);
+    return uploadEventImage(p);
+  }
+
+  if (action === 'saveEvent') {
+    requireToken(p.token, ['coach']);
+    return saveEvent(p);
+  }
+
+  if (action === 'deleteEvent') {
+    requireToken(p.token, ['coach']);
+    return deleteEvent(String(p.id || ''));
+  }
+
+  if (action === 'setRegistrationStatus') {
+    requireToken(p.token, ['coach']);
+    return setRegistrationStatus(p);
+  }
+
+  if (action === 'addMember') {
+    requireToken(p.token, ['attendance']);
+    return addMember(p);
+  }
+
+  if (action === 'deleteMember') {
+    requireToken(p.token, ['attendance']);
+    return deleteMember(String(p.id || ''));
+  }
+
+  if (action === 'saveAttendanceBatch') {
+    requireToken(p.token, ['attendance']);
+    return saveAttendanceBatch(p);
+  }
+
+  if (action === 'saveWarning') {
+    requireToken(p.token, ['supervision']);
+    return saveWarning(p);
+  }
+
+  if (action === 'saveGamePrize') {
+    requireToken(p.token, ['coach']);
+    return saveGamePrize(String(p.prize || '').trim());
+  }
+
+  if (action === 'submitGameScore') {
+    return submitGameScore(p);
+  }
+
+  throw new Error('عملیات شناخته نشد: ' + action);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Auth                                                                       */
+/* -------------------------------------------------------------------------- */
+
+function verifyOfficialCode(code) {
+  var rows = getSheetObjects('مسئولین');
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (truthy(r.active) && String(r.code).toUpperCase() === code) {
+      var roleKey = normalizeRole(String(r.role || ''));
+      return {
+        code: String(r.code),
+        name: String(r.name || ''),
+        role: String(r.role || ''),
+        roleCode: roleKey
+      };
+    }
+  }
+  return null;
+}
+
+function verifyCoachCode(code) {
+  var rows = getSheetObjects('مربیان');
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (truthy(r.active) && String(r.code).toUpperCase() === code) {
+      return { code: String(r.code), name: String(r.name || '') };
+    }
+  }
+  return null;
+}
+
+function normalizeRole(role) {
+  if (role.indexOf('حضور') >= 0) return 'attendance';
+  if (role.indexOf('نظارت') >= 0) return 'supervision';
+  throw new Error('نقش مسئول معتبر نیست');
+}
+
+function officialPublic(o) {
+  return { code: o.code, name: o.name, role: o.role };
+}
+
+function issueToken(role, subject) {
+  ensureSecret();
+  var payload = {
+    r: role,
+    s: subject,
+    exp: Date.now() + CFG.TOKEN_TTL_MS,
+    n: Utilities.getUuid()
+  };
+  var body = b64(JSON.stringify(payload));
+  var sig = b64Bytes(Utilities.computeHmacSha256Signature(body, getSecret()));
+  return body + '.' + sig;
+}
+
+function requireToken(token, roles) {
+  if (!token) throw new Error('نشست معتبر نیست');
+  var parts = String(token).split('.');
+  if (parts.length !== 2) throw new Error('نشست نامعتبر است');
+
+  var expected = b64Bytes(Utilities.computeHmacSha256Signature(parts[0], getSecret()));
+  if (expected !== parts[1]) throw new Error('نشست نامعتبر است');
+
+  var payload;
+  try { payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString()); }
+  catch (e) { throw new Error('نشست نامعتبر است'); }
+
+  if (!payload.exp || Date.now() > Number(payload.exp)) throw new Error('نشست منقضی شده');
+  if (roles.indexOf(payload.r) < 0) throw new Error('دسترسی کافی نیست');
+
+  return { role: payload.r, subject: payload.s, exp: payload.exp };
+}
+
+function ensureSecret() {
+  var sp = PropertiesService.getScriptProperties();
+  if (!sp.getProperty('AUTH_SECRET')) {
+    sp.setProperty('AUTH_SECRET', Utilities.getUuid() + '-' + Utilities.getUuid());
+  }
+}
+
+function getSecret() {
+  return PropertiesService.getScriptProperties().getProperty('AUTH_SECRET') || 'UNINITIALIZED';
+}
+
+function b64(s) {
+  return Utilities.base64EncodeWebSafe(String(s), Utilities.Charset.UTF_8).replace(/=+$/,'');
+}
+
+function b64Bytes(bytes) {
+  return Utilities.base64EncodeWebSafe(bytes).replace(/=+$/,'');
+}
+
+/* -------------------------------------------------------------------------- */
+/* Member auth                                                                */
+/* -------------------------------------------------------------------------- */
+
+function generateLoginCode(phone) {
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+
+  var code = String(Math.floor(10000 + Math.random() * 90000));
+  CacheService.getScriptCache().put('login:' + phone, code, 300);
+
+  var member = findMemberByPhone(phone);
+  return {
+    ok: true,
+    code: code,
+    codeId: Utilities.getUuid(),
+    expiresIn: 300,
+    isNewUser: !member
+  };
+}
+
+function verifyLoginCode(phone, code) {
+  var cached = CacheService.getScriptCache().get('login:' + phone);
+  if (!cached || cached !== code) throw new Error('کد نامعتبر یا منقضی شده');
+
+  CacheService.getScriptCache().remove('login:' + phone);
+
+  var member = findMemberByPhone(phone);
+  if (!member) {
+    var created = addMemberInternal({
+      firstName: '',
+      lastName: '',
+      phone: phone,
+      active: true
+    });
+    member = created;
+  }
+
+  member = publicMember(member);
+  return {
+    ok: true,
+    isNewUser: !member.firstName && !member.lastName,
+    member: member,
+    token: issueToken('member', phone)
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Members                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function addMember(p) {
+  var first = String(p.firstName || '').trim();
+  var last = String(p.lastName || '').trim();
+  var phone = String(p.phone || '').trim();
+
+  if (!first || !last) throw new Error('نام و نام خانوادگی الزامی است');
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+
+  if (findMemberByPhone(phone, true)) throw new Error('این عضو قبلاً وجود دارد');
+
+  var m = addMemberInternal({
+    firstName: first,
+    lastName: last,
+    phone: phone,
+    active: true
+  });
+
+  return { ok: true, member: publicMember(m) };
+}
+
+function addMemberInternal(o) {
+  var sheet = getSheet('اعضا');
+  var name = ((o.firstName || '') + ' ' + (o.lastName || '')).trim();
+  var row = {
+    id: uid('MEM'),
+    firstName: o.firstName || '',
+    lastName: o.lastName || '',
+    name: name,
+    phone: o.phone || '',
+    active: o.active !== false,
+    createdAt: nowIso()
+  };
+  sheet.appendRow(rowToArray('اعضا', row));
+  return row;
+}
+
+function updateMember(p) {
+  var token = String(p.token || '');
+  var auth = requireToken(token, ['member']);
+  var phone = auth.subject;
+  var sheet = getSheet('اعضا');
+  var rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) throw new Error('عضو پیدا نشد');
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (String(row[4]) !== phone) continue;
+
+    row[1] = String(p.firstName || '').trim();
+    row[2] = String(p.lastName || '').trim();
+    row[3] = (row[1] + ' ' + row[2]).trim();
+    sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
+
+    return { ok: true, member: rowToObject('اعضا', row) };
+  }
+  throw new Error('عضو پیدا نشد');
+}
+
+function deleteMember(id) {
+  var sheet = getSheet('اعضا');
+  var rows = sheet.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === id) {
+      rows[i][5] = false;
+      sheet.getRange(i + 1, 1, 1, rows[i].length).setValues([rows[i]]);
+      return { ok: true };
+    }
+  }
+  throw new Error('عضو پیدا نشد');
+}
+
+function listActiveMembers() {
+  return getSheetObjects('اعضا')
+    .filter(function(r){ return truthy(r.active); })
+    .sort(function(a,b){ return String(a.name).localeCompare(String(b.name), 'fa'); })
+    .map(publicMember);
+}
+
+function findMemberByPhone(phone, includeInactive) {
+  var rows = getSheetObjects('اعضا');
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].phone) === String(phone) && (includeInactive || truthy(rows[i].active))) {
+      return rows[i];
+    }
+  }
+  return null;
+}
+
+function publicMember(r) {
+  return {
+    id: r.id,
+    firstName: r.firstName,
+    lastName: r.lastName,
+    name: r.name,
+    phone: r.phone,
+    active: truthy(r.active),
+    createdAt: r.createdAt
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Events / Drive                                                             */
+/* -------------------------------------------------------------------------- */
+
+function listEventsPublic() {
+  return getSheetObjects('رویدادها')
+    .filter(function(r){ return truthy(r.active); })
+    .sort(function(a,b){ return Number(a.sort || 0) - Number(b.sort || 0); })
+    .map(function(r){
+      return {
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        imageUrl: r.imageUrl,
+        label: r.label,
+        date: r.date
+      };
+    });
+}
+
+function uploadEventImage(p) {
+  var data = String(p.base64 || '');
+  if (!data) throw new Error('فایلی ارسال نشده');
+
+  var mime = String(p.mimeType || 'image/jpeg');
+  var ext = mime.split('/')[1] || 'jpg';
+  var blob = Utilities.newBlob(Utilities.base64Decode(data), mime, 'event-' + Date.now() + '.' + ext);
+  var folder = getDriveFolder();
+  var file = folder.createFile(blob);
+
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {}
+
+  return {
+    ok: true,
+    fileId: file.getId(),
+    url: 'https://drive.google.com/uc?export=view&id=' + encodeURIComponent(file.getId())
+  };
+}
+
+function saveEvent(p) {
+  var sheet = getSheet('رویدادها');
+  var id = String(p.id || '').trim();
+
+  var rowObj = {
+    id: id || uid('EVT'),
+    title: String(p.title || '').trim(),
+    description: String(p.description || '').trim(),
+    imageUrl: String(p.imageUrl || '').trim(),
+    imageId: String(p.imageId || '').trim(),
+    label: String(p.label || 'رویداد').trim(),
+    date: String(p.date || '').trim(),
+    active: p.active !== false,
+    sort: Number(p.sort || 0),
+    createdAt: nowIso(),
+    updatedAt: nowIso()
+  };
+
+  if (!rowObj.title) throw new Error('عنوان رویداد الزامی است');
+
+  if (!id) {
+    sheet.appendRow(rowToArray('رویدادها', rowObj));
+  } else {
+    var pos = findRow(sheet, 'id', id);
+    if (!pos) throw new Error('رویداد پیدا نشد');
+
+    rowObj.createdAt = sheet.getRange(pos, 10).getValue() || rowObj.createdAt;
+    sheet.getRange(pos, 1, 1, 11).setValues([rowToArray('رویدادها', rowObj)]);
+  }
+
+  return { ok: true, item: rowObj };
+}
+
+function deleteEvent(id) {
+  var sheet = getSheet('رویدادها');
+  var pos = findRow(sheet, 'id', id);
+  if (!pos) throw new Error('رویداد پیدا نشد');
+
+  var row = sheet.getRange(pos, 1, 1, 11).getValues()[0];
+  row[7] = false;
+  row[10] = nowIso();
+  sheet.getRange(pos, 1, 1, 11).setValues([row]);
+  return { ok: true };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Camps / Registrations                                                      */
+/* -------------------------------------------------------------------------- */
+
+function listCamps() {
+  return getSheetObjects('اردوها')
+    .filter(function(r){ return String(r.status) === 'active'; })
+    .map(function(r){ return { id:r.id, title:r.title, status:r.status }; });
+}
+
+function registerCamp(p) {
+  if (!p.campId) throw new Error('اردو انتخاب نشده');
+  if (!p.firstName || !p.lastName || !p.fatherName) throw new Error('اطلاعات ناقص است');
+  if (!/^09\d{9}$/.test(String(p.phone || ''))) throw new Error('شماره همراه نامعتبر است');
+
+  var photoUrl = '';
+  if (p.photoBase64) {
+    var uploaded = uploadPublicFile(
+      String(p.photoBase64),
+      String(p.photoMimeType || 'image/jpeg'),
+      'registration-' + Date.now()
+    );
+    photoUrl = uploaded.url;
+  }
+
+  var sheet = getSheet('ثبت‌نام‌ها');
+  var row = {
+    id: uid('REG'),
+    campId: String(p.campId),
+    firstName: String(p.firstName).trim(),
+    lastName: String(p.lastName).trim(),
+    fatherName: String(p.fatherName).trim(),
+    phone: String(p.phone).trim(),
+    nationalCode: String(p.nationalCode || '').trim(),
+    photoUrl: photoUrl,
+    status: 'در انتظار تایید',
+    createdAt: nowIso(),
+    updatedAt: nowIso()
+  };
+  sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
+  return { ok: true, id: row.id, status: row.status };
+}
+
+function setRegistrationStatus(p) {
+  var id = String(p.id || '');
+  var status = String(p.status || '');
+  if (['تایید شد','رد شد'].indexOf(status) < 0) throw new Error('وضعیت نامعتبر');
+
+  var sheet = getSheet('ثبت‌نام‌ها');
+  var pos = findRow(sheet, 'id', id);
+  if (!pos) throw new Error('ثبت‌نام پیدا نشد');
+
+  var values = sheet.getRange(pos, 1, 1, 11).getValues()[0];
+  values[8] = status;
+  values[10] = nowIso();
+  sheet.getRange(pos, 1, 1, 11).setValues([values]);
+
+  if (status === 'تایید شد') {
+    var phone = String(values[5] || '');
+    if (!findMemberByPhone(phone, true)) {
+      addMemberInternal({
+        firstName: values[2],
+        lastName: values[3],
+        phone: phone,
+        active: true
+      });
+    } else {
+      reactivateMember(phone);
+    }
+  }
+
+  return { ok: true };
+}
+
+function reactivateMember(phone) {
+  var sheet = getSheet('اعضا');
+  var rows = sheet.getDataRange().getValues();
+  for (var i=1;i<rows.length;i++){
+    if (String(rows[i][4]) === String(phone)) {
+      rows[i][5] = true;
+      sheet.getRange(i+1,1,1,rows[i].length).setValues([rows[i]]);
+      return;
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Attendance                                                                 */
+/* -------------------------------------------------------------------------- */
+
+function attendanceForDate(date) {
+  return getSheetObjects('حضورغیاب')
+    .filter(function(r){ return String(r.date) === String(date); })
+    .map(function(r){
+      return {
+        memberId: r.memberId,
+        memberName: r.memberName,
+        status: r.status,
+        note: r.note
+      };
+    });
+}
+
+function attendanceForMonth(month) {
+  return getSheetObjects('حضورغیاب')
+    .filter(function(r){ return String(r.date).indexOf(month) === 0; })
+    .sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); })
+    .map(function(r){
+      return {
+        date: r.date,
+        memberId: r.memberId,
+        memberName: r.memberName,
+        status: r.status,
+        note: r.note
+      };
+    });
+}
+
+function hasAttendanceDate(date) {
+  var rows = getSheetObjects('حضورغیاب');
+  return rows.some(function(r){ return String(r.date) === String(date); });
+}
+
+function saveAttendanceBatch(p) {
+  var date = String(p.date || currentDate());
+  if (date !== currentDate()) throw new Error('ثبت حضور فقط برای امروز مجاز است');
+  if (hasAttendanceDate(date)) throw new Error('حضور امروز قبلاً ثبت شده و دیگر قابل ثبت مجدد نیست');
+
+  var records = Array.isArray(p.records) ? p.records : [];
+  if (!records.length) throw new Error('رکوردی برای ذخیره وجود ندارد');
+
+  var official = requireToken(p.token, ['attendance']);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    if (hasAttendanceDate(date)) throw new Error('حضور امروز قبلاً ثبت شده');
+
+    var sheet = getSheet('حضورغیاب');
+    var now = nowIso();
+    var values = [];
+
+    records.forEach(function(r){
+      if (!r.memberId || !r.memberName || !r.status) return;
+      var status = String(r.status);
+      if (['حاضر','موجه','غیبت'].indexOf(status) < 0) return;
+      values.push([date, String(r.memberId), String(r.memberName), status, String(r.note || ''), official.subject, now]);
+    });
+
+    if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
+    sheet.getRange(sheet.getLastRow()+1,1,values.length,7).setValues(values);
+
+    return { ok:true, locked:true, count:values.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Supervision                                                                */
+/* -------------------------------------------------------------------------- */
+
+function saveWarning(p) {
+  var auth = requireToken(p.token, ['supervision']);
+  var responsibility = String(p.responsibility || '').trim();
+  var memberId = String(p.memberId || '').trim();
+  var memberName = String(p.memberName || '').trim();
+  var reason = String(p.reason || '').trim();
+
+  if (!responsibility) throw new Error('اسم مسئولیت الزامی است');
+  if (!memberName) throw new Error('نام مسئول الزامی است');
+  if (!reason) throw new Error('دلیل اخطار الزامی است');
+
+  var sheet = getSheet('اخطارها');
+  sheet.appendRow([
+    currentDate(),
+    responsibility,
+    memberId,
+    memberName,
+    reason,
+    auth.subject,
+    nowIso()
+  ]);
+
+  return { ok:true };
+}
+
+function warningsForMonth(month) {
+  return getSheetObjects('اخطارها')
+    .filter(function(r){ return String(r.date).indexOf(month) === 0; })
+    .sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); })
+    .map(function(r){
+      return {
+        date:r.date,
+        responsibility:r.responsibility,
+        memberId:r.memberId,
+        memberName:r.memberName,
+        reason:r.reason
+      };
+    });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Dashboard                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function dashboardData() {
+  var month = currentMonth();
+  var today = currentDate();
+  var regs = getSheetObjects('ثبت‌نام‌ها');
+  var pending = regs.filter(function(r){ return String(r.status) === 'در انتظار تایید'; }).length;
+  var attendance = attendanceForMonth(month);
+  var warnings = warningsForMonth(month);
+  var todayAttendance = attendance.filter(function(r){ return r.date === today; });
+
+  return {
+    ok:true,
+    month:month,
+    today:today,
+    stats:{
+      activeMembers:listActiveMembers().length,
+      pendingRegistrations:pending,
+      todayAttendance:todayAttendance.length,
+      monthWarnings:warnings.length
+    },
+    events:listEventsPublic(),
+    registrations:regs.sort(byNewest).slice(0,50),
+    attendance:attendance,
+    warnings:warnings,
+    prize:getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE,
+    leaderboard:leaderboardForWeek(currentWeekKey()),
+    previousWinner:previousWinner()
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Game                                                                       */
+/* -------------------------------------------------------------------------- */
+
+function saveGamePrize(prize) {
+  var value = prize || CFG.DEFAULT_GAME_PRIZE;
+  setSetting('gamePrize', value);
+  return { ok:true, prize:value };
+}
+
+function submitGameScore(p) {
+  var playerName = String(p.playerName || '').trim();
+  var score = Math.floor(Number(p.score || 0));
+  if (!playerName) throw new Error('اسم بازیکن را وارد کن');
+  if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
+
+  var week = currentWeekKey();
+  var sheet = getSheet('بازی');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    var rows = getSheetObjects('بازی');
+    var existing = null;
+    var existingRow = 0;
+    for (var i=0;i<rows.length;i++){
+      if (String(rows[i].weekKey) === week && String(rows[i].playerName) === playerName) {
+        existing = rows[i];
+        existingRow = findRow(sheet, 'weekKey', week, 'playerName', playerName);
+        break;
+      }
+    }
+
+    if (existing) {
+      if (score <= Number(existing.score || 0)) {
+        return { ok:true, saved:false, score:Number(existing.score), weekKey:week, leaderboard:leaderboardForWeek(week) };
+      }
+      var vals = sheet.getRange(existingRow,1,1,4).getValues()[0];
+      vals[2] = score;
+      vals[3] = nowIso();
+      sheet.getRange(existingRow,1,1,4).setValues([vals]);
+    } else {
+      sheet.appendRow([week, playerName, score, nowIso()]);
+    }
+
+    return { ok:true, saved:true, score:score, weekKey:week, leaderboard:leaderboardForWeek(week) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function leaderboardForWeek(week) {
+  return getSheetObjects('بازی')
+    .filter(function(r){ return String(r.weekKey) === String(week); })
+    .map(function(r){ return { playerName:r.playerName, score:Number(r.score || 0) }; })
+    .sort(function(a,b){ return b.score - a.score; })
+    .slice(0,10);
+}
+
+function previousWinner() {
+  var prev = previousWeekKey();
+  var top = leaderboardForWeek(prev);
+  if (!top.length) return null;
+  return { weekKey:prev, playerName:top[0].playerName, score:top[0].score };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Settings                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function getSetting(key) {
+  var row = findRow(getSheet('تنظیمات'), 'key', key);
+  if (!row) return '';
+  return String(getSheet('تنظیمات').getRange(row,2).getValue() || '');
+}
+
+function setSetting(key, value) {
+  var sheet = getSheet('تنظیمات');
+  var row = findRow(sheet, 'key', key);
+  if (row) {
+    sheet.getRange(row,2).setValue(value);
+  } else {
+    sheet.appendRow([key,value]);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Drive                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function uploadPublicFile(base64, mime, name) {
+  var blob = Utilities.newBlob(Utilities.base64Decode(base64), mime, name);
+  var folder = getDriveFolder();
+  var file = folder.createFile(blob);
+
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {}
+
+  return {
+    id:file.getId(),
+    url:'https://drive.google.com/uc?export=view&id=' + encodeURIComponent(file.getId())
+  };
+}
+
+function getDriveFolder() {
+  if (!CFG.DRIVE_FOLDER_ID || CFG.DRIVE_FOLDER_ID.indexOf('PASTE_') === 0) {
+    throw new Error('DRIVE_FOLDER_ID را در Code.gs تنظیم کن');
+  }
+  return DriveApp.getFolderById(CFG.DRIVE_FOLDER_ID);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sheets helpers                                                             */
+/* -------------------------------------------------------------------------- */
+
+function getSS() {
+  if (!CFG.SPREADSHEET_ID || CFG.SPREADSHEET_ID.indexOf('PASTE_') === 0) {
+    throw new Error('SPREADSHEET_ID را در Code.gs تنظیم کن');
+  }
+  return SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
+}
+
+function getSheet(name) {
+  var ss = getSS();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    ensureSheet(ss,name,HEADERS[name] || []);
+    sheet = ss.getSheetByName(name);
+  }
+  return sheet;
+}
+
+function ensureSheet(ss,name,headers) {
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+
+  if (sheet.getLastRow() === 0 && headers.length) {
+    sheet.getRange(1,1,1,headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getSheetObjects(name) {
+  var sheet = getSheet(name);
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  var headers = values[0].map(String);
+  var out = [];
+  for (var i=1;i<values.length;i++){
+    var row = values[i];
+    if (row.every(function(v){ return v === '' || v === null; })) continue;
+    var obj = {};
+    for (var j=0;j<headers.length;j++) obj[headers[j]] = row[j];
+    out.push(obj);
+  }
+  return out;
+}
+
+function rowToArray(name,obj) {
+  return HEADERS[name].map(function(h){ return obj[h] !== undefined ? obj[h] : ''; });
+}
+
+function rowToObject(name,row) {
+  var headers = HEADERS[name];
+  var o = {};
+  for (var i=0;i<headers.length;i++) o[headers[i]] = row[i];
+  return o;
+}
+
+function findRow(sheet, key1, val1, key2, val2) {
+  var range = sheet.getDataRange();
+  var values = range.getValues();
+  if (values.length < 2) return 0;
+  var headers = values[0].map(String);
+  var i1 = headers.indexOf(key1);
+  var i2 = key2 ? headers.indexOf(key2) : -1;
+
+  for (var r=1;r<values.length;r++){
+    if (String(values[r][i1]) === String(val1) &&
+        (!key2 || String(values[r][i2]) === String(val2))) {
+      return r+1;
+    }
+  }
+  return 0;
+}
+
+function truthy(v) {
+  if (v === true) return true;
+  var s = String(v).toLowerCase();
+  return s === 'true' || s === '1' || s === 'بله';
+}
+
+function uid(prefix) {
+  return prefix + '-' + Utilities.getUuid().split('-')[0].toUpperCase();
+}
+
+function nowIso() {
+  return Utilities.formatDate(new Date(), CFG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
+}
+
+function currentDate() {
+  return Utilities.formatDate(new Date(), CFG.TIMEZONE, 'yyyy-MM-dd');
+}
+
+function currentMonth() {
+  return Utilities.formatDate(new Date(), CFG.TIMEZONE, 'yyyy-MM');
+}
+
+function currentWeekKey() {
+  var d = localDateOnly(new Date());
+  var day = d.getDay(); // Sunday=0
+  // هفته‌ی بازی از جمعه شروع می‌شود
+  var delta = (day + 2) % 7;
+  d.setDate(d.getDate() - delta);
+  return Utilities.formatDate(d, CFG.TIMEZONE, 'yyyy-MM-dd');
+}
+
+function previousWeekKey() {
+  var d = localDateOnly(new Date());
+  d.setDate(d.getDate() - 7);
+  var day = d.getDay();
+  var delta = (day + 2) % 7;
+  d.setDate(d.getDate() - delta);
+  return Utilities.formatDate(d, CFG.TIMEZONE, 'yyyy-MM-dd');
+}
+
+function localDateOnly(date) {
+  var text = Utilities.formatDate(date, CFG.TIMEZONE, 'yyyy-MM-dd');
+  var parts = text.split('-').map(Number);
+  return new Date(parts[0], parts[1]-1, parts[2]);
+}
+
+function byNewest(a,b) {
+  return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+}

@@ -1,0 +1,29 @@
+
+<!DOCTYPE html><html lang="fa" dir="rtl"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14243b"><title>پنل مربیان | حلقه شهید هادی ذوالفقاری</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/coach.css">
+</head><body><div class="app-container">
+<header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><h1>پنل مربیان</h1></header>
+<main class="page coach-page">
+<section id="coachLogin" class="coach-login">
+<div class="coach-lock">♙</div><span class="eyebrow">PRIVATE AREA</span><h2>ورود مربیان</h2><p>کد مربی را وارد کن تا داشبورد مدیریت حلقه باز شود</p>
+<form id="coachLoginForm"><input id="coachCode" class="form-control" dir="ltr" placeholder="COACH-..." autocomplete="off" required><button class="btn-submit">ورود به پنل</button></form>
+</section>
+<section id="coachDashboard" class="hidden">
+<div class="coach-top"><div><span class="eyebrow">CONTROL CENTER</span><h2>داشبورد حلقه</h2><p id="coachName">—</p></div><button id="coachLogout" class="btn-secondary">خروج</button></div>
+<div class="coach-stats" id="coachStats"></div>
+<section class="coach-panel"><div class="panel-head"><div><span class="eyebrow">EVENTS</span><h3>مدیریت رویدادها</h3></div><button id="newEventBtn" class="mini-action">＋ رویداد جدید</button></div>
+<div id="eventEditor" class="event-editor hidden"><input id="eventId" type="hidden"><div class="form-grid"><label>عنوان<input id="eventTitle" class="form-control"></label><label>برچسب<input id="eventLabel" class="form-control" placeholder="رویداد ویژه"></label><label class="full">توضیح<textarea id="eventDescription" class="form-control"></textarea></label><label>تاریخ<input id="eventDate" class="form-control" placeholder="۱۴۰۵/۰۷/۱۰"></label><label>ترتیب<input id="eventSort" class="form-control" type="number" value="0"></label></div>
+<div class="event-upload"><input id="eventImage" type="file" accept="image/*"><div id="eventPreview">تصویر رویداد را انتخاب کن</div></div>
+<div class="editor-actions"><button id="saveEventBtn" class="btn-submit">ذخیره رویداد</button><button id="cancelEventBtn" class="btn-secondary">انصراف</button></div></div>
+<div id="eventsAdmin" class="admin-list"></div></section>
+<section class="coach-panel"><div class="panel-head"><div><span class="eyebrow">REGISTRATIONS</span><h3>ثبت‌نام‌ها</h3></div></div><div id="registrationsAdmin" class="admin-list"></div></section>
+<section class="coach-panel"><div class="panel-head"><div><span class="eyebrow">ATTENDANCE</span><h3>گزارش ماه جاری</h3></div></div><div id="attendanceAdmin" class="report-box"></div></section>
+<section class="coach-panel"><div class="panel-head"><div><span class="eyebrow">SUPERVISION</span><h3>اخطارهای ماه جاری</h3></div></div><div id="warningsAdmin" class="report-box"></div></section>
+<section class="coach-panel"><div class="panel-head"><div><span class="eyebrow">GAME</span><h3>جایزه هفتگی بازی</h3></div></div><div class="prize-editor"><input id="gamePrize" class="form-control"><button id="savePrizeBtn" class="btn-submit">ذخیره جایزه</button></div><p class="muted">اگر چیزی وارد نکنی، متن پیش‌فرض نمایش داده می‌شود</p></section>
+</section></main>
+<nav class="bottom-nav"><a href="index.html" class="nav-item">⌂<span>خانه</span></a><a href="activities.html" class="nav-item">✦<span>فعالیت‌ها</span></a><a href="game.html" class="nav-item">◉<span>بازی</span></a><a href="officials.html" class="nav-item">♙<span>مسئولین</span></a></nav>
+</div><script src="js/main.js" defer></script><script src="js/coach.js" defer></script></body></html>
