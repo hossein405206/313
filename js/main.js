@@ -255,9 +255,11 @@
       try { sessionStorage.removeItem(this._keyUser); } catch (e) {}
     },
 
-    setOfficial: function (official) {
+    setOfficial: function (official, token) {
       try {
-        sessionStorage.setItem(this._keyOfficial, JSON.stringify(official));
+        var value = Object.assign({}, official || {});
+        if (token) value.token = token;
+        sessionStorage.setItem(this._keyOfficial, JSON.stringify(value));
       } catch (e) { Logger.error('Session set error', e); }
     },
     getOfficial: function () {
@@ -523,7 +525,7 @@
         if (!res.official) throw new Error('کد نامعتبر است');
 
         var official = res.official;
-        Session.setOfficial(official);
+        Session.setOfficial(official, res.token);
 
         Toast.success('خوش آمدی، ' + (official.name || 'مسئول'));
         Logger.info('ورود مسئول:', official);
