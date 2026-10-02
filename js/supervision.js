@@ -140,7 +140,7 @@
     try {
       var res = await api.get({
         action: 'listWarnings',
-        officialCode: state.official.code
+        token: state.official.token
       });
       state.warnings = res.items || [];
       renderWarnings();
@@ -270,7 +270,7 @@
         return;
       }
 
-      if (!state.official) {
+      if (!state.official || !state.official.token) {
         toast('اول باید وارد بشی', 'error');
         return;
       }
@@ -294,8 +294,9 @@
         await api.post({
           action: 'saveWarning',
           officialCode: state.official.code,
-          officialName: officialName,
-          description: description,
+          responsibility: officialName,
+          memberName: officialName,
+          reason: description,
           date: todayISO()
         });
 
