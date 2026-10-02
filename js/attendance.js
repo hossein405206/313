@@ -283,7 +283,7 @@
       }
 
       var official = state.official;
-      if (!official) {
+      if (!official || !official.token) {
         toast('اول باید وارد بشی', 'error');
         return;
       }
@@ -302,6 +302,7 @@
         else if (rec.status === 'absent') statusFa = 'غیبت';
 
         records.push({
+          memberId: m.id,
           fullName: fullName,
           status: statusFa,
           note: rec.note || ''
@@ -320,7 +321,7 @@
       try {
         await api.post({
           action: 'saveAttendanceBatch',
-          officialCode: official.code,
+          token: official.token,
           date: todayISO(),
           records: records
         });
