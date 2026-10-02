@@ -569,9 +569,9 @@
       return ''
         + '<article class="activity-card">'
         +   '<div class="thumb">'
-        +     '<img src="' + DOM.escape(ev.image || 'images/placeholder.svg') + '"'
+        +     '<img src="' + DOM.escape(ev.imageUrl || ev.image || 'images/placeholder.svg') + '"'
         +          ' alt="' + DOM.escape(ev.title) + '" loading="lazy">'
-        +     '<span class="badge">' + DOM.escape(ev.category || 'عمومی') + '</span>'
+        +     '<span class="badge">' + DOM.escape(ev.label || ev.category || 'عمومی') + '</span>'
         +   '</div>'
         +   '<div class="body">'
         +     '<h3>' + DOM.escape(ev.title) + '</h3>'
@@ -584,7 +584,7 @@
       var filtered = (currentFilter === 'all')
         ? allEvents
         : allEvents.filter(function (ev) {
-            return String(ev.category) === currentFilter;
+            return String(ev.label || ev.category) === currentFilter;
           });
 
       if (!filtered.length) {
