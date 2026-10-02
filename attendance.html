@@ -57,7 +57,7 @@
       </section>
 
       <!-- ═══ نوار ابزار ═══ -->
-      <div class="att-toolbar">
+      <div class="att-toolbar"><button type="button" class="att-btn-all" id="addMemberBtn">＋ افزودن عضو</button>
         <input
           type="search"
           id="searchInput"
@@ -83,6 +83,7 @@
       </div>
 
     </main>
+    <div class="modal" id="memberModal" role="dialog" aria-modal="true"><div class="modal-content"><div class="modal-header"><h3>افزودن عضو</h3><button type="button" class="close-btn" data-close-modal>×</button></div><form id="memberForm"><input id="memberFirst" class="form-control" placeholder="نام" required><input id="memberLast" class="form-control" placeholder="نام خانوادگی" required><input id="memberPhone" class="form-control" dir="ltr" inputmode="numeric" placeholder="09xxxxxxxxx" required><button class="btn-submit">افزودن</button></form></div></div>
 
     <!-- ═══ دکمه ذخیره شناور ═══ -->
     <div class="att-save-bar" id="saveBar">
