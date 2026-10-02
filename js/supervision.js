@@ -96,7 +96,7 @@
 
   async function loadOfficials() {
     var api = getAPI();
-    var select = $('#officialSelect');
+    var select = $('#memberSelect');
     if (!api || !select) return;
 
     try {
@@ -104,16 +104,12 @@
       var all = res.items || [];
 
       // فقط مسئولیت‌های اجرایی (نه نقش‌های ویژه)
-      state.officials = all.filter(function (o) {
-        return String(o.type) === 'official';
-      });
+      state.officials = all;
 
       var html = '<option value="">انتخاب کن...</option>';
       for (var i = 0; i < state.officials.length; i++) {
         var o = state.officials[i];
-        html += '<option value="' + escapeHtml(o.name) + '">'
-             + escapeHtml(o.name) + ' — ' + escapeHtml(o.role)
-             + '</option>';
+        html += '<option value="' + escapeHtml(o.name) + '">' + escapeHtml(o.name) + '</option>';
       }
       select.innerHTML = html;
 
@@ -275,11 +271,16 @@
         return;
       }
 
-      var officialName = select.value.trim();
+      var memberName = select.value.trim();
+      var responsibility = $('#responsibilityInput').value.trim();
       var description = textarea.value.trim();
 
-      if (!officialName) {
-        toast('مسئول موردنظر رو انتخاب کن', 'error');
+      if (!memberName) {
+        toast('نام مسئول رو انتخاب کن', 'error');
+        return;
+      }
+      if (!responsibility) {
+        toast('مسئولیت رو وارد کن', 'error');
         return;
       }
       if (!description) {
