@@ -268,7 +268,7 @@
           // ذخیره session
           var session = getSession();
           if (session && state.member) {
-            session.setMember(state.member);
+            session.setMember(state.member, res.token);
           }
 
           // نمایش خوش‌آمد
