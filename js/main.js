@@ -240,9 +240,11 @@
     _keyUser: 'kanoon_member',
     _keyOfficial: 'kanoon_official',
 
-    setMember: function (member) {
+    setMember: function (member, token) {
       try {
-        sessionStorage.setItem(this._keyUser, JSON.stringify(member));
+        var value = Object.assign({}, member || {});
+        if (token) value.token = token;
+        sessionStorage.setItem(this._keyUser, JSON.stringify(value));
       } catch (e) { Logger.error('Session set error', e); }
     },
     getMember: function () {
