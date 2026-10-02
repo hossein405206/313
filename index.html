@@ -3,121 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1E2F4A">
+  <meta name="theme-color" content="#101A2C">
+  <meta name="description" content="حلقه شهید هادی ذوالفقاری">
   <title>حلقه شهید هادی ذوالفقاری | خانه</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
+<div class="app-container home-app">
 
-  <div class="app-container">
+  <header class="app-header">
+    <button class="header-menu" type="button" aria-label="باز کردن منو" data-open-drawer>
+      <span></span><span></span><span></span>
+    </button>
+    <div class="header-brand">
+      <span class="header-brand__mark">ه‍</span>
+      <div>
+        <strong>حلقه شهید هادی ذوالفقاری</strong>
+        <small>پایگاه نوجوانان مسجد</small>
+      </div>
+    </div>
+    <a class="header-auth" href="login.html" aria-label="ورود">
+      <span class="header-auth__avatar">ح</span>
+    </a>
+  </header>
 
-    <!-- ═══ هدر ═══ -->
-    <header class="app-header">
-      <h1>حلقه شهید هادی ذوالفقاری</h1>
-    </header>
+  <main class="home-main">
 
-    <!-- ═══ کاروسل رویدادها ═══ -->
-    <section class="carousel-section" aria-label="رویدادهای اخیر">
-      <div class="carousel-container" id="carouselContainer">
+    <section class="hero-section" aria-label="معرفی حلقه">
+      <div class="hero-glow"></div>
+      <div class="hero-content">
+        <span class="hero-kicker"><i></i> یک جمع برای رشد</span>
+        <h1>اینجا فقط یک سایت نیست<br><em>اینجا حلقه‌ی ماست</em></h1>
+        <p>برنامه‌ها، فعالیت‌ها، اردوها و خبرهای حلقه را یک‌جا ببین و در جریان باش</p>
+        <div class="hero-actions">
+          <a href="activities.html" class="hero-primary">
+            <span>مشاهده فعالیت‌ها</span>
+            <b>←</b>
+          </a>
+          <a href="schedule.html" class="hero-secondary">برنامه هفتگی</a>
+        </div>
+      </div>
+      <div class="hero-orbit orbit-one"></div>
+      <div class="hero-orbit orbit-two"></div>
+      <div class="hero-symbol">هـ</div>
+      <div class="hero-noise"></div>
+    </section>
 
-        <div class="carousel-slide active">
-          <img src="images/placeholder.svg" alt="اردوی مشهد" fetchpriority="high">
-          <div class="carousel-overlay">
+    <section class="quick-strip" aria-label="دسترسی سریع">
+      <a href="register.html" class="quick-item">
+        <span class="quick-icon quick-gold">+</span>
+        <span>ثبت‌نام اردو</span>
+      </a>
+      <a href="schedule.html" class="quick-item">
+        <span class="quick-icon quick-blue">◷</span>
+        <span>برنامه</span>
+      </a>
+      <a href="feedback.html" class="quick-item">
+        <span class="quick-icon quick-red">✦</span>
+        <span>پیشنهاد</span>
+      </a>
+      <a href="contact.html" class="quick-item">
+        <span class="quick-icon quick-teal">⌁</span>
+        <span>ارتباط</span>
+      </a>
+    </section>
+
+    <section class="home-section">
+      <div class="section-heading">
+        <div>
+          <span>EXPLORE</span>
+          <h2>چه خبر؟</h2>
+        </div>
+        <a href="activities.html">همه <b>←</b></a>
+      </div>
+
+      <div class="feature-grid">
+        <a href="activities.html" class="feature-card feature-main">
+          <div class="feature-art feature-art--mosque">
+            <span class="moon"></span>
+            <span class="mosque-dome"></span>
+            <span class="mosque-minaret"></span>
+            <span class="mosque-stars">✦　·　✦</span>
+          </div>
+          <div class="feature-info">
+            <span class="feature-badge">رویداد ویژه</span>
             <h3>اردوی زیارتی و تفریحی مشهد</h3>
             <p>ثبت‌نام برای اعضای فعال حلقه آغاز شد</p>
+            <div class="feature-meta"><span>مشاهده جزئیات</span><b>←</b></div>
           </div>
-        </div>
+        </a>
 
-        <div class="carousel-slide">
-          <img src="images/placeholder.svg" alt="مسابقه PS5" loading="lazy">
-          <div class="carousel-overlay">
-            <h3>مسابقات فیفا و PS5 کانون</h3>
-            <p>پنج‌شنبه‌ها بعد از نماز مغرب و عشاء</p>
+        <a href="activities.html" class="feature-card feature-small feature-game">
+          <div class="mini-icon">PS5</div>
+          <div>
+            <span>پنج‌شنبه‌ها</span>
+            <h3>مسابقات FIFA و PS5</h3>
+            <small>بعد از نماز مغرب و عشاء</small>
           </div>
-        </div>
+          <b class="arrow-circle">←</b>
+        </a>
 
-        <div class="carousel-dots">
-          <button class="dot active" data-index="0" aria-label="اسلاید ۱"></button>
-          <button class="dot" data-index="1" aria-label="اسلاید ۲"></button>
-        </div>
-
+        <a href="activities.html" class="feature-card feature-small feature-community">
+          <div class="mini-icon">◉</div>
+          <div>
+            <span>کنار هم</span>
+            <h3>فعالیت‌های حلقه</h3>
+            <small>گزارش و تصاویر برنامه‌ها</small>
+          </div>
+          <b class="arrow-circle">←</b>
+        </a>
       </div>
     </section>
 
-    <!-- ═══ منوی اصلی ═══ -->
-    <section class="page">
-      <h2 class="section-title">بخش‌های اصلی</h2>
+    <section class="home-section">
+      <div class="section-heading">
+        <div>
+          <span>DISCOVER</span>
+          <h2>بخش‌های حلقه</h2>
+        </div>
+      </div>
 
-      <div class="menu-grid">
-
-        <a href="activities.html" class="menu-card">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-          </div>
-          <span>فعالیت‌ها</span>
+      <div class="service-list">
+        <a href="activities.html" class="service-card service-featured">
+          <span class="service-number">01</span>
+          <span class="service-icon">✦</span>
+          <span class="service-copy"><strong>فعالیت‌ها</strong><small>برنامه‌ها و اتفاقات حلقه</small></span>
+          <b>←</b>
         </a>
-
-        <a href="register.html" class="menu-card">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
-          </div>
-          <span>ثبت‌نام اردو</span>
+        <a href="register.html" class="service-card">
+          <span class="service-number">02</span>
+          <span class="service-icon">＋</span>
+          <span class="service-copy"><strong>ثبت‌نام اردو</strong><small>ثبت‌نام سریع و آنلاین</small></span>
+          <b>←</b>
         </a>
-
-        <a href="schedule.html" class="menu-card">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <span>برنامه هفتگی</span>
+        <a href="schedule.html" class="service-card">
+          <span class="service-number">03</span>
+          <span class="service-icon">◷</span>
+          <span class="service-copy"><strong>برنامه هفتگی</strong><small>برنامه این هفته را ببین</small></span>
+          <b>←</b>
         </a>
-
-        <a href="officials.html" class="menu-card">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <span>مسئولین</span>
+        <a href="officials.html" class="service-card">
+          <span class="service-number">04</span>
+          <span class="service-icon">♙</span>
+          <span class="service-copy"><strong>مسئولین</strong><small>ارتباط با مسئولین حلقه</small></span>
+          <b>←</b>
         </a>
-
-        <a href="feedback.html" class="menu-card">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </div>
-          <span>انتقادات و پیشنهادات</span>
+        <a href="feedback.html" class="service-card">
+          <span class="service-number">05</span>
+          <span class="service-icon">✎</span>
+          <span class="service-copy"><strong>انتقاد و پیشنهاد</strong><small>نظرت را مستقیم بگو</small></span>
+          <b>←</b>
         </a>
-
-        <a href="contact.html" class="menu-card">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          </div>
-          <span>ارتباط با ما</span>
+        <a href="contact.html" class="service-card">
+          <span class="service-number">06</span>
+          <span class="service-icon">⌁</span>
+          <span class="service-copy"><strong>ارتباط با ما</strong><small>راه‌های ارتباطی حلقه</small></span>
+          <b>←</b>
         </a>
-
       </div>
     </section>
 
-    <!-- ═══ نوار پایین ═══ -->
-    <nav class="bottom-nav" aria-label="ناوبری اصلی">
-      <a href="index.html" class="nav-item active" aria-current="page">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>خانه</span>
-      </a>
-      <a href="activities.html" class="nav-item">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        <span>فعالیت‌ها</span>
-      </a>
-      <button type="button" class="nav-item" data-open-login>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>مربیان</span>
-      </button>
-    </nav>
+    <section class="quote-panel">
+      <div class="quote-mark">“</div>
+      <div>
+        <span>حلقه شهید هادی ذوالفقاری</span>
+        <p>«آدم باید هر روز یک قدم برای بهتر شدن خودش بردارد»</p>
+      </div>
+      <div class="quote-pattern"></div>
+    </section>
 
-  </div>
+    <footer class="home-footer">
+      <div class="footer-brand"><span>ه‍</span><strong>حلقه شهید هادی ذوالفقاری</strong></div>
+      <p>یک جمع صمیمی برای رشد، رفاقت و ساختن روزهای بهتر</p>
+      <div class="footer-line"><i></i><span>یا علی</span><i></i></div>
+    </footer>
+  </main>
 
-  <script src="js/main.js" defer></script>
+  <nav class="bottom-nav" aria-label="ناوبری اصلی">
+    <a href="index.html" class="nav-item active" aria-current="page">
+      <span class="nav-icon">⌂</span><span>خانه</span>
+    </a>
+    <a href="activities.html" class="nav-item">
+      <span class="nav-icon">✦</span><span>فعالیت‌ها</span>
+    </a>
+    <button type="button" class="nav-item nav-main-action" data-open-login>
+      <span class="nav-main-circle">♙</span><span>ورود</span>
+    </button>
+    <a href="schedule.html" class="nav-item">
+      <span class="nav-icon">◷</span><span>برنامه</span>
+    </a>
+    <a href="contact.html" class="nav-item">
+      <span class="nav-icon">⌁</span><span>ارتباط</span>
+    </a>
+  </nav>
+
+  <div class="drawer-backdrop" data-close-drawer></div>
+  <aside class="app-drawer" aria-label="منوی سایت">
+    <button class="drawer-close" data-close-drawer>×</button>
+    <div class="drawer-head"><span>ه‍</span><div><strong>حلقه ما</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div>
+    <div class="drawer-links">
+      <a href="index.html">⌂ <span>خانه</span></a>
+      <a href="activities.html">✦ <span>فعالیت‌ها</span></a>
+      <a href="register.html">＋ <span>ثبت‌نام اردو</span></a>
+      <a href="schedule.html">◷ <span>برنامه هفتگی</span></a>
+      <a href="officials.html">♙ <span>مسئولین</span></a>
+      <a href="feedback.html">✎ <span>انتقاد و پیشنهاد</span></a>
+      <a href="contact.html">⌁ <span>ارتباط با ما</span></a>
+    </div>
+    <div class="drawer-bottom">یا علی مدد</div>
+  </aside>
+
+</div>
+<script src="js/main.js" defer></script>
 </body>
 </html>
