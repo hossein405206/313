@@ -134,7 +134,25 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '3.1-coach-auth' };
+  if (action === 'ping') return { ok: true, service: '313', version: '3.2-coach-debug', diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003' };
+
+  if (action === 'coachStatus') {
+    var masterRows = [];
+    try { masterRows = getSheetObjects('مربیان'); } catch (e) {}
+    var masterInSheet = masterRows.some(function(r){
+      return String(r.phone || '') === CFG.MASTER_COACH_PHONE && String(r.code || '') === CFG.MASTER_COACH_CODE && truthy(r.active);
+    });
+    return {
+      ok: true,
+      diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003',
+      version: '3.2-coach-debug',
+      masterConfigured: !!CFG.MASTER_COACH_PHONE && !!CFG.MASTER_COACH_CODE,
+      masterPhoneSuffix: String(CFG.MASTER_COACH_PHONE).slice(-2),
+      masterCodeLength: String(CFG.MASTER_COACH_CODE).length,
+      masterInSheet: masterInSheet,
+      loginCoachPresent: true
+    };
+  }
 
   if (action === 'listEvents' || action === 'listActivities') {
     return { ok: true, items: listEventsPublic() };
