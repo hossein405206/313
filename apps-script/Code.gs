@@ -9,10 +9,10 @@
    2) DRIVE_FOLDER_ID را وارد کن
    3) تابع setup() را یک بار اجرا کن
    4) کدهای پیش‌فرض ساخته‌شده در شیت «مسئولین» و «مربیان» را عوض کن
-   5) Deploy > New deployment > Web app
+   5) Deploy > Manage deployments > ویرایش Deployment فعلی > انتخاب نسخه جدید > Deploy
       Execute as: Me
       Who has access: Anyone
-   6) URL /exec را در js/main.js نگه دار یا با URL جدید جایگزین کن
+   6) URL /exec فعلی را در js/main.js ثابت نگه دار
 
    ساختار داده‌ها در Google Sheets:
    تنظیمات، مربیان، مسئولین، اعضا، رویدادها، اردوها،
