@@ -1129,3 +1129,21 @@
     initProV2();
   }
 })();
+  /* V4 navigation */
+  function buildBottomNav() {
+    var nav=document.querySelector('.bottom-nav'); if(!nav)return;
+    var path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+    var items=[
+      ['index.html','⌂','خانه'],['activities.html','✦','فعالیت‌ها'],['schedule.html','◷','برنامه'],
+      ['game.html','◉','بازی'],['login.html','♙','ورود']
+    ];
+    nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
+  }
+  function bindGlobalNavigation(){
+    buildBottomNav();
+    DOM.qsa('[data-open-login]').forEach(function(b){b.addEventListener('click',function(){location.href='login.html'})});
+    var drawer=document.querySelector('.app-drawer'),back=document.querySelector('.drawer-backdrop');
+    DOM.qsa('[data-open-drawer]').forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.add('open');if(back)back.classList.add('open');document.body.classList.add('drawer-open')}})});
+    DOM.qsa('[data-close-drawer]').forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
+  }
+
