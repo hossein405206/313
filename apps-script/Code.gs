@@ -1,6 +1,6 @@
 /* ============================================================================
    313 / حلقه شهید هادی ذوالفقاری
-   Google Apps Script Backend v3
+   Google Apps Script Backend v4
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
@@ -12,7 +12,7 @@
    5) Deploy > Manage deployments > ویرایش Deployment فعلی > انتخاب نسخه جدید > Deploy
       Execute as: Me
       Who has access: Anyone
-   6) URL /exec فعلی را در js/main.js ثابت نگه دار
+   6) برای انتشار نهایی، یک Deployment جدید بساز و URL همان Deployment را در js/main.js قرار بده
 
    ساختار داده‌ها در Google Sheets:
    تنظیمات، مربیان، مسئولین، اعضا، رویدادها، اردوها،
@@ -134,7 +134,7 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '3.2-coach-debug', diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.0.0-coach-auth', diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003' };
 
   if (action === 'coachStatus') {
     var masterRows = [];
@@ -145,7 +145,7 @@ function handleGet(p) {
     return {
       ok: true,
       diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003',
-      version: '3.2-coach-debug',
+      version: '4.0.0-coach-auth',
       masterConfigured: !!CFG.MASTER_COACH_PHONE && !!CFG.MASTER_COACH_CODE,
       masterPhoneSuffix: String(CFG.MASTER_COACH_PHONE).slice(-2),
       masterCodeLength: String(CFG.MASTER_COACH_CODE).length,
