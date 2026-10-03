@@ -34,13 +34,13 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
-  'اعضا': ['id','firstName','lastName','name','phone','active','createdAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','active','createdAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
-  'بازی': ['weekKey','playerName','score','updatedAt'],
+  'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
   'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt']
 };
 
@@ -499,7 +499,7 @@ function registerMember(p){
     return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};
   }
   var parts=fullName.split(' '), last=parts.length>1?parts.pop():'', first=parts.join(' ');
-  var member=addMemberInternal({firstName:first,lastName:last,phone:phone,active:true});
+  var member=addMemberInternal({firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true});
   return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};
 }
 function generateLoginCode(phone) {
@@ -577,6 +577,8 @@ function addMemberInternal(o) {
     lastName: o.lastName || '',
     name: name,
     phone: o.phone || '',
+    nickname: o.nickname || '',
+    profileCompleted: o.profileCompleted === true,
     active: o.active !== false,
     createdAt: nowIso()
   };
@@ -599,9 +601,12 @@ function updateMember(p) {
     row[1] = String(p.firstName || '').trim();
     row[2] = String(p.lastName || '').trim();
     row[3] = (row[1] + ' ' + row[2]).trim();
+    row[5] = String(p.nickname || '').trim();
+    if (!row[1] || !row[2] || !row[5]) throw new Error('نام، نام خانوادگی و نام نمایشی الزامی است');
+    row[6] = true;
     sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
 
-    return { ok: true, member: rowToObject('اعضا', row) };
+    return { ok: true, member: publicMember(rowToObject('اعضا', row)) };
   }
   throw new Error('عضو پیدا نشد');
 }
@@ -643,6 +648,8 @@ function publicMember(r) {
     lastName: r.lastName,
     name: r.name,
     phone: r.phone,
+    nickname: r.nickname || '',
+    profileCompleted: truthy(r.profileCompleted),
     active: truthy(r.active),
     createdAt: r.createdAt
   };
@@ -980,50 +987,29 @@ function saveGamePrize(prize) {
 }
 
 function submitGameScore(p) {
-  var playerName = String(p.playerName || '').trim();
+  var auth = requireToken(p.token, ['member']);
+  var member = findMemberByPhone(auth.subject, true);
+  if (!member) throw new Error('عضو پیدا نشد');
+  if (!truthy(member.profileCompleted)) throw new Error('ابتدا پروفایلت را تکمیل کن');
   var score = Math.floor(Number(p.score || 0));
-  if (!playerName) throw new Error('اسم بازیکن را وارد کن');
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
-
-  var week = currentWeekKey();
-  var sheet = getSheet('بازی');
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-
+  var week = currentWeekKey(), sheet = getSheet('بازی');
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
-    var rows = getSheetObjects('بازی');
-    var existing = null;
-    var existingRow = 0;
-    for (var i=0;i<rows.length;i++){
-      if (String(rows[i].weekKey) === week && String(rows[i].playerName) === playerName) {
-        existing = rows[i];
-        existingRow = findRow(sheet, 'weekKey', week, 'playerName', playerName);
-        break;
-      }
-    }
-
-    if (existing) {
-      if (score <= Number(existing.score || 0)) {
-        return { ok:true, saved:false, score:Number(existing.score), weekKey:week, leaderboard:leaderboardForWeek(week) };
-      }
-      var vals = sheet.getRange(existingRow,1,1,4).getValues()[0];
-      vals[2] = score;
-      vals[3] = nowIso();
-      sheet.getRange(existingRow,1,1,4).setValues([vals]);
-    } else {
-      sheet.appendRow([week, playerName, score, nowIso()]);
-    }
-
-    return { ok:true, saved:true, score:score, weekKey:week, leaderboard:leaderboardForWeek(week) };
-  } finally {
-    lock.releaseLock();
-  }
+    var rows=getSheetObjects('بازی'), existing=null, existingRow=0;
+    for(var i=0;i<rows.length;i++) if(String(rows[i].weekKey)===week && String(rows[i].memberId)===String(member.id)){existing=rows[i];existingRow=findRow(sheet,'weekKey',week,'memberId',member.id);break;}
+    var playerName=String(member.nickname||member.name||'عضو').trim();
+    if(existing){
+      if(score<=Number(existing.score||0)) return {ok:true,saved:false,score:Number(existing.score),weekKey:week,leaderboard:leaderboardForWeek(week)};
+      var vals=sheet.getRange(existingRow,1,1,5).getValues()[0]; vals[1]=member.id; vals[2]=playerName; vals[3]=score; vals[4]=nowIso(); sheet.getRange(existingRow,1,1,5).setValues([vals]);
+    }else sheet.appendRow([week,member.id,playerName,score,nowIso()]);
+    return {ok:true,saved:true,score:score,weekKey:week,leaderboard:leaderboardForWeek(week)};
+  } finally { lock.releaseLock(); }
 }
-
 function leaderboardForWeek(week) {
   return getSheetObjects('بازی')
     .filter(function(r){ return String(r.weekKey) === String(week); })
-    .map(function(r){ return { playerName:r.playerName, score:Number(r.score || 0) }; })
+    .map(function(r){ return { memberId:String(r.memberId || ''), playerName:r.playerName, score:Number(r.score || 0) }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
 }
