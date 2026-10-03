@@ -85,3 +85,10 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 - مربی متن جایزه را تعیین می‌کند
 - مقدار پیش‌فرض:
   **به بیشترین رکورد هفته جایزه داده می شود**
+
+
+## Endpoint فعلی سایت
+
+`https://script.google.com/macros/s/AKfycbxxuOgL4x67CuF3aL6baLGURlxNIOKel3C3GU0zcvF6LlzvoBeK32D4uMkg9PDEEImM/exec`
+
+این همان Web App endpoint است که در `js/main.js` تنظیم شده است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
