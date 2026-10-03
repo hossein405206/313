@@ -352,9 +352,12 @@ function verifyCoachCode(code) {
   return null;
 }
 function loginCoach(p){
-  var phone=String(p.phone||'').trim(), code=String(p.code||'').trim();
+  var phone=normalizeIranDigits(String(p.phone||'').trim()), code=String(p.code||'').trim();
   if(!/^09\d{9}$/.test(phone)) throw new Error('شماره مربی نامعتبر است');
   if(!code) throw new Error('کد مربی را وارد کن');
+  var coachSheet=getSheet('مربیان');
+  migrateSheetHeaders(coachSheet,'مربیان');
+  ensureMasterCoach();
   var rows=getSheetObjects('مربیان');
   var coach=rows.filter(function(r){return truthy(r.active)&&String(r.phone)===phone&&String(r.code)===code;})[0];
   if(!coach) throw new Error('شماره یا کد مربی نادرست است');
@@ -365,6 +368,11 @@ function ensureMasterCoach(){
   var rows=getSheetObjects('مربیان');
   var found=rows.some(function(r){return String(r.phone)===CFG.MASTER_COACH_PHONE&&String(r.code)===CFG.MASTER_COACH_CODE;});
   if(!found)getSheet('مربیان').appendRow([CFG.MASTER_COACH_CODE,CFG.MASTER_COACH_NAME,CFG.MASTER_COACH_PHONE,true,'master',nowIso(),nowIso()]);
+}
+function normalizeIranDigits(value){
+  return String(value||'')
+    .replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));})
+    .replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c));});
 }
 function addCoach(p){
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مربی اضافه کند');
