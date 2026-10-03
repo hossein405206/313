@@ -122,6 +122,7 @@ function setup() {
     camps.appendRow([uid('CAMP'), 'اردوی مشهد', 'active', nowIso()]);
   }
 
+  ensureLifetimeGameRecords();
   ensureSecret();
 
   return { ok: true, message: 'راه‌اندازی اولیه انجام شد' };
@@ -987,6 +988,48 @@ function saveGamePrize(prize) {
   var value = prize || CFG.DEFAULT_GAME_PRIZE;
   setSetting('gamePrize', value);
   return { ok:true, prize:value };
+}
+
+function ensureLifetimeGameRecords() {
+  var memberSheet = getSheet('اعضا');
+  var gameRows = getSheetObjects('بازی');
+  if (!gameRows.length) return;
+
+  var members = getSheetObjects('اعضا');
+  var bestById = {};
+  members.forEach(function(m){ bestById[String(m.id)] = Number(m.bestScore || 0); });
+
+  gameRows.forEach(function(g){
+    var score = Number(g.score || 0);
+    if (score <= 0) return;
+    var memberId = String(g.memberId || '');
+    if (memberId && bestById[memberId] !== undefined) {
+      if (score > bestById[memberId]) bestById[memberId] = score;
+      return;
+    }
+
+    // برای رکوردهای قدیمی که memberId نداشتند، فقط در صورت تطبیق یکتای نام تلاش می‌کنیم.
+    var playerName = String(g.playerName || '').trim();
+    if (!playerName) return;
+    var matches = members.filter(function(m){
+      return String(m.nickname || '').trim() === playerName || String(m.name || '').trim() === playerName;
+    });
+    if (matches.length === 1) {
+      var id = String(matches[0].id);
+      if (score > (bestById[id] || 0)) bestById[id] = score;
+    }
+  });
+
+  var rows = memberSheet.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    var id = String(rows[i][0] || '');
+    if (!id || bestById[id] === undefined) continue;
+    var current = Number(rows[i][7] || 0);
+    if (bestById[id] > current) {
+      rows[i][7] = bestById[id];
+      memberSheet.getRange(i + 1, 1, 1, rows[i].length).setValues([rows[i]]);
+    }
+  }
 }
 
 function submitGameScore(p) {
