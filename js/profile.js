@@ -101,7 +101,7 @@
     // اطلاعات
     var map = {
       infoFullName: fullName,
-      infoNationalCode: member.nationalCode || 'ثبت نشده',
+      infoNickname: member.nickname || 'ثبت نشده',
       infoBirthDate: member.birthDate || 'ثبت نشده',
       infoFatherName: member.fatherName || 'ثبت نشده',
       infoFatherPhone: member.fatherPhone || 'ثبت نشده',
@@ -117,6 +117,8 @@
     // آمار
     var statPoints = $('#statPoints');
     if (statPoints) statPoints.textContent = toPersian(member.points || 0);
+    var bestScore = $('#statBestScore');
+    if (bestScore) bestScore.textContent = toPersian(member.bestScore || 0);
 
     // تعداد روز از عضویت
     var daysEl = $('#statDays');
@@ -169,11 +171,7 @@
     var fields = {
       editFirstName: m.firstName || '',
       editLastName: m.lastName || '',
-      editNationalCode: m.nationalCode || '',
-      editBirthDate: m.birthDate || '',
-      editFatherName: m.fatherName || '',
-      editFatherPhone: m.fatherPhone || '',
-      editAddress: m.address || ''
+      editNickname: m.nickname || ''
     };
 
     var keys = Object.keys(fields);
@@ -216,13 +214,9 @@
 
       var data = {
         phone: state.member.phone,
-        firstName:    ($('#editFirstName')    || {}).value || '',
-        lastName:     ($('#editLastName')     || {}).value || '',
-        nationalCode: ($('#editNationalCode') || {}).value || '',
-        birthDate:    ($('#editBirthDate')    || {}).value || '',
-        fatherName:   ($('#editFatherName')   || {}).value || '',
-        fatherPhone:  ($('#editFatherPhone')  || {}).value || '',
-        address:      ($('#editAddress')      || {}).value || ''
+        firstName: ($('#editFirstName') || {}).value || '',
+        lastName: ($('#editLastName') || {}).value || '',
+        nickname: ($('#editNickname') || {}).value || ''
       };
 
       var keys = Object.keys(data);
@@ -232,10 +226,7 @@
 
       if (!data.firstName) { toast('نام رو وارد کن', 'error'); return; }
       if (!data.lastName)  { toast('نام خانوادگی رو وارد کن', 'error'); return; }
-      if (data.fatherPhone && !isValidIranMobile(data.fatherPhone)) {
-        toast('شماره پدر نامعتبر', 'error');
-        return;
-      }
+      if (!data.nickname) { toast('نام نمایشی رو وارد کن', 'error'); return; }
 
       btn.disabled = true;
       btn.textContent = 'در حال ذخیره...';
