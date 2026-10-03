@@ -57,6 +57,10 @@
           <span class="pstat__num" id="statDays">۰</span>
           <span class="pstat__label">روز عضویت</span>
         </div>
+        <div class="pstat pstat--record">
+          <span class="pstat__num" id="statBestScore">۰</span>
+          <span class="pstat__label">بیشترین رکورد تاریخ</span>
+        </div>
       </section>
 
       <!-- ═══ اطلاعات ═══ -->
@@ -70,6 +74,16 @@
           <div class="info-row__content">
             <small>نام و نام خانوادگی</small>
             <strong id="infoFullName">—</strong>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-row__icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="info-row__content">
+            <small>نام نمایشی</small>
+            <strong id="infoNickname">—</strong>
           </div>
         </div>
 
@@ -164,28 +178,9 @@
         </div>
 
         <div class="form-group">
-          <label for="editNationalCode">کد ملی</label>
-          <input type="text" id="editNationalCode" class="form-control" dir="ltr" inputmode="numeric" maxlength="10">
-        </div>
-
-        <div class="form-group">
-          <label for="editBirthDate">تاریخ تولد</label>
-          <input type="text" id="editBirthDate" class="form-control" placeholder="1385/05/20" dir="ltr">
-        </div>
-
-        <div class="form-group">
-          <label for="editFatherName">نام پدر</label>
-          <input type="text" id="editFatherName" class="form-control">
-        </div>
-
-        <div class="form-group">
-          <label for="editFatherPhone">شماره پدر</label>
-          <input type="tel" id="editFatherPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11">
-        </div>
-
-        <div class="form-group">
-          <label for="editAddress">آدرس</label>
-          <textarea id="editAddress" class="form-control" rows="2"></textarea>
+          <label for="editNickname">نام نمایشی در جدول رکوردها</label>
+          <input type="text" id="editNickname" class="form-control" maxlength="24" required placeholder="مثلاً حسین">
+          <small class="form-help">این نام را همه در جدول رکوردها می‌بینند</small>
         </div>
 
         <button type="submit" class="btn-submit" id="saveEditBtn">ذخیره تغییرات</button>
