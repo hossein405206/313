@@ -11,7 +11,7 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   var CONFIG = {
-    API_URL: 'https://script.google.com/macros/s/AKfycbxucpvGPUUY0vob0TxvcF9WURrARC3shfe4lUE9TtNifWAAnAdgzL6llhnhgyrYQ_YI/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbxxuOgL4x67CuF3aL6baLGURlxNIOKel3C3GU0zcvF6LlzvoBeK32D4uMkg9PDEEImM/exec',
     CAROUSEL_INTERVAL: 4500,
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
