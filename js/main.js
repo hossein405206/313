@@ -1147,3 +1147,11 @@
     DOM.qsa('[data-close-drawer]').forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
   }
 
+
+
+(function(){
+  function bootV4Navigation(){
+    if(typeof bindGlobalNavigation==='function') bindGlobalNavigation();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bootV4Navigation); else bootV4Navigation();
+})();
