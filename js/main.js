@@ -946,7 +946,7 @@
     var root=document.getElementById('homeEvents'); if(!root||!window.KanoonApp)return;
     window.KanoonApp.api.get({action:'listEvents'}).then(function(r){
       var items=r.items||[];
-      if(!items.length){root.innerHTML='<div class="event-empty"><strong>فعلاً رویداد جدیدی ثبت نشده</strong><span>از پنل مربیان می‌توانی رویداد بعدی را اضافه کنی</span></div>';return}
+      if(!items.length){root.innerHTML='<div class="event-empty"><strong>فعلاً رویداد جدیدی ثبت نشده</strong></div>';return}
       root.innerHTML=items.slice(0,6).map(function(e,i){
         return '<a class="home-event-slide '+(i===0?'active':'')+'" href="activities.html" aria-hidden="'+(i!==0)+'"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="'+(i===0?'eager':'lazy')+'"><div class="home-event-overlay"><span>'+esc(e.label||'رویداد')+'</span><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||e.date||'')+'</p><b>مشاهده جزئیات ←</b></div></a>';
       }).join('');
@@ -1141,9 +1141,17 @@
   }
   function bindGlobalNavigation(){
     buildBottomNav();
-    DOM.qsa('[data-open-login]').forEach(function(b){b.addEventListener('click',function(){location.href='login.html'})});
+    Array.prototype.slice.call(document.querySelectorAll('[data-open-login]')).forEach(function(b){b.addEventListener('click',function(){location.href='login.html'})});
     var drawer=document.querySelector('.app-drawer'),back=document.querySelector('.drawer-backdrop');
-    DOM.qsa('[data-open-drawer]').forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.add('open');if(back)back.classList.add('open');document.body.classList.add('drawer-open')}})});
-    DOM.qsa('[data-close-drawer]').forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
+    Array.prototype.slice.call(document.querySelectorAll('[data-open-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.add('open');if(back)back.classList.add('open');document.body.classList.add('drawer-open')}})});
+    Array.prototype.slice.call(document.querySelectorAll('[data-close-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
   }
 
+
+
+(function(){
+  function bootV4Navigation(){
+    if(typeof bindGlobalNavigation==='function') bindGlobalNavigation();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bootV4Navigation); else bootV4Navigation();
+})();
