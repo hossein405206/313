@@ -34,7 +34,7 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','active','createdAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
@@ -254,7 +254,8 @@ function handleGet(p) {
       weekKey: week,
       prize: prize,
       leaderboard: leaderboardForWeek(week),
-      previousWinner: previousWinner()
+      previousWinner: previousWinner(),
+      allTimeLeaderboard: allTimeLeaderboard()
     };
   }
 
@@ -579,6 +580,7 @@ function addMemberInternal(o) {
     phone: o.phone || '',
     nickname: o.nickname || '',
     profileCompleted: o.profileCompleted === true,
+    bestScore: Number(o.bestScore || 0),
     active: o.active !== false,
     createdAt: nowIso()
   };
@@ -616,7 +618,7 @@ function deleteMember(id) {
   var rows = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
     if (String(rows[i][0]) === id) {
-      rows[i][5] = false;
+      rows[i][8] = false;
       sheet.getRange(i + 1, 1, 1, rows[i].length).setValues([rows[i]]);
       return { ok: true };
     }
@@ -650,6 +652,7 @@ function publicMember(r) {
     phone: r.phone,
     nickname: r.nickname || '',
     profileCompleted: truthy(r.profileCompleted),
+    bestScore: Number(r.bestScore || 0),
     active: truthy(r.active),
     createdAt: r.createdAt
   };
@@ -820,7 +823,7 @@ function reactivateMember(phone) {
   var rows = sheet.getDataRange().getValues();
   for (var i=1;i<rows.length;i++){
     if (String(rows[i][4]) === String(phone)) {
-      rows[i][5] = true;
+      rows[i][8] = true;
       sheet.getRange(i+1,1,1,rows[i].length).setValues([rows[i]]);
       return;
     }
@@ -993,23 +996,39 @@ function submitGameScore(p) {
   if (!truthy(member.profileCompleted)) throw new Error('ابتدا پروفایلت را تکمیل کن');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
+  var memberSheet = getSheet('اعضا');
+  var memberRow = findRow(memberSheet, 'id', member.id);
+  if (!memberRow) throw new Error('رکورد عضو پیدا نشد');
   var week = currentWeekKey(), sheet = getSheet('بازی');
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
     var rows=getSheetObjects('بازی'), existing=null, existingRow=0;
     for(var i=0;i<rows.length;i++) if(String(rows[i].weekKey)===week && String(rows[i].memberId)===String(member.id)){existing=rows[i];existingRow=findRow(sheet,'weekKey',week,'memberId',member.id);break;}
     var playerName=String(member.nickname||member.name||'عضو').trim();
+    var lifetimeBest = Number(member.bestScore || 0);
+    if(score > lifetimeBest){
+      memberSheet.getRange(memberRow, 8).setValue(score);
+      lifetimeBest = score;
+    }
     if(existing){
-      if(score<=Number(existing.score||0)) return {ok:true,saved:false,score:Number(existing.score),weekKey:week,leaderboard:leaderboardForWeek(week)};
+      if(score<=Number(existing.score||0)) return {ok:true,saved:false,score:Number(existing.score),weekKey:week,lifetimeBest:lifetimeBest,leaderboard:leaderboardForWeek(week),allTimeLeaderboard:allTimeLeaderboard()};
       var vals=sheet.getRange(existingRow,1,1,5).getValues()[0]; vals[1]=member.id; vals[2]=playerName; vals[3]=score; vals[4]=nowIso(); sheet.getRange(existingRow,1,1,5).setValues([vals]);
     }else sheet.appendRow([week,member.id,playerName,score,nowIso()]);
-    return {ok:true,saved:true,score:score,weekKey:week,leaderboard:leaderboardForWeek(week)};
+    return {ok:true,saved:true,score:score,weekKey:week,lifetimeBest:lifetimeBest,leaderboard:leaderboardForWeek(week),allTimeLeaderboard:allTimeLeaderboard()};
   } finally { lock.releaseLock(); }
 }
 function leaderboardForWeek(week) {
   return getSheetObjects('بازی')
     .filter(function(r){ return String(r.weekKey) === String(week); })
     .map(function(r){ return { memberId:String(r.memberId || ''), playerName:r.playerName, score:Number(r.score || 0) }; })
+    .sort(function(a,b){ return b.score - a.score; })
+    .slice(0,10);
+}
+
+function allTimeLeaderboard() {
+  return getSheetObjects('اعضا')
+    .filter(function(r){ return truthy(r.active) && truthy(r.profileCompleted) && Number(r.bestScore || 0) > 0; })
+    .map(function(r){ return { memberId:String(r.id || ''), playerName:String(r.nickname || r.name || 'عضو'), score:Number(r.bestScore || 0) }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
 }
