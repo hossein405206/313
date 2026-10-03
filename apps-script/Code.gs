@@ -20,8 +20,8 @@
    ============================================================================ */
 
 var CFG = {
-  SPREADSHEET_ID: 'PASTE_SPREADSHEET_ID_HERE',
-  DRIVE_FOLDER_ID: 'PASTE_DRIVE_FOLDER_ID_HERE',
+  SPREADSHEET_ID: '181xhlPLXByFjDRqos0pSi7K-iUsN8MUxTacTtzFTh4U',
+  DRIVE_FOLDER_ID: '1D0UJh3swn-wXDfn0rGORpZh9hWqO00xd',
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
