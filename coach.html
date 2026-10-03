@@ -9,11 +9,11 @@
 <header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><h1>پنل مربیان</h1></header>
 <main class="page coach-page">
 <section id="coachLogin" class="coach-login">
-<div class="coach-lock">♙</div><span class="eyebrow">PRIVATE AREA</span><h2>ورود مربیان</h2><p>کد مربی را وارد کن تا داشبورد مدیریت حلقه باز شود</p>
+<div class="coach-lock">♙</div><h2>ورود مربیان</h2><p>کد مربی را وارد کن تا داشبورد مدیریت حلقه باز شود</p>
 <form id="coachLoginForm"><input id="coachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="شماره همراه مربی" required><input id="coachCode" class="form-control" dir="ltr" placeholder="کد مربی" autocomplete="off" required><button class="btn-submit">ورود به پنل</button></form>
 </section>
 <section id="coachDashboard" class="hidden">
-<div class="coach-top"><div><span class="eyebrow">CONTROL CENTER</span><h2>داشبورد حلقه</h2><p id="coachName">—</p></div><button id="coachLogout" class="btn-secondary">خروج</button></div>
+<div class="coach-top"><div><h2>داشبورد حلقه</h2><p id="coachName">—</p></div><button id="coachLogout" class="btn-secondary">خروج</button></div>
 <div class="coach-stats" id="coachStats"></div>
 <section class="coach-panel"><div class="panel-head"><div><span class="eyebrow">EVENTS</span><h3>مدیریت رویدادها</h3></div><button id="newEventBtn" class="mini-action">＋ رویداد جدید</button></div>
 <div id="eventEditor" class="event-editor hidden"><input id="eventId" type="hidden"><div class="form-grid"><label>عنوان<input id="eventTitle" class="form-control"></label><label>برچسب<input id="eventLabel" class="form-control" placeholder="رویداد ویژه"></label><label class="full">توضیح<textarea id="eventDescription" class="form-control"></textarea></label><label>تاریخ<input id="eventDate" class="form-control" placeholder="۱۴۰۵/۰۷/۱۰"></label><label>ترتیب<input id="eventSort" class="form-control" type="number" value="0"></label></div>
