@@ -77,6 +77,20 @@ function safeError(err) {
 /* Setup                                                                      */
 /* -------------------------------------------------------------------------- */
 
+function listSchedulePublic(){
+  var rows=getSheetObjects('برنامه').filter(function(x){return String(x.active).toLowerCase()!=='false';});
+  rows.sort(function(a,b){return Number(a.sort||0)-Number(b.sort||0);});
+  return {items:rows};
+}
+function saveSchedule(p){
+  requireCoach(p.token);
+  var sheet=getSheet('برنامه'), id=String(p.id||Utilities.getUuid()), rows=getSheetObjects('برنامه'), pos=findRowById('برنامه',id);
+  var obj={id:id,day:String(p.day||'').trim(),title:String(p.title||'').trim(),time:String(p.time||'').trim(),location:String(p.location||'').trim(),active:p.active!==false,sort:Number(p.sort||0),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  if(!obj.day||!obj.title)throw new Error('روز و عنوان برنامه الزامی است');
+  if(pos){var old=rows[pos-2];obj.createdAt=old.createdAt||obj.createdAt;sheet.getRange(pos,1,1,SHEETS['برنامه'].length).setValues([rowToArray('برنامه',obj)]);}else sheet.appendRow(rowToArray('برنامه',obj));
+  return {item:obj};
+}
+function deleteSchedule(p){requireCoach(p.token);var pos=findRowById('برنامه',String(p.id||''));if(!pos)throw new Error('برنامه پیدا نشد');getSheet('برنامه').deleteRow(pos);return {deleted:true};}
 function setup() {
   var ss = getSS();
   Object.keys(HEADERS).forEach(function(name) {
