@@ -764,7 +764,7 @@ function submitFeedback(p) {
   var message = String(p.message || '').trim();
 
   if (!message) throw new Error('متن پیام خالی است');
-  if (phone && !/^09\\d{9}$/.test(phone)) throw new Error('شماره تماس نامعتبر است');
+  if (phone && !/^09\d{9}$/.test(phone)) throw new Error('شماره تماس نامعتبر است');
   if (['پیشنهاد','انتقاد','شکایت','سایر'].indexOf(category) < 0) category = 'سایر';
   if (message.length > 2000) throw new Error('متن پیام بیش از حد طولانی است');
 
