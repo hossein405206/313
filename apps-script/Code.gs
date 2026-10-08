@@ -112,6 +112,7 @@ function setup() {
   migrateSheetHeaders(coaches, 'مربیان');
   ensureMasterCoach();
   normalizeCoachRecords();
+  ensureOfficialRoles();
 
   var officials = getSheet('مسئولین');
   if (officials.getLastRow() < 2) {
@@ -534,6 +535,17 @@ function updateCoachCode(p) {
   var rows=getSheetObjects('مربیان'); if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===newCode.toUpperCase() && String(r.code||'').trim()!==String(p.oldCode||'').trim();}))throw new Error('این کد قبلاً استفاده شده');
   var sheet=getSheet('مربیان'), headers=sheet.getDataRange().getValues()[0].map(String), ci=headers.indexOf('code'), ui=headers.indexOf('updatedAt'); var row=sheet.getRange(pos,1,1,headers.length).getValues()[0]; if(String(row[headers.indexOf('role')]||'')==='master')throw new Error('کد مربی ارشد قابل تغییر نیست'); row[ci]=newCode; row[ui]=nowIso(); sheet.getRange(pos,1,1,headers.length).setValues([row]); return {ok:true,code:newCode};
 }
+function ensureOfficialRoles() {
+  var sheet=getSheet('مسئولین'), rows=getSheetObjects('مسئولین');
+  var roles=['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'];
+  roles.forEach(function(role){
+    var exists=rows.some(function(r){return truthy(r.active)&&String(r.role||'')===role;});
+    if(!exists){
+      var prefix=role.indexOf('راهنمایی')>=0?'ATT-GUIDE':role.indexOf('دبستان')>=0?'ATT-ELEMENTARY':'SUP';
+      sheet.appendRow([prefix+'-'+Utilities.getUuid().split('-')[0].toUpperCase(),'مسئول '+role,role,true,nowIso()]);
+    }
+  });
+}
 function listOfficialRecords() {
   return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),active:truthy(r.active),createdAt:r.createdAt||''};});
 }
@@ -542,7 +554,7 @@ function addOfficial(p) {
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
-  if(getSheetObjects('مسئولین').some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده');
+  var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
   getSheet('مسئولین').appendRow([code,name,role,true,nowIso()]); return {ok:true};
 }
 function updateOfficial(p) {
@@ -811,7 +823,8 @@ function listEventsPublic() {
         id: r.id,
         title: r.title,
         description: r.description,
-        imageUrl: r.imageUrl,
+        imageUrl: r.imageId ? ('https://drive.google.com/thumbnail?id=' + encodeURIComponent(String(r.imageId)) + '&sz=w1200') : r.imageUrl,
+        imageId: r.imageId || '',
         label: r.label,
         date: r.date
       };
@@ -1330,6 +1343,7 @@ function getSheet(name) {
     ensureSheet(ss,name,HEADERS[name] || []);
     sheet = ss.getSheetByName(name);
   }
+  migrateSheetHeaders(sheet,name);
   return sheet;
 }
 
