@@ -2718,3 +2718,24 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 .btn-submit{border-radius:14px!important;min-height:45px;font-weight:800!important;box-shadow:0 7px 18px rgba(18,32,51,.12);transition:transform .18s var(--ease-out),box-shadow .18s}.btn-submit:hover{transform:translateY(-2px);box-shadow:0 11px 24px rgba(18,32,51,.15)}.btn-submit:active{transform:translateY(0) scale(.985)}
 .form-control{min-height:47px;border-radius:13px!important;border:1px solid var(--line-strong)!important;background:rgba(255,255,255,.88)!important;transition:border-color .18s,box-shadow .18s,background .18s}.form-control:focus{background:#fff!important;border-color:rgba(201,154,53,.65)!important;box-shadow:0 0 0 4px rgba(201,154,53,.10)!important;outline:none}
 @media (min-width:700px){.app-container{max-width:520px;box-shadow:0 0 70px rgba(0,0,0,.42),0 0 120px rgba(212,164,56,.06)}}
+
+
+/* CONTACT / FEEDBACK REFINEMENT v7 */
+.contact-page,.feedback-page{padding-top:20px}
+.contact-hero,.feedback-hero{position:relative;overflow:hidden;padding:25px 22px;border-radius:25px;background:linear-gradient(145deg,#132d46,#1d4a58);color:#fff;box-shadow:0 18px 40px rgba(19,45,70,.18);margin-bottom:18px}
+.contact-hero:after,.feedback-hero:after{content:'';position:absolute;width:150px;height:150px;border-radius:50%;left:-55px;top:-65px;background:rgba(225,187,91,.12)}
+.contact-hero .eyebrow,.feedback-hero .eyebrow{display:inline-flex;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.1);font-size:.68rem;letter-spacing:.12em}
+.contact-hero h2,.feedback-hero h2{margin:12px 0 7px;font-size:1.65rem;color:#fff}
+.contact-hero p,.feedback-hero p{margin:0;color:rgba(255,255,255,.74);line-height:1.9;font-size:.86rem}
+.contact-list{display:grid;gap:11px}
+.contact-item{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line,#e5e8ec);background:rgba(255,255,255,.9);border-radius:19px;box-shadow:0 8px 22px rgba(25,45,65,.055);text-decoration:none;color:inherit;transition:.2s ease}
+.contact-item:hover{transform:translateY(-2px);box-shadow:0 13px 28px rgba(25,45,65,.1)}
+.icon-wrapper{width:46px;height:46px;flex:0 0 46px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#f6e7bc,#fff8e8);color:#8a641e;font-size:1.15rem;border:1px solid #ead9aa}
+.contact-item .info{min-width:0;display:grid;gap:4px}
+.contact-item .info small{font-size:.7rem;color:#8a929b}
+.contact-item .info strong{font-size:.84rem;line-height:1.75;color:#253444;overflow-wrap:anywhere}
+.contact-credit{margin-top:16px;padding:20px;border-radius:21px;background:#f8f5ec;border:1px solid #ece3ca;text-align:center;display:grid;gap:7px}
+.contact-credit span{font-size:.7rem;color:#8b9299}.contact-credit strong{font-size:.92rem;color:#28384a}.contact-credit a{font-size:.78rem;color:#8a641e;text-decoration:none;font-weight:800}
+.feedback-page form{padding:18px;border-radius:23px;background:#fff;border:1px solid var(--line,#e5e8ec);box-shadow:0 14px 35px rgba(25,45,65,.07)}
+.feedback-page .form-group{margin-bottom:14px}.feedback-page textarea{min-height:145px;resize:vertical}
+.feedback-page .req{color:#b87d20}
