@@ -29,7 +29,7 @@ function login(){
  var f=$('#coachLoginForm');if(!f)return;
  f.addEventListener('submit',async function(e){e.preventDefault();
   var phone=$('#coachPhone').value.trim(),code=$('#coachCode').value.trim();
-  if(!/^09\\d{9}$/.test(phone)){toast('شماره مربی نامعتبر است',1);return}
+  if(!/^09\d{9}$/.test(phone)){toast('شماره مربی نامعتبر است',1);return}
   if(!code){toast('کد مربی را وارد کن',1);return}
   var btn=f.querySelector('button');setBusy(btn,'در حال ورود...');
   try{
@@ -51,7 +51,7 @@ function setReg(id,status){api().post({action:'setRegistrationStatus',token:stat
 function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
 function renderWarnings(rows){var box=$('#warningsAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+' · '+esc(r.reason)+'</span><span>'+esc(r.responsibility)+'</span></div>').join(''):'<p class="muted">برای ماه جاری اخطاری ثبت نشده</p>'}
 function openEditor(e){$('#eventEditor').classList.remove('hidden');$('#eventId').value=e?e.id:'';$('#eventTitle').value=e?e.title:'';$('#eventLabel').value=e?e.label:'';$('#eventDescription').value=e?e.description:'';$('#eventDate').value=normalizeDateInput(e?e.date:'');$('#eventSort').value=e?e.sort||0:0;$('#eventPreview').textContent=e&&e.imageUrl?'تصویر فعلی ثبت شده':'تصویر جدید را انتخاب کن'}
-function normalizeDateInput(v){var s=String(v||'').trim();return /^\\d{4}-\\d{2}-\\d{2}$/.test(s)?s:''}
+function normalizeDateInput(v){var s=String(v||'').trim();return /^\d{4}-\d{2}-\d{2}$/.test(s)?s:''}
 function editEvent(id){var e=state.events.find(function(x){return x.id===id});if(e)openEditor(e)}
 function deleteEvent(id){if(!confirm('این رویداد حذف شود؟'))return;api().post({action:'deleteEvent',token:state.token,id:id}).then(function(){toast('رویداد حذف شد');load()}).catch(function(e){toast(e.message,1)})}
 function file64(file){return new Promise(function(resolve,reject){var r=new FileReader();r.onload=function(){resolve(String(r.result).split(',')[1])};r.onerror=reject;r.readAsDataURL(file)})}
