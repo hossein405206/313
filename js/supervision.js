@@ -152,8 +152,8 @@
 
   function renderWarning(w) {
     var date = w.date || '';
-    var name = w.officialName || '—';
-    var desc = w.description || '';
+    var name = w.memberName || '—';
+    var desc = w.reason || '';
     var initial = String(name).charAt(0) || '؟';
 
     return ''
@@ -294,9 +294,9 @@
       try {
         await api.post({
           action: 'saveWarning',
-          officialCode: state.official.code,
-          responsibility: officialName,
-          memberName: officialName,
+          token: state.official.token,
+          responsibility: responsibility,
+          memberName: memberName,
           reason: description,
           date: todayISO()
         });
