@@ -1,6 +1,12 @@
 <!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#14243b"><title>ورود اعضا | مسجد امام رضا (ع)</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/auth.css"></head><body><div class="app-container">
 <header class="app-header"><a href="index.html" class="header-back">←</a><div class="header-brand"><div><strong>مسجد امام رضا (ع)</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header>
 <main class="page auth-page">
+<section class="ali-wisdom" aria-label="کلامی از امام علی علیه السلام">
+  <div class="ali-wisdom__ornament">◈ کلام معصوم ◈</div>
+  <div class="ali-wisdom__arabic" id="aliWisdomArabic" aria-live="polite"></div>
+  <div class="ali-wisdom__meaning"><b>✍️ معنی:</b> <span id="aliWisdomMeaning"></span></div>
+  <div class="ali-wisdom__source">📌 منبع: <span id="aliWisdomSource"></span></div>
+</section>
 <section class="auth-step active" data-step="1">
 <div class="auth-hero"><div class="auth-hero__icon"><span>ح</span></div><h2 class="auth-title">ورود یا ثبت‌نام</h2><p class="auth-subtitle">نام و شماره همراهت را وارد کن</p></div>
 <form id="memberForm" class="auth-form" novalidate>
@@ -8,7 +14,7 @@
 <div class="form-group"><label for="phoneInput">شماره همراه</label><input type="tel" id="phoneInput" class="form-control" placeholder="09xxxxxxxxx" dir="ltr" inputmode="numeric" autocomplete="tel" maxlength="11" required></div>
 <button type="submit" class="btn-submit" id="memberSubmit">ورود به سایت</button>
 </form>
-<p class="auth-note">ورود برای اعضای سایت رایگان است</p>
+
 </section>
 <section class="auth-step" data-step="2">
 <div class="auth-hero"><div class="auth-hero__icon auth-hero__icon--success"><span>✓</span></div><h2 class="auth-title" id="welcomeTitle">خوش آمدی</h2><p class="auth-subtitle" id="welcomeSubtitle">ورود با موفقیت انجام شد</p></div>
