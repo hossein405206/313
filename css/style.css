@@ -2739,3 +2739,95 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 .feedback-page form{padding:18px;border-radius:23px;background:#fff;border:1px solid var(--line,#e5e8ec);box-shadow:0 14px 35px rgba(25,45,65,.07)}
 .feedback-page .form-group{margin-bottom:14px}.feedback-page textarea{min-height:145px;resize:vertical}
 .feedback-page .req{color:#b87d20}
+
+
+/* NAV + LOGIN WISDOM REFINEMENT v8 */
+.bottom-nav .nav-item{
+  color:#596679 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  display:flex !important;
+}
+.bottom-nav .nav-item .nav-icon{
+  color:currentColor !important;
+  opacity:1 !important;
+}
+.bottom-nav .nav-item.active{
+  color:#9a7122 !important;
+  background:#f8f0dc !important;
+  opacity:1 !important;
+}
+.quick-officials .quick-icon{
+  background:linear-gradient(145deg,#ead18b,#bd8c28) !important;
+  color:#fff !important;
+}
+.ali-wisdom{
+  position:relative;
+  margin:4px 0 17px;
+  padding:18px 17px 16px;
+  border:1px solid rgba(201,154,53,.25);
+  border-radius:22px;
+  background:
+    radial-gradient(170px 100px at 100% 0,rgba(201,154,53,.13),transparent 70%),
+    linear-gradient(145deg,#fffaf0,#f7f0df);
+  box-shadow:0 10px 26px rgba(25,42,60,.07);
+  overflow:hidden;
+}
+.ali-wisdom:before{
+  content:'';
+  position:absolute;
+  inset:7px;
+  border:1px solid rgba(201,154,53,.1);
+  border-radius:17px;
+  pointer-events:none;
+}
+.ali-wisdom__ornament{
+  position:relative;
+  text-align:center;
+  color:#9a7122;
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.04em;
+  margin-bottom:13px;
+}
+.ali-wisdom__arabic{
+  position:relative;
+  min-height:42px;
+  color:#182b43;
+  text-align:center;
+  font-family:'Aref Ruqaa','Vazirmatn',serif;
+  font-size:1.42rem;
+  font-weight:700;
+  line-height:1.8;
+}
+.ali-wisdom__arabic.is-typing:after{
+  content:'';
+  display:inline-block;
+  width:2px;
+  height:1.15em;
+  margin-right:3px;
+  vertical-align:-.18em;
+  background:#b7892d;
+  animation:wisdomCursor .75s steps(1) infinite;
+}
+.ali-wisdom__meaning{
+  position:relative;
+  margin-top:9px;
+  color:#536174;
+  font-size:.7rem;
+  line-height:1.9;
+}
+.ali-wisdom__meaning b{color:#8c6825}
+.ali-wisdom__source{
+  position:relative;
+  margin-top:7px;
+  padding-top:8px;
+  border-top:1px solid rgba(24,43,67,.07);
+  color:#8a929d;
+  font-size:.58rem;
+}
+@keyframes wisdomCursor{50%{opacity:0}}
+@media(max-width:360px){
+  .ali-wisdom{padding-inline:13px}
+  .ali-wisdom__arabic{font-size:1.28rem}
+}
