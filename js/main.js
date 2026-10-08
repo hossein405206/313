@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: true,
-    VERSION: '5.2.0'
+    VERSION: '5.3.0'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -239,39 +239,39 @@
   var Session = {
     _keyUser: 'kanoon_member',
     _keyOfficial: 'kanoon_official',
-
+    _legacyUser: 'kanoon_member',
+    _legacyOfficial: 'kanoon_official',
+    _read: function (key, legacyKey) {
+      try {
+        var raw = localStorage.getItem(key);
+        if (!raw) {
+          raw = sessionStorage.getItem(legacyKey || key);
+          if (raw) localStorage.setItem(key, raw);
+        }
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
+    },
     setMember: function (member, token) {
       try {
         var value = Object.assign({}, member || {});
         if (token) value.token = token;
-        sessionStorage.setItem(this._keyUser, JSON.stringify(value));
+        localStorage.setItem(this._keyUser, JSON.stringify(value));
       } catch (e) { Logger.error('Session set error', e); }
     },
-    getMember: function () {
-      try {
-        var raw = sessionStorage.getItem(this._keyUser);
-        return raw ? JSON.parse(raw) : null;
-      } catch (e) { return null; }
-    },
+    getMember: function () { return this._read(this._keyUser, this._legacyUser); },
     clearMember: function () {
-      try { sessionStorage.removeItem(this._keyUser); } catch (e) {}
+      try { localStorage.removeItem(this._keyUser); sessionStorage.removeItem(this._legacyUser); } catch (e) {}
     },
-
     setOfficial: function (official, token) {
       try {
         var value = Object.assign({}, official || {});
         if (token) value.token = token;
-        sessionStorage.setItem(this._keyOfficial, JSON.stringify(value));
+        localStorage.setItem(this._keyOfficial, JSON.stringify(value));
       } catch (e) { Logger.error('Session set error', e); }
     },
-    getOfficial: function () {
-      try {
-        var raw = sessionStorage.getItem(this._keyOfficial);
-        return raw ? JSON.parse(raw) : null;
-      } catch (e) { return null; }
-    },
+    getOfficial: function () { return this._read(this._keyOfficial, this._legacyOfficial); },
     clearOfficial: function () {
-      try { sessionStorage.removeItem(this._keyOfficial); } catch (e) {}
+      try { localStorage.removeItem(this._keyOfficial); sessionStorage.removeItem(this._legacyOfficial); } catch (e) {}
     }
   };
 
@@ -1129,26 +1129,27 @@
     initProV2();
   }
 })();
-  /* V4 navigation */
-  function buildBottomNav() {
-    var nav=document.querySelector('.bottom-nav'); if(!nav)return;
-    var path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
-    var items=[
-      ['index.html','⌂','خانه'],['activities.html','✦','فعالیت‌ها'],['schedule.html','◷','برنامه'],
-      ['game.html','◉','بازی'],['login.html','♙','ورود']
-    ];
-    nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
-  }
-  function bindGlobalNavigation(){
-    buildBottomNav();
-    Array.prototype.slice.call(document.querySelectorAll('[data-open-login]')).forEach(function(b){b.addEventListener('click',function(){location.href='login.html'})});
-    var drawer=document.querySelector('.app-drawer'),back=document.querySelector('.drawer-backdrop');
-    Array.prototype.slice.call(document.querySelectorAll('[data-open-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.add('open');if(back)back.classList.add('open');document.body.classList.add('drawer-open')}})});
-    Array.prototype.slice.call(document.querySelectorAll('[data-close-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
-  }
-
-
-
+  /* V5 navigation — ورود یا پروفایل */
+function buildBottomNav() {
+  var nav=document.querySelector('.bottom-nav'); if(!nav)return;
+  var path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+  var member=Session.getMember();
+  var items=[
+    ['index.html','⌂','خانه'],
+    ['activities.html','✦','فعالیت‌ها'],
+    ['schedule.html','◷','برنامه'],
+    ['game.html','◉','بازی'],
+    [member?'profile.html':'login.html',member?'♙':'↗',member?'پروفایل':'ورود']
+  ];
+  nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
+}
+function bindGlobalNavigation(){
+  buildBottomNav();
+  Array.prototype.slice.call(document.querySelectorAll('[data-open-login]')).forEach(function(b){b.addEventListener('click',function(){location.href=Session.getMember()?'profile.html':'login.html'})});
+  var drawer=document.querySelector('.app-drawer'),back=document.querySelector('.drawer-backdrop');
+  Array.prototype.slice.call(document.querySelectorAll('[data-open-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.add('open');if(back)back.classList.add('open');document.body.classList.add('drawer-open')}})});
+  Array.prototype.slice.call(document.querySelectorAll('[data-close-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
+}
 (function(){
   function bootV4Navigation(){
     if(typeof bindGlobalNavigation==='function') bindGlobalNavigation();
