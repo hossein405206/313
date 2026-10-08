@@ -104,8 +104,7 @@
       infoNickname: member.nickname || 'ثبت نشده',
       infoBirthDate: member.birthDate || 'ثبت نشده',
       infoFatherName: member.fatherName || 'ثبت نشده',
-      infoFatherPhone: member.fatherPhone || 'ثبت نشده',
-      infoAddress: member.address || 'ثبت نشده'
+      infoFatherPhone: member.fatherPhone || 'ثبت نشده'
     };
 
     var keys = Object.keys(map);
