@@ -37,11 +37,12 @@ var HEADERS = {
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
-  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
+  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
-  'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt']
+  'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt'],
+  'بازخوردها': ['id','name','phone','category','message','status','createdAt']
 };
 
 /* -------------------------------------------------------------------------- */
@@ -160,6 +161,12 @@ function handleGet(p) {
   }
 
   if (action === 'listSchedule') { return listSchedulePublic(); }
+
+  if (action === 'listCoaches') {
+    var coachAuthGet = requireToken(p.token, ['coach']);
+    if (!coachAuthGet.isMaster) throw new Error('فقط مربی ارشد به فهرست مربیان دسترسی دارد');
+    return { ok: true, items: getSheetObjects('مربیان').filter(function(r){ return truthy(r.active); }).map(function(r){ return { name:r.name, phone:r.phone, role:r.role, code:r.code }; }) };
+  }
 
   if (action === 'listCamps') {
     return { ok: true, items: listCamps() };
@@ -341,6 +348,7 @@ function handlePost(p) {
   if (action === 'submitGameScore') {
     return submitGameScore(p);
   }
+  if (action === 'feedback') { return submitFeedback(p); }
 
   throw new Error('عملیات شناخته نشد: ' + action);
 }
@@ -746,6 +754,34 @@ function deleteEvent(id) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Feedback                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function submitFeedback(p) {
+  var name = String(p.name || '').trim();
+  var phone = normalizeIranDigits(String(p.phone || '').trim());
+  var category = String(p.category || 'پیشنهاد').trim();
+  var message = String(p.message || '').trim();
+
+  if (!message) throw new Error('متن پیام خالی است');
+  if (phone && !/^09\\d{9}$/.test(phone)) throw new Error('شماره تماس نامعتبر است');
+  if (['پیشنهاد','انتقاد','شکایت','سایر'].indexOf(category) < 0) category = 'سایر';
+  if (message.length > 2000) throw new Error('متن پیام بیش از حد طولانی است');
+
+  getSheet('بازخوردها').appendRow([
+    uid('FDB'),
+    name,
+    phone,
+    category,
+    message,
+    'جدید',
+    nowIso()
+  ]);
+
+  return { ok: true, message: 'پیام با موفقیت ثبت شد' };
+}
+
+/* -------------------------------------------------------------------------- */
 /* Camps / Registrations                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -759,6 +795,7 @@ function registerCamp(p) {
   if (!p.campId) throw new Error('اردو انتخاب نشده');
   if (!p.firstName || !p.lastName || !p.fatherName) throw new Error('اطلاعات ناقص است');
   if (!/^09\d{9}$/.test(String(p.phone || ''))) throw new Error('شماره همراه نامعتبر است');
+  if (!/^09\d{9}$/.test(String(p.fatherPhone || ''))) throw new Error('شماره همراه پدر نامعتبر است');
 
   var photoUrl = '';
   if (p.photoBase64) {
@@ -777,6 +814,7 @@ function registerCamp(p) {
     firstName: String(p.firstName).trim(),
     lastName: String(p.lastName).trim(),
     fatherName: String(p.fatherName).trim(),
+    fatherPhone: String(p.fatherPhone || '').trim(),
     phone: String(p.phone).trim(),
     nationalCode: String(p.nationalCode || '').trim(),
     photoUrl: photoUrl,
@@ -797,13 +835,17 @@ function setRegistrationStatus(p) {
   var pos = findRow(sheet, 'id', id);
   if (!pos) throw new Error('ثبت‌نام پیدا نشد');
 
-  var values = sheet.getRange(pos, 1, 1, 11).getValues()[0];
-  values[8] = status;
-  values[10] = nowIso();
-  sheet.getRange(pos, 1, 1, 11).setValues([values]);
+  var width = HEADERS['ثبت‌نام‌ها'].length;
+  var values = sheet.getRange(pos, 1, 1, width).getValues()[0];
+  var statusIndex = HEADERS['ثبت‌نام‌ها'].indexOf('status');
+  var updatedIndex = HEADERS['ثبت‌نام‌ها'].indexOf('updatedAt');
+  var phoneIndex = HEADERS['ثبت‌نام‌ها'].indexOf('phone');
+  values[statusIndex] = status;
+  values[updatedIndex] = nowIso();
+  sheet.getRange(pos, 1, 1, width).setValues([values]);
 
   if (status === 'تایید شد') {
-    var phone = String(values[5] || '');
+    var phone = String(values[phoneIndex] || '');
     if (!findMemberByPhone(phone, true)) {
       addMemberInternal({
         firstName: values[2],
