@@ -200,7 +200,7 @@ function handleGet(p) {
   if (action === 'verifyCoachCode') {
     var coach = verifyCoachCode(String(p.code || '').trim().toUpperCase());
     if (!coach) throw new Error('کد مربی نامعتبر است');
-    return { ok: true, coach: { name: coach.name, role: coach.role, isMaster: coach.isMaster }, token: issueToken('coach', coach.code, coach.isMaster) };
+    return { ok: true, coach: { name: coach.name, role: coach.role, isMaster: coach.isMaster, permissions: coachPermissions(coach) }, token: issueToken('coach', coach.code, coach.isMaster, coachPermissions(coach)) };
   }
 
   if (action === 'listMembers') {
@@ -260,7 +260,7 @@ function handleGet(p) {
     throw new Error('دسترسی نامعتبر');
   }
 
-  if (action === 'getDashboard') { var dashAuth=requireToken(p.token,['coach']); var dash=dashboardData(); dash.isMaster=!!dashAuth.isMaster; return dash; }
+  if (action === 'getDashboard') { var dashAuth=requireToken(p.token,['coach']); var dash=dashboardData(dashAuth); dash.isMaster=!!dashAuth.isMaster; dash.permissions=dashAuth.isMaster?allCoachPermissions():dashAuth.permissions; return dash; }
 
   if (action === 'getGameData') {
     var week = currentWeekKey();
@@ -491,6 +491,7 @@ function normalizeCoachRecords() {
     if(code)seenCode[code]=true;
     if(isMaster)masterKept=true;
     if(idx.permissions!==undefined){
+      if(!String(rows[i][idx.permissions]||'').trim() && String(rows[i][idx.role]||'')!=='master') rows[i][idx.permissions]=JSON.stringify({events:true,schedule:true,registrations:true,reports:true,game:true,coaches:false,officials:false});
       var normalized=JSON.stringify(coachPermissions(rowToObject('مربیان',rows[i])));
       if(String(rows[i][idx.permissions]||'')!==normalized){rows[i][idx.permissions]=normalized;changed=true;}
     }
@@ -1123,7 +1124,7 @@ function warningsForMonth(month) {
 /* Dashboard                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function dashboardData() {
+function dashboardData(auth) {
   var month = currentMonth();
   var today = currentDate();
   var regs = getSheetObjects('ثبت‌نام‌ها');
@@ -1142,11 +1143,11 @@ function dashboardData() {
       todayAttendance:todayAttendance.length,
       monthWarnings:warnings.length
     },
-    events:listEventsPublic(),
-    registrations:regs.sort(byNewest).slice(0,50),
-    attendance:attendance,
-    warnings:warnings,
-    prize:getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE,
+    events:(!auth || auth.isMaster || auth.permissions.events) ? listEventsPublic() : [],
+    registrations:(!auth || auth.isMaster || auth.permissions.registrations) ? regs.sort(byNewest).slice(0,50) : [],
+    attendance:(!auth || auth.isMaster || auth.permissions.reports) ? attendance : [],
+    warnings:(!auth || auth.isMaster || auth.permissions.reports) ? warnings : [],
+    prize:(!auth || auth.isMaster || auth.permissions.game) ? (getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE) : '',
     leaderboard:leaderboardForWeek(currentWeekKey()),
     previousWinner:previousWinner()
   };
