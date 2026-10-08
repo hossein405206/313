@@ -863,14 +863,12 @@
     var header = DOM.qs('.app-header');
     if (!header) return;
 
-    // اگه دکمه ورود قبلاً هست، کاری نکن
-    if (DOM.qs('.header-auth', header)) return;
-
+    var existingBtn = DOM.qs('.header-auth', header);
     var member = Session.getMember();
     var official = Session.getOfficial();
     var user = member || official;
 
-    var btn = document.createElement('a');
+    var btn = existingBtn || document.createElement('a');
     btn.className = 'header-auth';
 
     if (user) {
@@ -885,7 +883,7 @@
       btn.innerHTML = '<span class="header-auth__text">ورود / ثبت‌نام</span>';
     }
 
-    header.appendChild(btn);
+    if (!existingBtn) header.appendChild(btn);
   }
 
   /* ══════════════════════════════════════════════════════════════════════
