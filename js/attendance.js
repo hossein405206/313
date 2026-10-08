@@ -373,7 +373,7 @@
     try {
       var res = await api.get({
         action: 'listMembers',
-        officialCode: official.code
+        token: official.token
       });
       state.members = res.items || [];
       renderList();
