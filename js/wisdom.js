@@ -56,5 +56,5 @@ window.KanoonWisdoms = [
 ];
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function render(){var root=document.getElementById('homeWisdom');if(!root||!window.KanoonWisdoms)return;var item=window.KanoonWisdoms[Math.floor(Math.random()*window.KanoonWisdoms.length)];root.innerHTML='<div class="home-wisdom__ornament">◈ کلامی از امیرالمؤمنین علی علیه‌السلام ◈</div><div class="home-wisdom__arabic">« '+esc(item.a)+' »</div><div class="home-wisdom__meaning">'+esc(item.m)+'</div><div class="home-wisdom__source">— '+esc(item.s)+'</div>';}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){render();setInterval(render,12000)});else{render();setInterval(render,12000)}
 })();
