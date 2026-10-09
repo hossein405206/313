@@ -316,6 +316,17 @@
 
     var member = session.getMember();
 
+    // وضعیت عضویت را از سرور تازه می‌کنیم تا تأیید مالک بلافاصله در پروفایل دیده شود.
+    if (member && member.token && getAPI()) {
+      try {
+        var membership = await getAPI().get({ action: 'getMyMembershipStatus', token: member.token });
+        member = Object.assign({}, member, membership.member || {}, { token: member.token, membershipStatus: membership.membershipStatus || '' });
+        session.setMember(member, member.token);
+      } catch (membershipError) {
+        // در صورت اختلال شبکه، اطلاعات محلی را نمایش می‌دهیم و مانع دیدن پروفایل نمی‌شویم.
+      }
+    }
+
     // اگه کاربر وارد نشده، برو به login
     if (!member) {
       toast('اول باید وارد بشی', 'error');
