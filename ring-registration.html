@@ -32,7 +32,7 @@
     </header>
     <main class="page">
       <h2 class="section-title">فرم عضویت حلقه</h2>
-      <p class="section-subtitle">برای ثبت عضویت، اطلاعات خودت و سرپرستت را دقیق وارد کن. این فرم با ثبت‌نام اردو فرق دارد.</p>
+      <p class="section-subtitle">برای عضویت در حلقه، اطلاعات خودت و پدرت را دقیق وارد کن. این فرم با ثبت‌نام اردو فرق دارد.</p>
       <div class="ring-register-intro">
         <strong>چرا این اطلاعات لازم است؟</strong>
         اطلاعات برای سامان‌دهی عضویت و تماس ضروری حلقه درخواست می‌شود. آن‌ها را فقط با دقت وارد کن و از ارسال اطلاعات نادرست خودداری کن.
@@ -47,17 +47,17 @@
         <div class="form-group"><label for="firstName">نام</label><input id="firstName" class="form-control" type="text" readonly maxlength="60" autocomplete="given-name"></div>
         <div class="form-group"><label for="lastName">نام خانوادگی</label><input id="lastName" class="form-control" type="text" readonly maxlength="80" autocomplete="family-name"></div>
         <div class="form-group"><label for="nationalCode">کد ملی <span class="req">*</span></label><input id="nationalCode" class="form-control" type="text" inputmode="numeric" dir="ltr" maxlength="10" minlength="10" placeholder="۱۰ رقم" required></div>
-        <div class="form-group"><label for="birthDate">تاریخ تولد <span class="req">*</span></label><input id="birthDate" class="form-control" type="date" required></div>
+        <div class="form-group"><label for="birthDate">تاریخ تولد (شمسی) <span class="req">*</span></label><input id="birthDate" class="form-control" type="text" inputmode="numeric" dir="ltr" maxlength="10" autocomplete="bday" placeholder="مثلاً ۱۳۸۹/۰۶/۱۵" aria-describedby="birthDateHint" required><small id="birthDateHint" class="field-hint">تاریخ را به صورت سال/ماه/روز وارد کن.</small></div>
         <div class="form-group"><label for="school">نام مدرسه <span class="req">*</span></label><input id="school" class="form-control" type="text" maxlength="120" required></div>
         <div class="form-group"><label for="grade">پایه تحصیلی <span class="req">*</span></label><select id="grade" class="form-control" required><option value="">انتخاب کن</option><option>سوم دبستان</option><option>چهارم دبستان</option><option>پنجم دبستان</option><option>ششم دبستان</option><option>هفتم</option><option>هشتم</option><option>نهم</option><option>دهم</option><option>یازدهم</option><option>دوازدهم</option><option>فارغ‌التحصیل</option><option>سایر</option></select></div>
 
         <h3 class="form-section-title">اطلاعات خانواده و تماس</h3>
         <div class="form-group"><label for="fatherName">نام پدر <span class="req">*</span></label><input id="fatherName" class="form-control" type="text" maxlength="80" required></div>
-        <div class="form-group"><label for="fatherPhone">شماره همراه پدر یا سرپرست <span class="req">*</span></label><input id="fatherPhone" class="form-control" type="tel" inputmode="tel" dir="ltr" maxlength="11" placeholder="09xxxxxxxxx" required></div>
-        <div class="form-group"><label for="guardianName">نام سرپرست <span class="req">*</span></label><input id="guardianName" class="form-control" type="text" maxlength="80" required></div>
+        <div class="form-group"><label for="fatherPhone">شماره همراه پدر <span class="req">*</span></label><input id="fatherPhone" class="form-control" type="tel" inputmode="tel" dir="ltr" maxlength="11" placeholder="09xxxxxxxxx" required></div>
+        
         <div class="form-group"><label for="emergencyPhone">شماره تماس ضروری <span class="req">*</span></label><input id="emergencyPhone" class="form-control" type="tel" inputmode="tel" dir="ltr" maxlength="11" placeholder="09xxxxxxxxx" required></div>
         <div class="form-group"><label for="address">آدرس محل سکونت <span class="req">*</span></label><textarea id="address" class="form-control" rows="3" maxlength="500" required placeholder="شهر، محله، خیابان و نشانی لازم"></textarea></div>
-        <p class="ring-register-privacy">کد ملی، تاریخ تولد و آدرس از پروفایل عمومی برداشته شده‌اند و در این فرم عضویت ثبت می‌شوند. اطلاعات اعضا را در فایل Google Sheets عمومی نکن.</p>
+        
         <button type="submit" class="btn-submit ring-register-submit" id="ringRegisterSubmit">ثبت‌نام در حلقه</button>
       </form>
     </main>
@@ -70,11 +70,68 @@
     var $=function(id){return document.getElementById(id);};
     var member=null,form=$('ringRegisterForm'),button=$('ringRegisterSubmit'),status=$('ringRegisterStatus');
     function digits(v){return String(v||'').replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));}).replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c));}).replace(/\D/g,'');}
+        function dateDiv(a,b){return ~~(a/b);}
+    function dateMod(a,b){return a-dateDiv(a,b)*b;}
+    function jalCalShamsi(jy){
+      var breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+      var bl=breaks.length,gy=jy+621,leapJ=-14,jp=breaks[0],jm,jump,leapG,march,n;
+      if(jy<jp||jy>=breaks[bl-1])throw new Error('سال شمسی نامعتبر است');
+      for(var i=1;i<bl;i++){jm=breaks[i];jump=jm-jp;if(jy<jm)break;leapJ+=dateDiv(jump,33)*8+dateDiv(dateMod(jump,33),4);jp=jm;}
+      n=jy-jp;leapJ+=dateDiv(n,33)*8+dateDiv(dateMod(n,33)+3,4);
+      if(dateMod(jump,33)===4&&jump-n===4)leapJ++;
+      leapG=dateDiv(gy,4)-dateDiv((dateDiv(gy,100)+1)*3,4)-150;
+      march=20+leapJ-leapG;
+      if(jump-n<6)n=n-jump+dateDiv(jump+4,33)*33;
+      var leap=dateMod(dateMod(n+1,33)-1,4);if(leap===-1)leap=4;
+      return {leap:leap,gy:gy,march:march};
+    }
+    function gregorianJdnShamsi(gy,gm,gd){
+      var d=dateDiv((gy+dateDiv(gm-8,6)+100100)*1461,4)+dateDiv(153*dateMod(gm+9,12)+2,5)+gd-34840408;
+      return d-dateDiv(dateDiv(gy+100100+dateDiv(gm-8,6),100)*3,4)+752;
+    }
+    function jdnGregorianShamsi(jdn){
+      var j=4*jdn+139361631;
+      j=j+dateDiv(dateDiv(4*jdn+183187720,146097)*3,4)*4-3908;
+      var i=dateDiv(dateMod(j,1461),4)*5+308,gd=dateDiv(dateMod(i,153),5)+1,gm=dateMod(dateDiv(i,153),12)+1,gy=dateDiv(j,1461)-100100+dateDiv(8-gm,6);
+      return {gy:gy,gm:gm,gd:gd};
+    }
+    function jdnJalaaliShamsi(jdn){
+      var gy=jdnGregorianShamsi(jdn).gy,jy=Math.min(gy-621,3177),r=jalCalShamsi(jy),jdn1f=gregorianJdnShamsi(r.gy,3,r.march),k=jdn-jdn1f,jm,jd;
+      if(k>=0){if(k<=185)return {jy:jy,jm:1+dateDiv(k,31),jd:dateMod(k,31)+1};k-=186;}
+      else{jy-=1;k+=179;if(r.leap===1)k++;}
+      jm=7+dateDiv(k,30);jd=dateMod(k,30)+1;
+      return {jy:jy,jm:jm,jd:jd};
+    }
+    function normalizeDateText(value){
+      return String(value||'').trim().replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));}).replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c));}).replace(/[.-]/g,'/').replace(/\s/g,'');
+    }
+    function pad2(n){return ('0'+String(n)).slice(-2);}
+    function validJalaliDate(value){
+      var s=normalizeDateText(value),m=/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(s);
+      if(!m)return '';
+      var jy=Number(m[1]),jm=Number(m[2]),jd=Number(m[3]);
+      if(jy<1300||jy>1500||jm<1||jm>12||jd<1)return '';
+      var cal;try{cal=jalCalShamsi(jy);}catch(e){return '';}
+      var maxDays=jm<=6?31:(jm<=11?30:(cal.leap===0?30:29));
+      if(jd>maxDays)return '';
+      var now=new Date(),today=jdnJalaaliShamsi(gregorianJdnShamsi(now.getFullYear(),now.getMonth()+1,now.getDate()));
+      if(jy>today.jy||(jy===today.jy&&(jm>today.jm||(jm===today.jm&&jd>today.jd))))return '';
+      return jy+'/'+pad2(jm)+'/'+pad2(jd);
+    }
+    function birthDateToJalali(value){
+      var s=normalizeDateText(value),m=/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(s);
+      if(!m)return String(value||'');
+      var y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]);
+      if(y>=1700){var j=jdnJalaaliShamsi(gregorianJdnShamsi(y,mo,d));return j.jy+'/'+pad2(j.jm)+'/'+pad2(j.jd);}
+      if(y>=1300&&y<=1500)return y+'/'+pad2(mo)+'/'+pad2(d);
+      return String(value||'');
+    }
     function show(message,type){status.textContent=message;status.className='ring-register-status show '+(type||'info');}
     function set(id,value){var el=$(id);if(el)el.value=value==null?'':String(value);}
     function fill(item){
       if(!item)return;
-      ['nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone'].forEach(function(k){set(k,item[k]||'');});
+      ['nationalCode','fatherName','fatherPhone','address','school','grade','emergencyPhone'].forEach(function(k){set(k,item[k]||'');});
+      set('birthDate',birthDateToJalali(item.birthDate));
     }
     function boot(){
       if(!window.KanoonApp||!window.KanoonApp.session||!window.KanoonApp.api){setTimeout(boot,80);return;}
@@ -93,11 +150,12 @@
       e.preventDefault();
       if(!member||!member.token){show('نشست ورود پیدا نشد؛ دوباره وارد شو.','error');return;}
       var data={action:'saveRingRegistration',token:member.token,
-        nationalCode:digits($('nationalCode').value),birthDate:$('birthDate').value,
+        nationalCode:digits($('nationalCode').value),birthDate:validJalaliDate($('birthDate').value),
         fatherName:$('fatherName').value.trim(),fatherPhone:digits($('fatherPhone').value),
         address:$('address').value.trim(),school:$('school').value.trim(),grade:$('grade').value,
-        guardianName:$('guardianName').value.trim(),emergencyPhone:digits($('emergencyPhone').value)};
+        guardianName:$('fatherName').value.trim(),emergencyPhone:digits($('emergencyPhone').value)};
       if(data.nationalCode.length!==10){show('کد ملی باید دقیقاً ۱۰ رقم باشد.','error');return;}
+      if(!data.birthDate){show('تاریخ تولد شمسی را درست وارد کن؛ نمونه: ۱۳۸۹/۰۶/۱۵.','error');return;}
       if(!/^09\d{9}$/.test(data.fatherPhone)||!/^09\d{9}$/.test(data.emergencyPhone)){show('شماره‌های همراه باید با ۰۹ شروع شوند و ۱۱ رقم داشته باشند.','error');return;}
       button.disabled=true;button.textContent='در حال ثبت...';
       try{var res=await window.KanoonApp.api.post(data);show(res.message||'ثبت‌نام در حلقه انجام شد.','success');button.textContent='ذخیره تغییرات ثبت‌نام';}
