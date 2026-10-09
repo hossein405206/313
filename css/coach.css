@@ -3,3 +3,59 @@
 
 /* V2 management refinements */
 .coach-role-badge{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;background:rgba(224,192,100,.14);border:1px solid rgba(224,192,100,.28);color:#e4c56d;font-size:.58rem;font-weight:800;margin-right:auto;margin-left:8px}.panel-subtitle{display:block;margin-top:5px;color:#8792a1;font-size:.55rem;line-height:1.8}.permission-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px}.permission-item{display:flex;align-items:center;gap:7px;padding:9px 10px;border-radius:12px;background:#fff;border:1px solid rgba(23,35,56,.08);font-size:.58rem;color:#39495e;cursor:pointer}.permission-item input{accent-color:#b98a2c}.permission-summary{font-size:.5rem;color:#8b7440;margin-top:5px;line-height:1.8}.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}.status-dot.on{background:#4d9b72;box-shadow:0 0 0 3px rgba(77,155,114,.1)}.status-dot.off{background:#a0a8b2}.permission-hidden{display:none!important}.coach-admin-item{align-items:flex-start}@media(max-width:380px){.permission-grid{grid-template-columns:1fr}.coach-role-badge{display:none}}
+
+
+/* WordPress-like coach workspace */
+.coach-page{max-width:980px;padding:18px 16px 105px}
+.coach-top{position:relative;gap:12px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(16,33,55,.12)}
+.coach-top>div{min-width:0;flex:1}
+.coach-top h2{font-family:var(--font-body)!important;font-size:1.25rem;line-height:1.5}
+.coach-top p{margin-top:5px}
+.coach-top .btn-secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.coach-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0}
+.coach-stat{border-radius:16px;border-color:rgba(24,42,67,.07);padding:17px;box-shadow:0 8px 22px rgba(18,38,61,.05)}
+.coach-stat strong{font-size:1.55rem;line-height:1.4}
+.coach-stat span{font-size:.68rem;line-height:1.7}
+.coach-quick-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0 23px}
+.coach-quick-link{position:relative;display:flex;flex-direction:column;min-width:0;gap:3px;padding:15px;border-radius:17px;background:linear-gradient(160deg,#fff,#fbfaf7);border:1px solid rgba(28,52,76,.09);box-shadow:0 8px 20px rgba(18,38,61,.045);color:#203650;text-decoration:none;transition:transform .18s,border-color .18s,box-shadow .18s}
+.coach-quick-link:hover{transform:translateY(-2px);border-color:rgba(177,138,55,.38);box-shadow:0 12px 24px rgba(18,38,61,.08)}
+.coach-quick-link>span{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#f4ecd9;color:#987020;font-size:.66rem;font-weight:900;margin-bottom:5px}
+.coach-quick-link strong{font-size:.74rem;line-height:1.7}
+.coach-quick-link small{font-size:.56rem;color:#8a95a3;line-height:1.7}
+.coach-panel{scroll-margin-top:14px;margin:14px 0;padding:20px;border-radius:19px;background:#fff;border:1px solid rgba(22,43,66,.075);box-shadow:0 9px 26px rgba(18,38,61,.045)}
+.panel-head{align-items:center;gap:12px;flex-wrap:wrap}
+.panel-head h3{font-size:.92rem;line-height:1.8}
+.panel-subtitle{display:block;margin-top:3px;font-size:.58rem;color:#8893a1;line-height:1.8}
+.coach-account-panel{background:linear-gradient(145deg,#fff,#f9fbfa);border-color:rgba(15,107,98,.12)}
+.coach-account-panel .form-grid{margin-top:10px}
+.coach-account-panel .editor-actions{justify-content:flex-start}
+.coach-account-panel .editor-actions button{flex:0 1 230px}
+.feedback-list{display:grid;gap:10px}
+.feedback-item{padding:15px;border:1px solid rgba(29,48,72,.08);border-radius:15px;background:#fcfcfb;min-width:0}
+.feedback-item__top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.feedback-item__top strong{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f5edda;color:#8f6b23;font-size:.6rem}
+.feedback-item__top small{display:block;margin-top:6px;color:#798596;font-size:.58rem;line-height:1.7}
+.feedback-item__top time{flex:0 0 auto;color:#929ba6;font-size:.5rem;direction:ltr}
+.feedback-item>p{white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0;color:#2f4056;font-size:.7rem;line-height:2}
+.feedback-item__actions{display:flex;justify-content:flex-end}
+.feedback-item__actions label{display:flex;align-items:center;gap:8px;color:#6f7d8d;font-size:.6rem}
+.feedback-item__actions select{min-width:132px;width:auto;margin:0;padding:7px 10px;font-size:.62rem}
+.admin-list .admin-item{border-radius:13px}
+.event-editor{border:1px solid rgba(177,138,55,.1)}
+#coachDashboard{animation:coachDashboardIn .28s ease both}
+@keyframes coachDashboardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:720px){
+ .coach-page{padding-inline:12px}
+ .coach-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .coach-quick-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .coach-panel{padding:15px;border-radius:16px}
+}
+@media(max-width:390px){
+ .coach-quick-link{padding:12px}
+ .coach-quick-link strong{font-size:.68rem}
+ .coach-top{padding:16px}
+ .coach-top .btn-secondary{font-size:.58rem;padding:8px}
+ .feedback-item__top{display:block}
+ .feedback-item__top time{display:block;margin-top:6px}
+ .feedback-item__actions label{width:100%;justify-content:space-between}
+}
