@@ -29,7 +29,7 @@
 
 <nav class="coach-quick-nav" aria-label="دسترسی سریع پنل">
 <a class="coach-quick-link" data-permission="events" href="#coachEventsSection"><span>۱</span><strong>رویدادها</strong><small>تصویر و خبر</small></a>
-<a class="coach-quick-link" data-permission="schedule" href="#coachScheduleSection"><span>۲</span><strong>برنامه هفتگی</strong><small>روز و ساعت</small></a>
+<a class="coach-quick-link" data-permission="schedule" href="#coachScheduleSection"><span>۲</span><strong>برنامه هفتگی</strong><small>مرتب از شنبه تا جمعه</small></a>
 <a class="coach-quick-link" data-permission="registrations" href="#coachRegistrationsSection"><span>۳</span><strong>ثبت‌نام‌ها</strong><small>درخواست‌ها</small></a>
 <a class="coach-quick-link" data-permission="reports" href="#coachAttendanceReportsSection"><span>۴</span><strong>گزارش‌ها</strong><small>حضور و غیاب</small></a>
 <a class="coach-quick-link" data-permission="officials" href="#officialStaffPanel"><span>۵</span><strong>مسئولین</strong><small>کدهای ورود</small></a>
@@ -55,12 +55,16 @@
 <div id="officialList" class="admin-list"></div></section>
 
 <section class="coach-panel coach-permission-section" id="coachScheduleSection" data-permission="schedule"><div class="panel-head"><div><h3>مدیریت برنامه هفتگی</h3></div><button id="newScheduleBtn" class="mini-action">＋ برنامه جدید</button></div>
-<div id="scheduleEditor" class="event-editor hidden"><input id="scheduleId" type="hidden"><div class="form-grid"><label>روز<select id="scheduleDay" class="form-control"><option value="">انتخاب روز</option><option>شنبه</option><option>یک‌شنبه</option><option>دوشنبه</option><option>سه‌شنبه</option><option>چهارشنبه</option><option>پنج‌شنبه</option><option>جمعه</option></select></label><label>عنوان<input id="scheduleTitle" class="form-control" placeholder="جلسه حلقه"></label><label>ساعت<input id="scheduleTime" class="form-control" type="time"></label><label>ترتیب<input id="scheduleSort" class="form-control" type="number" value="0"></label></div><div class="editor-actions"><button id="saveScheduleBtn" class="btn-submit">ذخیره برنامه</button><button id="cancelScheduleBtn" class="btn-secondary">انصراف</button></div></div><div id="scheduleAdmin" class="admin-list"></div></section>
+<div id="scheduleEditor" class="event-editor hidden"><input id="scheduleId" type="hidden"><div class="form-grid"><label>روز<select id="scheduleDay" class="form-control"><option value="">انتخاب روز</option><option>شنبه</option><option>یک‌شنبه</option><option>دوشنبه</option><option>سه‌شنبه</option><option>چهارشنبه</option><option>پنج‌شنبه</option><option>جمعه</option></select></label><label>عنوان برنامه<input id="scheduleTitle" class="form-control" placeholder="مثلاً جلسه حلقه"></label></div><div class="editor-actions"><button id="saveScheduleBtn" class="btn-submit">ذخیره برنامه</button><button id="cancelScheduleBtn" class="btn-secondary">انصراف</button></div></div><div id="scheduleAdmin" class="admin-list"></div></section>
 
 <section class="coach-panel coach-permission-section" id="coachRegistrationsSection" data-permission="registrations"><div class="panel-head"><div><h3>ثبت‌نام‌ها</h3></div></div><div id="registrationsAdmin" class="admin-list"></div></section>
 <section class="coach-panel coach-permission-section" id="coachAttendanceReportsSection" data-permission="reports"><div class="panel-head"><div><h3>گزارش ماه جاری</h3></div></div><div id="attendanceAdmin" class="report-box"></div></section>
 <section class="coach-panel coach-permission-section" data-permission="reports"><div class="panel-head"><div><h3>اخطارهای ماه جاری</h3></div></div><div id="warningsAdmin" class="report-box"></div></section>
-<section class="coach-panel coach-permission-section" id="coachGameSection" data-permission="game"><div class="panel-head"><div><h3>جایزه هفتگی بازی</h3></div></div><div class="prize-editor"><input id="gamePrize" class="form-control"><button id="savePrizeBtn" class="btn-submit">ذخیره جایزه</button></div><p class="muted">اگر چیزی وارد نکنی، متن پیش‌فرض نمایش داده می‌شود</p></section>
+<section class="coach-panel coach-permission-section" id="coachGameSection" data-permission="game">
+<div class="panel-head"><div><h3>جایزه هفتگی بازی</h3><small class="panel-subtitle">متن جایزه این هفته را واضح و کوتاه بنویس.</small></div><span class="prize-heading-icon" aria-hidden="true">🏆</span></div>
+<div class="prize-card"><div class="prize-card-intro"><span class="prize-trophy" aria-hidden="true">🏆</span><div><strong>جایزه این هفته</strong><p>متنی که اینجا ذخیره می‌کنی برای اعضا نمایش داده می‌شود.</p></div></div>
+<div class="prize-editor"><textarea id="gamePrize" class="form-control" rows="3" placeholder="مثلاً: جایزه نفر اول رکورد هفتگی..." aria-label="متن جایزه هفتگی"></textarea><button type="button" id="savePrizeBtn" class="btn-submit prize-save-btn"><span aria-hidden="true">✓</span> ذخیره جایزه</button></div>
+<p class="muted">خالی گذاشتن این کادر، متن پیش‌فرض جایزه را نمایش می‌دهد.</p></div></section>
 
 <section class="coach-panel coach-permission-section" id="feedbackSection" data-permission="feedback">
 <div class="panel-head"><div><h3>انتقاد و پیشنهاد اعضا</h3><small class="panel-subtitle">پیام‌های ارسال‌شده از صفحه «انتقاد و پیشنهاد» در این بخش نمایش داده می‌شوند.</small></div><button type="button" class="mini-action" id="refreshFeedbackBtn">به‌روزرسانی</button></div>
