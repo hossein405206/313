@@ -16,3 +16,11 @@
 .game-shell .btn-submit{border:1px solid rgba(255,255,255,.2);background:linear-gradient(145deg,#d9ae4e,#a97822);color:#fff;font-weight:800;border-radius:15px;box-shadow:0 12px 28px rgba(58,38,8,.3)}
 .game-hint{margin-top:11px;color:#8996a6}
 @media (max-width:390px){.game-shell{padding:6px}.game-top{top:13px;left:14px;right:14px}.game-top strong{padding:6px 8px;font-size:.65rem}}
+
+/* Member-only game gate */
+.game-access-gate{margin:24px 0;padding:32px 22px;border-radius:26px;background:radial-gradient(circle at 15% 0,rgba(221,184,93,.2),transparent 45%),linear-gradient(145deg,#172b46,#0c1828);color:#fff;text-align:center;box-shadow:0 18px 42px rgba(15,24,40,.18);border:1px solid rgba(255,255,255,.08)}
+.game-access-gate .gate-mark{display:grid;place-items:center;width:66px;height:66px;margin:0 auto 15px;border-radius:22px;background:rgba(224,187,95,.14);font-size:1.8rem;border:1px solid rgba(224,187,95,.28)}
+.game-access-gate h2{font-size:1.15rem;font-weight:900;margin:0 0 10px;line-height:1.8}
+.game-access-gate p{font-size:.78rem;line-height:2;color:rgba(255,255,255,.72);max-width:330px;margin:0 auto 20px}
+.game-access-gate .gate-cta{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-width:205px;padding:13px 18px;border-radius:15px;background:linear-gradient(135deg,#e5c76f,#b78a31);color:#1a2638;font-size:.8rem;font-weight:900;box-shadow:0 10px 25px rgba(0,0,0,.2);text-decoration:none}
+.game-access-gate .gate-cta span{font-size:1.1rem}
