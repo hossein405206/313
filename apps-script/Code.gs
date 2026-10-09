@@ -52,7 +52,8 @@ var HEADERS = {
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
   'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt'],
-  'بازخوردها': ['id','name','phone','category','message','status','createdAt']
+  'بازخوردها': ['id','name','phone','category','message','status','createdAt'],
+  'ثبت‌نام حلقه': ['id','memberId','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt']
 };
 
 /* -------------------------------------------------------------------------- */
@@ -178,6 +179,8 @@ function handleGet(p) {
     return { ok:true, items:listOfficialRecords() };
   }
 
+  if (action === 'getRingRegistration') return getRingRegistration(p);
+
   if (action === 'listCamps') {
     return { ok: true, items: listCamps() };
   }
@@ -255,7 +258,7 @@ function handleGet(p) {
     return {
       ok: true,
       items: registrations
-        .filter(function(r){ return String(r.phone || '') === String(registrationAuth.subject || ''); })
+        .filter(function(r){ return normalizeMemberPhone(r.phone) === normalizeMemberPhone(registrationAuth.subject); })
         .sort(byNewest)
     };
   }
@@ -286,6 +289,7 @@ function handlePost(p) {
   var action = String(p.action || '');
 
   if (action === 'memberAuth') { return memberAuth(p); }
+  if (action === 'saveRingRegistration') return saveRingRegistration(p);
   if (action === 'registerMember') { throw new Error('برای ثبت‌نام و ورود از فرم شماره همراه و گذرواژه استفاده کن'); }
   if (action === 'loginCoach') { return loginCoach(p); }
   if (action === 'addCoach') { return addCoach(p); }
@@ -443,6 +447,13 @@ function ensureMasterCoach(){
   var found=rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\s+/g,'')===config.phone&&String(r.code||'').trim()===config.code&&String(r.role||'')==='master';});
   if(!found)getSheet('مربیان').appendRow([config.code,config.name,config.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
 }
+function normalizeMemberPhone(value) {
+  var phone = normalizeIranDigits(String(value || '')).replace(/[^0-9]/g, '');
+  // اگر Google Sheets صفر ابتدایی شماره را به‌صورت عددی حذف کرده باشد، آن را برمی‌گردانیم.
+  if (/^9\\d{9}$/.test(phone)) phone = '0' + phone;
+  return phone;
+}
+
 function normalizeIranDigits(value){
   return String(value||'')
     .replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));})
@@ -935,7 +946,7 @@ function updateMember(p) {
 
   for (var i = 1; i < values.length; i++) {
     var row = values[i];
-    if (String(row[idx.phone] || '') !== phone) continue;
+    if (normalizeMemberPhone(row[idx.phone]) !== normalizeMemberPhone(phone)) continue;
     if (!truthy(row[idx.active])) throw new Error('حساب عضو غیرفعال است');
 
     var firstName = String(p.firstName || '').trim();
@@ -981,7 +992,7 @@ function uploadProfileImage(p) {
 
   var url = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w400';
   var sheet = getSheet('اعضا');
-  var rowNumber = findRow(sheet, 'phone', String(auth.subject || ''));
+  var rowNumber = findMemberRowByPhone(sheet, String(auth.subject || ''));
   if (!rowNumber) throw new Error('حساب عضو پیدا نشد');
   var headers = sheet.getDataRange().getValues()[0].map(String);
   var imageIndex = headers.indexOf('profileImage');
@@ -1014,12 +1025,132 @@ function listActiveMembers() {
 function findMemberByPhone(phone, includeInactive) {
   var rows = getSheetObjects('اعضا');
   for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i].phone) === String(phone) && (includeInactive || truthy(rows[i].active))) {
+    if (normalizeMemberPhone(rows[i].phone) === normalizeMemberPhone(phone) && (includeInactive || truthy(rows[i].active))) {
       return rows[i];
     }
   }
   return null;
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Ring membership registration                                               */
+/* -------------------------------------------------------------------------- */
+
+function findMemberRowByPhone(sheet, phone) {
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return 0;
+  var headers = values[0].map(String);
+  var phoneIndex = headers.indexOf('phone');
+  if (phoneIndex < 0) return 0;
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeMemberPhone(values[i][phoneIndex]) === normalizeMemberPhone(phone)) return i + 1;
+  }
+  return 0;
+}
+
+function getRingRegistrationByPhone(phone) {
+  var target = normalizeMemberPhone(phone);
+  if (!target) return null;
+  var rows = getSheetObjects('ثبت‌نام حلقه');
+  for (var i = 0; i < rows.length; i++) {
+    if (normalizeMemberPhone(rows[i].phone) === target) return rows[i];
+  }
+  return null;
+}
+
+function getRingRegistration(p) {
+  var auth = requireToken(String(p.token || ''), ['member']);
+  var registration = getRingRegistrationByPhone(auth.subject);
+  if (!registration) return { ok:true, registered:false, item:null };
+  return {
+    ok:true,
+    registered:true,
+    item:{
+      id:String(registration.id || ''),
+      nationalCode:String(registration.nationalCode || ''),
+      birthDate:String(registration.birthDate || ''),
+      fatherName:String(registration.fatherName || ''),
+      fatherPhone:String(registration.fatherPhone || ''),
+      address:String(registration.address || ''),
+      school:String(registration.school || ''),
+      grade:String(registration.grade || ''),
+      guardianName:String(registration.guardianName || ''),
+      emergencyPhone:String(registration.emergencyPhone || ''),
+      status:String(registration.status || 'ثبت‌نام‌شده'),
+      createdAt:String(registration.createdAt || '')
+    }
+  };
+}
+
+function saveRingRegistration(p) {
+  var auth = requireToken(String(p.token || ''), ['member']);
+  var phone = normalizeMemberPhone(auth.subject);
+  var member = findMemberByPhone(phone, true);
+  if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد؛ یک‌بار خارج شو و دوباره وارد شو');
+
+  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\\s+/g, '');
+  var birthDate = String(p.birthDate || '').trim();
+  var fatherName = String(p.fatherName || '').trim();
+  var fatherPhone = normalizeMemberPhone(p.fatherPhone);
+  var address = String(p.address || '').trim();
+  var school = String(p.school || '').trim();
+  var grade = String(p.grade || '').trim();
+  var guardianName = String(p.guardianName || '').trim();
+  var emergencyPhone = normalizeMemberPhone(p.emergencyPhone || p.fatherPhone);
+
+  if (!/^\\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
+  if (!birthDate) throw new Error('تاریخ تولد را وارد کن');
+  if (!fatherName) throw new Error('نام پدر را وارد کن');
+  if (!/^09\\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
+  if (address.length < 8) throw new Error('آدرس را کامل‌تر وارد کن');
+  if (!school) throw new Error('نام مدرسه را وارد کن');
+  if (!grade) throw new Error('پایه تحصیلی را انتخاب کن');
+  if (!guardianName) throw new Error('نام سرپرست را وارد کن');
+  if (!/^09\\d{9}$/.test(emergencyPhone)) throw new Error('شماره تماس اضطراری نامعتبر است');
+
+  var sheet = getSheet('ثبت‌نام حلقه');
+  var existingRow = findRingRegistrationRow(sheet, phone);
+  var existing = {
+    id: existingRow ? String(sheet.getRange(existingRow, 1).getValue() || '') : uid('RING'),
+    memberId: String(member.id || ''),
+    phone: phone,
+    nationalCode: nationalCode,
+    birthDate: birthDate,
+    fatherName: fatherName,
+    fatherPhone: fatherPhone,
+    address: address,
+    school: school,
+    grade: grade,
+    guardianName: guardianName,
+    emergencyPhone: emergencyPhone,
+    status: 'ثبت‌نام‌شده',
+    createdAt: existingRow ? String(sheet.getRange(existingRow, 14).getValue() || nowIso()) : nowIso(),
+    updatedAt: nowIso()
+  };
+  var row = rowToArray('ثبت‌نام حلقه', existing);
+  if (existingRow) sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
+  else sheet.appendRow(row);
+
+  return { ok:true, registered:true, message:'ثبت‌نام در حلقه با موفقیت انجام شد', item:{
+    id:existing.id, nationalCode:nationalCode, birthDate:birthDate, fatherName:fatherName,
+    fatherPhone:fatherPhone, address:address, school:school, grade:grade,
+    guardianName:guardianName, emergencyPhone:emergencyPhone, status:existing.status
+  }};
+}
+
+function findRingRegistrationRow(sheet, phone) {
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return 0;
+  var headers = values[0].map(String);
+  var index = headers.indexOf('phone');
+  if (index < 0) return 0;
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeMemberPhone(values[i][index]) === normalizeMemberPhone(phone)) return i + 1;
+  }
+  return 0;
+}
+
 
 function publicMember(r) {
   return {
@@ -1470,7 +1601,7 @@ function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
   if (!member) throw new Error('عضو پیدا نشد');
-  if (!truthy(member.profileCompleted)) throw new Error('ابتدا پروفایلت را تکمیل کن');
+  if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
   var memberSheet = getSheet('اعضا');
@@ -1514,7 +1645,7 @@ function leaderboardForWeek(week) {
 
 function allTimeLeaderboard() {
   return getSheetObjects('اعضا')
-    .filter(function(r){ return truthy(r.active) && truthy(r.profileCompleted) && Number(r.bestScore || 0) > 0; })
+    .filter(function(r){ return truthy(r.active) && Number(r.bestScore || 0) > 0; })
     .map(function(r){ return { memberId:String(r.id || ''), playerName:String(r.nickname || r.name || 'عضو'), score:Number(r.bestScore || 0), profileImage:String(r.profileImage || '') }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
