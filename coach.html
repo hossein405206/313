@@ -18,7 +18,26 @@
 <div class="coach-top"><div><h2>داشبورد حلقه</h2><p id="coachName">—</p></div><span id="coachRoleBadge" class="coach-role-badge">—</span><button id="coachLogout" class="btn-secondary">خروج</button></div>
 <div class="coach-stats" id="coachStats"></div>
 
-<section class="coach-panel coach-permission-section" data-permission="events"><div class="panel-head"><div><h3>مدیریت رویدادها</h3></div><button id="newEventBtn" class="mini-action">＋ رویداد جدید</button></div>
+<section class="coach-panel coach-account-panel" id="coachAccountPanel">
+<div class="panel-head"><div><h3>حساب کاربری من</h3><small class="panel-subtitle">شماره همراه یا کد ورود خودت را تغییر بده؛ لازم نیست هر دو را عوض کنی.</small></div></div>
+<div class="form-grid">
+<label>شماره همراه جدید (اختیاری)<input id="ownCoachNewPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx"></label>
+<label>کد ورود جدید (اختیاری)<input id="ownCoachNewCode" class="form-control" dir="ltr" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label>
+</div>
+<div class="editor-actions"><button type="button" id="saveOwnCoachCredentials" class="btn-submit">ذخیره اطلاعات ورود</button></div>
+</section>
+
+<nav class="coach-quick-nav" aria-label="دسترسی سریع پنل">
+<a class="coach-quick-link" data-permission="events" href="#coachEventsSection"><span>۱</span><strong>رویدادها</strong><small>تصویر و خبر</small></a>
+<a class="coach-quick-link" data-permission="schedule" href="#coachScheduleSection"><span>۲</span><strong>برنامه هفتگی</strong><small>روز و ساعت</small></a>
+<a class="coach-quick-link" data-permission="registrations" href="#coachRegistrationsSection"><span>۳</span><strong>ثبت‌نام‌ها</strong><small>درخواست‌ها</small></a>
+<a class="coach-quick-link" data-permission="reports" href="#coachAttendanceReportsSection"><span>۴</span><strong>گزارش‌ها</strong><small>حضور و غیاب</small></a>
+<a class="coach-quick-link" data-permission="officials" href="#officialStaffPanel"><span>۵</span><strong>مسئولین</strong><small>کدهای ورود</small></a>
+<a class="coach-quick-link" data-permission="feedback" href="#feedbackSection"><span>۶</span><strong>بازخوردها</strong><small>پیام اعضا</small></a>
+<a class="coach-quick-link" data-permission="game" href="#coachGameSection"><span>۷</span><strong>بازی</strong><small>جایزه هفتگی</small></a>
+</nav>
+
+<section class="coach-panel coach-permission-section" id="coachEventsSection" data-permission="events"><div class="panel-head"><div><h3>مدیریت رویدادها</h3></div><button id="newEventBtn" class="mini-action">＋ رویداد جدید</button></div>
 <div id="eventEditor" class="event-editor hidden"><input id="eventId" type="hidden"><div class="form-grid"><label>عنوان<input id="eventTitle" class="form-control"></label><label>برچسب<input id="eventLabel" class="form-control" placeholder="رویداد ویژه"></label><label class="full">توضیح<textarea id="eventDescription" class="form-control"></textarea></label><label>تاریخ<input id="eventDate" class="form-control" type="date"></label><label>ترتیب<input id="eventSort" class="form-control" type="number" value="0"></label></div>
 <div class="event-upload"><input id="eventImage" type="file" accept="image/*"><div id="eventPreview">تصویر رویداد را انتخاب کن</div></div>
 <div class="editor-actions"><button id="saveEventBtn" class="btn-submit">ذخیره رویداد</button><button id="cancelEventBtn" class="btn-secondary">انصراف</button></div></div>
@@ -30,18 +49,23 @@
 <div class="editor-actions"><button id="addCoachBtn" class="btn-submit">ثبت مدیر</button></div></div>
 <div id="coachList" class="admin-list"></div></section>
 
-<section class="coach-panel hidden" id="officialStaffPanel"><div class="panel-head"><div><h3>مدیریت مسئولین</h3><small class="panel-subtitle">دو مسئول حضور و غیاب: راهنمایی و دبستان + مسئول نظارت</small></div></div>
+<section class="coach-panel hidden coach-permission-section" data-permission="officials" id="officialStaffPanel"><div class="panel-head"><div><h3>مدیریت مسئولین</h3><small class="panel-subtitle">دو مسئول حضور و غیاب: راهنمایی و دبستان + مسئول نظارت</small></div></div>
 <div class="event-editor"><div class="form-grid"><label>نام مسئول<input id="newOfficialName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>کد مسئول<input id="newOfficialCode" class="form-control" dir="ltr" placeholder="مثلاً ATT-GUIDE"></label><label class="full">نوع مسئولیت<select id="newOfficialRole" class="form-control"><option value="حضور و غیاب - راهنمایی">حضور و غیاب — راهنمایی</option><option value="حضور و غیاب - دبستان">حضور و غیاب — دبستان</option><option value="نظارت">نظارت</option></select></label></div>
 <div class="editor-actions"><button id="addOfficialBtn" class="btn-submit">ثبت مسئول</button></div></div>
 <div id="officialList" class="admin-list"></div></section>
 
-<section class="coach-panel coach-permission-section" data-permission="schedule"><div class="panel-head"><div><h3>مدیریت برنامه هفتگی</h3></div><button id="newScheduleBtn" class="mini-action">＋ برنامه جدید</button></div>
+<section class="coach-panel coach-permission-section" id="coachScheduleSection" data-permission="schedule"><div class="panel-head"><div><h3>مدیریت برنامه هفتگی</h3></div><button id="newScheduleBtn" class="mini-action">＋ برنامه جدید</button></div>
 <div id="scheduleEditor" class="event-editor hidden"><input id="scheduleId" type="hidden"><div class="form-grid"><label>روز<select id="scheduleDay" class="form-control"><option value="">انتخاب روز</option><option>شنبه</option><option>یک‌شنبه</option><option>دوشنبه</option><option>سه‌شنبه</option><option>چهارشنبه</option><option>پنج‌شنبه</option><option>جمعه</option></select></label><label>عنوان<input id="scheduleTitle" class="form-control" placeholder="جلسه حلقه"></label><label>ساعت<input id="scheduleTime" class="form-control" type="time"></label><label>ترتیب<input id="scheduleSort" class="form-control" type="number" value="0"></label></div><div class="editor-actions"><button id="saveScheduleBtn" class="btn-submit">ذخیره برنامه</button><button id="cancelScheduleBtn" class="btn-secondary">انصراف</button></div></div><div id="scheduleAdmin" class="admin-list"></div></section>
 
-<section class="coach-panel coach-permission-section" data-permission="registrations"><div class="panel-head"><div><h3>ثبت‌نام‌ها</h3></div></div><div id="registrationsAdmin" class="admin-list"></div></section>
-<section class="coach-panel coach-permission-section" data-permission="reports"><div class="panel-head"><div><h3>گزارش ماه جاری</h3></div></div><div id="attendanceAdmin" class="report-box"></div></section>
+<section class="coach-panel coach-permission-section" id="coachRegistrationsSection" data-permission="registrations"><div class="panel-head"><div><h3>ثبت‌نام‌ها</h3></div></div><div id="registrationsAdmin" class="admin-list"></div></section>
+<section class="coach-panel coach-permission-section" id="coachAttendanceReportsSection" data-permission="reports"><div class="panel-head"><div><h3>گزارش ماه جاری</h3></div></div><div id="attendanceAdmin" class="report-box"></div></section>
 <section class="coach-panel coach-permission-section" data-permission="reports"><div class="panel-head"><div><h3>اخطارهای ماه جاری</h3></div></div><div id="warningsAdmin" class="report-box"></div></section>
-<section class="coach-panel coach-permission-section" data-permission="game"><div class="panel-head"><div><h3>جایزه هفتگی بازی</h3></div></div><div class="prize-editor"><input id="gamePrize" class="form-control"><button id="savePrizeBtn" class="btn-submit">ذخیره جایزه</button></div><p class="muted">اگر چیزی وارد نکنی، متن پیش‌فرض نمایش داده می‌شود</p></section>
+<section class="coach-panel coach-permission-section" id="coachGameSection" data-permission="game"><div class="panel-head"><div><h3>جایزه هفتگی بازی</h3></div></div><div class="prize-editor"><input id="gamePrize" class="form-control"><button id="savePrizeBtn" class="btn-submit">ذخیره جایزه</button></div><p class="muted">اگر چیزی وارد نکنی، متن پیش‌فرض نمایش داده می‌شود</p></section>
+
+<section class="coach-panel coach-permission-section" id="feedbackSection" data-permission="feedback">
+<div class="panel-head"><div><h3>انتقاد و پیشنهاد اعضا</h3><small class="panel-subtitle">پیام‌های ارسال‌شده از صفحه «انتقاد و پیشنهاد» در این بخش نمایش داده می‌شوند.</small></div><button type="button" class="mini-action" id="refreshFeedbackBtn">به‌روزرسانی</button></div>
+<div id="feedbackAdmin" class="feedback-list"><div class="empty"><p>پیام‌ها پس از ورود و دریافت اطلاعات بارگذاری می‌شوند.</p></div></div>
+</section>
 </section></main>
 <nav class="bottom-nav"></nav>
 </div><script src="js/main.js" defer></script><script src="js/coach.js" defer></script></body></html>
