@@ -22,7 +22,7 @@
 <div class="panel-head"><div><h3>حساب کاربری من</h3><small class="panel-subtitle">شماره همراه یا کد ورود خودت را تغییر بده؛ لازم نیست هر دو را عوض کنی.</small></div></div>
 <div class="form-grid">
 <label>شماره همراه جدید (اختیاری)<input id="ownCoachNewPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx"></label>
-<label>کد ورود جدید (اختیاری)<input id="ownCoachNewCode" class="form-control" dir="ltr" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label>
+<label>رمز ورود جدید (اختیاری)<input id="ownCoachNewCode" class="form-control" dir="ltr" minlength="8" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label>
 </div>
 <div class="editor-actions"><button type="button" id="saveOwnCoachCredentials" class="btn-submit">ذخیره اطلاعات ورود</button></div>
 </section>
@@ -43,8 +43,8 @@
 <div class="editor-actions"><button id="saveEventBtn" class="btn-submit">ذخیره رویداد</button><button id="cancelEventBtn" class="btn-secondary">انصراف</button></div></div>
 <div id="eventsAdmin" class="admin-list"></div></section>
 
-<section class="coach-panel hidden" id="coachStaffPanel"><div class="panel-head"><div><h3>مدیریت مربیان</h3><small class="panel-subtitle">مربی ارشد مالک اصلی است؛ مدیران فقط دسترسی‌هایی را دارند که اینجا فعال می‌کنی</small></div></div>
-<div class="event-editor"><div class="form-grid"><label>نام مدیر<input id="newCoachName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره مدیر<input id="newCoachPhone" class="form-control" dir="ltr" inputmode="numeric" placeholder="09xxxxxxxxx"></label><label>کد مدیر<input id="newCoachCode" class="form-control" dir="ltr" placeholder="مثلاً Coach_1405"></label></div>
+<section class="coach-panel hidden" id="coachStaffPanel"><div class="panel-head"><div><h3>مدیریت مربیان</h3><small class="panel-subtitle">مربی ارشد مالک اصلی است؛ مربیان فقط دسترسی‌هایی را دارند که اینجا فعال می‌کنی</small></div></div>
+<div class="event-editor"><div class="form-grid"><label>نام مربی<input id="newCoachName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره همراه مربی<input id="newCoachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx"></label><label>رمز ورود مربی<input id="newCoachCode" class="form-control" dir="ltr" minlength="8" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label></div>
 <div class="permission-grid" id="newCoachPermissions"></div>
 <div class="editor-actions"><button id="addCoachBtn" class="btn-submit">ثبت مدیر</button></div></div>
 <div id="coachList" class="admin-list"></div></section>
