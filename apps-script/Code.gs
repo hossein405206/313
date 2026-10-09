@@ -197,7 +197,7 @@ function handleGet(p) {
   }
 
   if (action === 'verifyOfficialCode') {
-    var official = verifyOfficialCode(String(p.code || '').trim().toUpperCase());
+    var official = verifyOfficialCode(normalizeIranDigits(String(p.code || '').trim()).toUpperCase());
     if (!official) throw new Error('کد مسئولیت نامعتبر است');
     return { ok: true, official: officialPublic(official), token: issueToken(official.roleCode, official.code) };
   }
@@ -207,7 +207,7 @@ function handleGet(p) {
   }
 
   if (action === 'listMembers') {
-    var auth = requireToken(p.token, ['attendance','coach']);
+    var auth = requireToken(p.token, ['attendance']);
     return { ok: true, items: listActiveMembers(), role: auth.role };
   }
 
@@ -370,7 +370,7 @@ function handlePost(p) {
     return submitGameScore(p);
   }
   if (action === 'verifyOfficialCode') {
-    var official = verifyOfficialCode(String(p.code || '').trim().toUpperCase());
+    var official = verifyOfficialCode(normalizeIranDigits(String(p.code || '').trim()).toUpperCase());
     if (!official) throw new Error('کد مسئولیت نامعتبر است');
     return { ok:true, official:officialPublic(official), token:issueToken(official.roleCode, official.code) };
   }
@@ -385,10 +385,12 @@ function handlePost(p) {
 /* -------------------------------------------------------------------------- */
 
 function verifyOfficialCode(code) {
+  var target = normalizeIranDigits(String(code || '').trim()).toUpperCase();
+  if (!target) return null;
   var rows = getSheetObjects('مسئولین');
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
-    if (truthy(r.active) && String(r.code).toUpperCase() === code) {
+    if (truthy(r.active) && normalizeIranDigits(String(r.code || '').trim()).toUpperCase() === target) {
       var roleKey = normalizeRole(String(r.role || ''));
       return {
         code: String(r.code),
@@ -692,6 +694,7 @@ function addOfficial(p) {
   requireCoachPermission(p.token, 'officials');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
   getSheet('مسئولین').appendRow([code,name,role,true,nowIso()]); return {ok:true};
@@ -701,6 +704,8 @@ function updateOfficial(p) {
   var oldCode=String(p.oldCode||'').trim(), pos=findRow(getSheet('مسئولین'),'code',oldCode); if(!pos)throw new Error('مسئول پیدا نشد');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
+  if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var rows=getSheetObjects('مسئولین'); if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
   var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
@@ -754,6 +759,34 @@ function requireToken(token, roles) {
 
   if (!payload.exp || Date.now() > Number(payload.exp)) throw new Error('نشست منقضی شده');
   if (roles.indexOf(payload.r) < 0) throw new Error('دسترسی کافی نیست');
+
+  // لغو فوری دسترسی مسئولان و مربیان غیرفعال‌شده یا تغییرکرده.
+  if (payload.r === 'attendance' || payload.r === 'supervision') {
+    var currentOfficial = verifyOfficialCode(String(payload.s || '').toUpperCase());
+    if (!currentOfficial || currentOfficial.roleCode !== payload.r) {
+      throw new Error('دسترسی مسئول غیرفعال شده یا تغییر کرده است؛ دوباره وارد شو');
+    }
+  }
+  if (payload.r === 'coach') {
+    if (payload.m) {
+      var master = getMasterCoachConfig();
+      if (!master.phone || !master.code || String(master.code) !== String(payload.s || '')) {
+        throw new Error('حساب مربی ارشد تغییر کرده است؛ دوباره وارد شو');
+      }
+      payload.p = allCoachPermissions();
+    } else {
+      var currentCoach = null;
+      var coachRows = getSheetObjects('مربیان');
+      for (var ci = 0; ci < coachRows.length; ci++) {
+        if (String(coachRows[ci].role || '') !== 'master' &&
+            String(coachRows[ci].code || '').trim().toUpperCase() === String(payload.s || '').trim().toUpperCase()) {
+          currentCoach = coachRows[ci]; break;
+        }
+      }
+      if (!currentCoach || !truthy(currentCoach.active)) throw new Error('حساب مربی غیرفعال شده است؛ دوباره وارد شو');
+      payload.p = coachPermissions(currentCoach);
+    }
+  }
 
   return { role: payload.r, subject: payload.s, exp: payload.exp, isMaster: !!payload.m, permissions: payload.p || {} };
 }
@@ -1615,7 +1648,7 @@ function ensureLifetimeGameRecords() {
 function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
-  if (!member) throw new Error('عضو پیدا نشد');
+  if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
   if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
