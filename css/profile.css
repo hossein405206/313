@@ -305,3 +305,17 @@
     height: 36px;
   }
 }
+
+
+/* نشان نقش روی آواتار */
+.profile-avatar { border: 3px solid transparent; box-shadow: 0 6px 20px rgba(15, 107, 98, .12); }
+.profile-avatar--none { border-color: transparent !important; box-shadow: none !important; }
+.profile-avatar--member { border-color: #2878d0 !important; box-shadow: 0 0 0 3px rgba(40,120,208,.12),0 6px 20px rgba(40,120,208,.2) !important; }
+.profile-avatar--official { border-color: #22b8ad !important; box-shadow: 0 0 0 3px rgba(34,184,173,.13),0 6px 20px rgba(34,184,173,.2) !important; }
+.profile-avatar--coach { border-color: #d6a329 !important; box-shadow: 0 0 0 3px rgba(214,163,41,.14),0 6px 20px rgba(214,163,41,.23) !important; }
+.profile-avatar--creator { border-color: #111827 !important; box-shadow: 0 0 0 3px rgba(17,24,39,.12),0 6px 20px rgba(17,24,39,.22) !important; }
+.profile-role-badge[hidden] { display: none !important; }
+.profile-role-badge { background: #2878d0; box-shadow: none; }
+.profile-avatar--official + .profile-name + .profile-phone + .profile-role-badge { background: #159e96; }
+.profile-avatar--coach + .profile-name + .profile-phone + .profile-role-badge { background: #c28d17; }
+.profile-avatar--creator + .profile-name + .profile-phone + .profile-role-badge { background: #111827; }
