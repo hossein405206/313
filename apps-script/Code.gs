@@ -1475,6 +1475,8 @@ function migrateSheetHeaders(sheet,name){
   var last=sheet.getLastRow(); if(last===0){sheet.getRange(1,1,1,desired.length).setValues([desired]);sheet.setFrozenRows(1);return;}
   var vals=sheet.getDataRange().getValues(), old=vals[0].map(String), same=desired.length===old.length&&desired.every(function(h,i){return h===old[i];});
   if(same)return;
+  var isPrefix=old.length<=desired.length&&old.every(function(h,i){return h===desired[i];});
+  if(isPrefix){sheet.getRange(1,old.length+1,1,desired.length-old.length).setValues([desired.slice(old.length)]);sheet.setFrozenRows(1);return;}
   var output=[desired];
   for(var r=1;r<vals.length;r++){var obj={};for(var j=0;j<old.length;j++)obj[old[j]]=vals[r][j];output.push(desired.map(function(h){return obj[h]!==undefined?obj[h]:'';}));}
   sheet.clearContents();sheet.getRange(1,1,output.length,desired.length).setValues(output);sheet.setFrozenRows(1);
