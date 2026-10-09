@@ -15,7 +15,7 @@
     CAROUSEL_INTERVAL: 4500,
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
-    DEBUG: true,
+    DEBUG: false,
     VERSION: '5.3.0'
   };
 
@@ -523,7 +523,7 @@
       btn.textContent = 'در حال بررسی...';
 
       try {
-        var res = await Api.get({ action: 'verifyOfficialCode', code: code });
+        var res = await Api.post({ action: 'verifyOfficialCode', code: code });
         if (!res.official) throw new Error('کد نامعتبر است');
 
         var official = res.official;

@@ -364,3 +364,7 @@
   .auth-title { font-size: 1.3rem; }
   .auth-phone-display { font-size: 0.8rem; }
     }
+
+
+/* Keep conditionally hidden auth controls hidden despite component styles. */
+[hidden] { display: none !important; }
