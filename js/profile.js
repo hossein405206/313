@@ -99,12 +99,12 @@
     if (ph) ph.textContent = member.phone || '—';
 
     // اطلاعات
+    var membershipLabels = {approved:'عضو تاییدشده',pending:'در انتظار بررسی',rejected:'درخواست رد شده'};
     var map = {
       infoFullName: fullName,
+      infoPhone: member.phone || '—',
       infoNickname: member.nickname || 'ثبت نشده',
-      infoBirthDate: member.birthDate || 'ثبت نشده',
-      infoFatherName: member.fatherName || 'ثبت نشده',
-      infoFatherPhone: member.fatherPhone || 'ثبت نشده'
+      infoMembershipStatus: membershipLabels[member.membershipStatus] || 'عضو حلقه نیست'
     };
 
     var keys = Object.keys(map);
