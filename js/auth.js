@@ -87,7 +87,7 @@ function init(){
  var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), password=$('#passwordInput');
  var passwordGroup=$('#passwordGroup'), hint=$('#authHint'), btn=$('#memberSubmit');
  if(!form)return;
- phone.addEventListener('input',function(){phone.value=phone.value.replace(/[^0-9۰-۹٠-٩]/g,'').slice(0,11);});
+ phone.addEventListener('input',function(){phone.value=phone.value.replace(/[^0-9۰-۹٠-٩]/g,'').slice(0,11);if(passwordMode){passwordMode=null;if(passwordGroup)passwordGroup.hidden=true;if(password)password.value='';if(hint)hint.textContent='اگر حساب نداری، بعد از واردکردن مشخصات رمز عبور می‌سازی.';btn.textContent='ادامه';}});
  var passwordMode=null;
  form.addEventListener('submit',async function(e){
   e.preventDefault();
