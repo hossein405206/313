@@ -150,11 +150,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.2.0-password-auth-profile-photo' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.3.0-ring-registration' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.2.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.3.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
