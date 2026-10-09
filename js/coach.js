@@ -21,9 +21,10 @@ function applyPermissions(){
  document.querySelectorAll('.coach-permission-section').forEach(function(s){
    var p=s.getAttribute('data-permission');s.classList.toggle('permission-hidden',!state.isMaster && state.permissions[p]!==true);
  });
- var staff=$('#coachStaffPanel'),official=$('#officialStaffPanel');
+ var staff=$('#coachStaffPanel'),official=$('#officialStaffPanel'),circleApps=$('#circleApplicationsPanel');
  if(staff)staff.classList.toggle('hidden',!state.isMaster);
  if(official)official.classList.toggle('hidden',!state.isMaster);
+ if(circleApps)circleApps.classList.toggle('hidden',!state.isMaster);
 }
 function login(){
  var f=$('#coachLoginForm');if(!f)return;
@@ -37,7 +38,7 @@ function login(){
    state.token=r.token;state.name=r.coach.name;state.isMaster=!!r.coach.isMaster;state.permissions=r.coach.permissions||{};
    sessionStorage.setItem('coach_token',state.token);sessionStorage.setItem('coach_name',state.name);sessionStorage.setItem('coach_master',state.isMaster?'1':'0');sessionStorage.setItem('coach_permissions',JSON.stringify(state.permissions));
    $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');$('#coachName').textContent=state.name;$('#coachRoleBadge').textContent=state.isMaster?'مالک اصلی':'مدیر';
-   applyPermissions();await load();if(state.isMaster){loadCoaches();loadOfficials()}
+   applyPermissions();await load();if(state.isMaster){loadCoaches();loadOfficials();loadCircleApplications()}
   }catch(e){toast(e.message||'شماره یا کد مربی نادرست است',1)}
   finally{clearBusy(btn)}
  })
@@ -48,6 +49,9 @@ function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.act
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
 function renderRegs(list){var box=$('#registrationsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(r){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small></div><div class="admin-actions">'+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>'}).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}})}
 function setReg(id,status){api().post({action:'setRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت ثبت شد ✓');load()}).catch(function(e){toast(e.message,1)})}
+function loadCircleApplications(){api().get({action:'listCircleApplications',token:state.token}).then(function(r){renderCircleApplications(r.items||[])}).catch(function(e){toast(e.message||'دریافت درخواست‌های عضویت ناموفق بود',1)})}
+function renderCircleApplications(list){var box=$('#circleApplicationsList');if(!box)return;var sorted=list.slice().sort(function(a,b){var rank={'در انتظار بررسی':0,'تأیید شد':1,'رد شد':2};return (rank[a.status]||0)-(rank[b.status]||0)});box.innerHTML=sorted.length?sorted.map(function(a){var pending=a.status==='در انتظار بررسی';return '<article class="admin-item circle-application-item"><div class="admin-item-main"><strong>'+esc(a.firstName+' '+a.lastName)+' <span class="status-dot '+(a.status==='تأیید شد'?'on':'off')+'"></span></strong><small>'+esc(a.phone)+' · '+esc(a.status)+'</small><small>مدرسه: '+esc(a.school)+' · پایه: '+esc(a.grade)+' · تولد: '+esc(a.birthDate||'—')+'</small><small>ولی: '+esc(a.guardianName)+' · '+esc(a.guardianPhone)+'</small>'+(a.notes?'<p>'+esc(a.notes)+'</p>':'')+'</div><div class="admin-actions">'+(pending?'<button data-circle-status="تأیید شد" data-circle-id="'+esc(a.id)+'">تأیید عضویت</button><button class="danger" data-circle-status="رد شد" data-circle-id="'+esc(a.id)+'">رد</button>':'<button data-circle-status="در انتظار بررسی" data-circle-id="'+esc(a.id)+'">بازگردانی به انتظار</button>')+'</div></article>'}).join(''):'<div class="empty"><p>درخواستی برای عضویت ثبت نشده است.</p></div>';box.querySelectorAll('[data-circle-status]').forEach(function(b){b.addEventListener('click',function(){setCircleApplicationStatus(b.dataset.circleId,b.dataset.circleStatus,b)})})}
+function setCircleApplicationStatus(id,status,button){if(!confirm('وضعیت درخواست به «'+status+'» تغییر کند؟'))return;setBusy(button,'در حال ثبت...');api().post({action:'setCircleApplicationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت عضویت ثبت شد ✓');loadCircleApplications();load()}).catch(function(e){toast(e.message||'ثبت وضعیت انجام نشد',1)}).finally(function(){clearBusy(button)})}
 function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
 function renderWarnings(rows){
  var box=$('#warningsAdmin');
@@ -79,13 +83,14 @@ function setup(){
  setupSchedule();setupStaff();
  $('#newEventBtn').onclick=function(){openEditor(null)};$('#cancelEventBtn').onclick=function(){$('#eventEditor').classList.add('hidden')};$('#saveEventBtn').onclick=saveEvent;
  $('#savePrizeBtn').onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(e){toast(e.message,1)})};
- $('#coachLogout').onclick=function(){sessionStorage.removeItem('coach_token');sessionStorage.removeItem('coach_name');sessionStorage.removeItem('coach_master');sessionStorage.removeItem('coach_permissions');location.reload()};
+ var refreshApps=$('#refreshCircleApplications');if(refreshApps)refreshApps.onclick=loadCircleApplications;
+  $('#coachLogout').onclick=function(){sessionStorage.removeItem('coach_token');sessionStorage.removeItem('coach_name');sessionStorage.removeItem('coach_master');sessionStorage.removeItem('coach_permissions');location.reload()};
  state.token=sessionStorage.getItem('coach_token')||'';state.name=sessionStorage.getItem('coach_name')||'';state.isMaster=sessionStorage.getItem('coach_master')==='1';try{state.permissions=JSON.parse(sessionStorage.getItem('coach_permissions')||'{}')}catch(e){state.permissions={}};
  if(state.token){
   $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');
   $('#coachName').textContent=state.name;$('#coachRoleBadge').textContent=state.isMaster?'مالک اصلی':'مدیر';
   applyPermissions();
-  load().then(function(){if(state.isMaster){loadCoaches();loadOfficials()}}).catch(function(e){
+  load().then(function(){if(state.isMaster){loadCoaches();loadOfficials();loadCircleApplications()}}).catch(function(e){
    ['coach_token','coach_name','coach_master','coach_permissions'].forEach(function(k){sessionStorage.removeItem(k)});
    state.token='';state.name='';state.isMaster=false;state.permissions={};
    $('#coachDashboard').classList.add('hidden');$('#coachLogin').classList.remove('hidden');
