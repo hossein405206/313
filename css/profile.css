@@ -82,18 +82,16 @@
   z-index: 1;
 }
 
-.profile-role-badge {
-  display: inline-block;
-  padding: 5px 14px;
-  background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
-  color: #FFF;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: var(--r-pill);
-  box-shadow: 0 3px 10px var(--gold-glow);
-  position: relative;
-  z-index: 1;
-}
+.profile-role-badge { display:inline-flex; align-items:center; justify-content:center; padding:5px 14px; background:transparent; color:var(--text-muted); border:1px solid transparent; font-size:.75rem; font-weight:700; border-radius:var(--r-pill); box-shadow:none; position:relative; z-index:1; }
+.profile-role-badge.role-badge--unregistered { background:transparent; color:#7b8794; border-color:transparent; }
+.profile-role-badge.role-badge--member { background:linear-gradient(135deg,#60a5fa,#2563eb); color:#fff; border-color:#bfdbfe; box-shadow:0 5px 14px rgba(37,99,235,.20); }
+.profile-role-badge.role-badge--official { background:linear-gradient(135deg,#99f6e4,#0d9488); color:#064e4b; border-color:#5eead4; }
+.profile-role-badge.role-badge--coach { background:linear-gradient(135deg,#f8e7a3,#d4a438); color:#694b08; border-color:#e8c65c; }
+.profile-role-badge.role-badge--owner { color:#fff; border:1px solid rgba(167,139,250,.55); background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed); background-size:220% 220%; animation:ownerRoleShift 4s ease infinite; }
+.profile-hero.profile-hero--unregistered .profile-avatar { background:linear-gradient(135deg,#e2e8f0,#b8c2cf); border-color:#e2e8f0; box-shadow:0 6px 18px rgba(100,116,139,.12); }
+.profile-hero.profile-hero--registered .profile-avatar { background:linear-gradient(135deg,#60a5fa,#2563eb); border-color:#bfdbfe; box-shadow:0 6px 18px rgba(37,99,235,.22); }
+@keyframes ownerRoleShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@media (prefers-reduced-motion:reduce) { .profile-role-badge.role-badge--owner { animation:none; } }
 
 /* ══════════════════════════════════════════════════════════════════════════
    آمار
