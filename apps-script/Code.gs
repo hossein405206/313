@@ -572,13 +572,29 @@ function coachPermissions(row) {
 }
 function listCoachRecords() {
   normalizeCoachRecords();
-  return getSheetObjects('مربیان').map(function(r){
+  var config = getMasterCoachConfig();
+  var records = getSheetObjects('مربیان').filter(function(r) {
+    return String(r.role || '') !== 'master';
+  }).map(function(r) {
     return {
       name:String(r.name||''), phone:String(r.phone||''), code:String(r.code||''),
       role:String(r.role||'admin'), active:truthy(r.active),
       permissions:coachPermissions(r), createdAt:r.createdAt||'', updatedAt:r.updatedAt||''
     };
   });
+  if (config.phone && config.code) {
+    records.unshift({
+      name:config.name,
+      phone:config.phone,
+      code:config.code,
+      role:'master',
+      active:true,
+      permissions:allCoachPermissions(),
+      createdAt:'',
+      updatedAt:''
+    });
+  }
+  return records;
 }
 function normalizeCoachRecords() {
   var sheet=getSheet('مربیان'), rows=sheet.getDataRange().getValues();
