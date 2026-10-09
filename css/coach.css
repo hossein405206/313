@@ -59,3 +59,25 @@
  .feedback-item__top time{display:block;margin-top:6px}
  .feedback-item__actions label{width:100%;justify-content:space-between}
 }
+
+/* Role identity: coach=gold, owner=animated purple/indigo, official=turquoise. */
+.coach-role-badge.is-coach { background:linear-gradient(135deg,#f8e7a3,#d4a438); border-color:rgba(212,164,56,.48); color:#694b08; box-shadow:0 6px 16px rgba(180,132,29,.16); }
+.coach-role-badge.is-owner, .staff-role-badge.is-owner { color:#fff; border:1px solid rgba(167,139,250,.5); background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed); background-size:220% 220%; animation:ownerRoleShift 4s ease infinite; box-shadow:0 6px 18px rgba(99,102,241,.24); }
+.staff-role-badge { display:inline-flex; align-items:center; max-width:100%; padding:3px 8px; margin-top:5px; border-radius:999px; font:800 .54rem Vazirmatn; line-height:1.7; border:1px solid transparent; }
+.staff-role-badge.is-coach { color:#765710; background:linear-gradient(135deg,#fff4c6,#f4dfa0); border-color:#ead184; }
+.staff-role-badge.is-official { color:#086b64; background:linear-gradient(135deg,#d9fbf3,#a8eee2); border-color:#8fe4d5; }
+.prize-card { padding:14px; border-radius:19px; background:linear-gradient(145deg,#f1fbf8,#f3f5ff); border:1px solid #d8ece8; }
+.prize-card-intro { display:flex; align-items:center; gap:11px; padding:4px 2px 13px; }
+.prize-trophy, .prize-heading-icon { display:grid; place-items:center; flex:0 0 auto; width:43px; height:43px; border-radius:15px; background:linear-gradient(135deg,#ccfbf1,#dbeafe); box-shadow:inset 0 1px 0 rgba(255,255,255,.85); font-size:1.3rem; }
+.prize-card-intro strong { display:block; color:#174d4b; font-size:.74rem; }
+.prize-card-intro p { margin-top:3px; color:#70858b; font-size:.57rem; line-height:1.8; }
+.prize-editor { display:grid; gap:10px; margin-top:2px; }
+.prize-editor textarea { min-height:92px; resize:vertical; border:1px solid #c8e3df; background:rgba(255,255,255,.94); color:#243b53; line-height:1.9; }
+.prize-editor textarea:focus { border-color:#2b9d91; box-shadow:0 0 0 3px rgba(20,148,136,.12); }
+#savePrizeBtn.prize-save-btn { display:flex; align-items:center; justify-content:center; gap:8px; min-height:46px; border:1px solid rgba(15,118,110,.18); border-radius:14px; color:#fff; background:linear-gradient(115deg,#0f766e,#2563eb); box-shadow:0 8px 18px rgba(15,118,110,.20); font-weight:800; transition:transform .18s ease,box-shadow .18s ease,filter .18s ease; }
+#savePrizeBtn.prize-save-btn span { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.18); }
+#savePrizeBtn.prize-save-btn:hover { transform:translateY(-1px); box-shadow:0 11px 22px rgba(15,118,110,.24); filter:saturate(1.05); }
+#savePrizeBtn.prize-save-btn:disabled { opacity:.7; transform:none; }
+@keyframes ownerRoleShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@media (prefers-reduced-motion:reduce) { .coach-role-badge.is-owner,.staff-role-badge.is-owner { animation:none; } }
+@media(max-width:420px) { .prize-card { padding:11px; } .prize-heading-icon { width:37px;height:37px; } .admin-actions { flex-wrap:wrap; justify-content:flex-end; } }
