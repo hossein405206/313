@@ -671,8 +671,8 @@ function applyCircleMembership(p) {
   var guardianPhone = normalizePhone(p.guardianPhone);
   var notes = String(p.notes || '').trim().slice(0, 500);
   if (!firstName || !lastName) throw new Error('نام و نام خانوادگی را وارد کن');
-  if (!/^09\\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
-  if (!guardianName || !/^09\\d{9}$/.test(guardianPhone)) throw new Error('نام و شماره همراه ولی الزامی است');
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (!guardianName || !/^09\d{9}$/.test(guardianPhone)) throw new Error('نام و شماره همراه ولی الزامی است');
   if (!school || !grade) throw new Error('نام مدرسه و پایه تحصیلی را وارد کن');
   if (p.guardianConsent !== true && String(p.guardianConsent) !== 'true') throw new Error('تأیید ولی الزامی است');
 
@@ -733,7 +733,7 @@ function setCircleApplicationStatus(p) {
 }
 
 function normalizePhone(value) {
-  return String(value || '').replace(/[\\s-]/g, '').replace(/[۰-۹]/g, function(d) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); }).replace(/[٠-٩]/g, function(d) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)); });
+  return String(value || '').replace(/[\s-]/g, '').replace(/[۰-۹]/g, function(d) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); }).replace(/[٠-٩]/g, function(d) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)); });
 }
 
 function isCircleMember(phone) {
