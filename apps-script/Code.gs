@@ -298,6 +298,11 @@ function handleGet(p) {
 function handlePost(p) {
   var action = String(p.action || '');
 
+  // Authenticated read operations are also accepted over POST so session tokens stay out of URLs.
+  if (['getCircleMembership','listCircleApplications','listCoaches','listOfficialsManage','listMembers','getAttendanceToday','listMonthlyAttendance','listWarnings','listRegistrations','getDashboard'].indexOf(action) >= 0) {
+    return handleGet(p);
+  }
+
   if (action === 'registerMember') { return registerMember(p); }
   if (action === 'applyCircleMembership') { return applyCircleMembership(p); }
   if (action === 'setCircleApplicationStatus') {
