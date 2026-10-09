@@ -40,7 +40,7 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
@@ -288,12 +288,6 @@ function handlePost(p) {
   if (action === 'addOfficial') return addOfficial(p);
   if (action === 'updateOfficial') return updateOfficial(p);
   if (action === 'setOfficialStatus') return setOfficialStatus(p);
-  if (action === 'generateLoginCode') { return generateLoginCode(String(p.phone || '').trim()); }
-
-  if (action === 'verifyLoginCode') {
-    return verifyLoginCode(String(p.phone || '').trim(), String(p.code || '').trim());
-  }
-
   if (action === 'updateMember') {
     requireToken(p.token, ['member']);
     return updateMember(p);
@@ -655,18 +649,53 @@ function b64Bytes(bytes) {
 /* Member auth                                                                */
 /* -------------------------------------------------------------------------- */
 
-function registerMember(p){
-  var fullName=String(p.name||'').trim().replace(/\s+/g,' '), phone=String(p.phone||'').trim();
-  if(!fullName)throw new Error('نام و نام خانوادگی را وارد کن');
-  if(!/^09\d{9}$/.test(phone))throw new Error('شماره همراه نامعتبر است');
-  var existing=findMemberByPhone(phone,true);
-  if(existing){
-    if(String(existing.name||'').trim()!==fullName)throw new Error('این شماره قبلاً با نام دیگری ثبت شده است');
-    return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};
+function normalizeMemberPhone(value) {
+  return normalizeIranDigits(String(value || '').trim()).replace(/[\s\-()]/g, '');
+}
+function validateMemberPassword(value) {
+  var password = String(value || '');
+  if (password.length < 8) throw new Error('رمز عبور باید حداقل ۸ نویسه داشته باشد');
+  if (password.length > 128) throw new Error('رمز عبور بیش از حد طولانی است');
+  return password;
+}
+function hashMemberPassword(password, salt) {
+  var digest = String(salt) + ':' + String(password);
+  for (var i = 0; i < 1200; i++) {
+    digest = b64Bytes(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, digest, Utilities.Charset.UTF_8));
   }
-  var parts=fullName.split(' '), last=parts.length>1?parts.pop():'', first=parts.join(' ');
-  var member=addMemberInternal({firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true});
-  return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};
+  return digest;
+}
+function registerMember(p) {
+  var fullName = String(p.name || '').trim().replace(/\s+/g, ' ');
+  var phone = normalizeMemberPhone(p.phone);
+  var password = String(p.password || '');
+  if (fullName.length < 2 || fullName.length > 100) throw new Error('نام و نام خانوادگی معتبر وارد کن');
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+
+  var existing = findMemberByPhone(phone, true);
+  if (existing) {
+    if (!truthy(existing.active)) throw new Error('این حساب غیرفعال است؛ با مسئول سایت تماس بگیر');
+    if (!String(existing.passwordSalt || '') || !String(existing.passwordHash || '')) {
+      return { ok: true, legacyAccount: true, message: 'این حساب قدیمی هنوز رمز عبور ندارد؛ برای فعال‌سازی امن با مسئول سایت تماس بگیر.' };
+    }
+    if (!password) return { ok: true, needsPassword: true, mode: 'login' };
+    validateMemberPassword(password);
+    if (hashMemberPassword(password, String(existing.passwordSalt)) !== String(existing.passwordHash)) {
+      throw new Error('رمز عبور نادرست است');
+    }
+    return { ok: true, member: publicMember(existing), token: issueToken('member', phone), existing: true };
+  }
+
+  if (!password) return { ok: true, needsPassword: true, mode: 'register' };
+  validateMemberPassword(password);
+  var parts = fullName.split(' '), last = parts.length > 1 ? parts.pop() : '', first = parts.join(' ');
+  var salt = Utilities.getUuid() + Utilities.getUuid();
+  var member = addMemberInternal({
+    firstName: first, lastName: last, phone: phone, nickname: '',
+    profileCompleted: false, active: true,
+    passwordSalt: salt, passwordHash: hashMemberPassword(password, salt)
+  });
+  return { ok: true, member: publicMember(member), token: issueToken('member', phone), existing: false };
 }
 function generateLoginCode(phone) {
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
@@ -742,12 +771,14 @@ function addMemberInternal(o) {
     firstName: o.firstName || '',
     lastName: o.lastName || '',
     name: name,
-    phone: o.phone || '',
+    phone: normalizeMemberPhone(o.phone || ''),
     nickname: o.nickname || '',
     profileCompleted: o.profileCompleted === true,
     bestScore: Number(o.bestScore || 0),
     active: o.active !== false,
-    createdAt: nowIso()
+    createdAt: nowIso(),
+    passwordSalt: o.passwordSalt || '',
+    passwordHash: o.passwordHash || ''
   };
   sheet.appendRow(rowToArray('اعضا', row));
   return row;
@@ -799,11 +830,11 @@ function listActiveMembers() {
 }
 
 function findMemberByPhone(phone, includeInactive) {
+  var normalizedPhone = normalizeMemberPhone(phone);
   var rows = getSheetObjects('اعضا');
   for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i].phone) === String(phone) && (includeInactive || truthy(rows[i].active))) {
-      return rows[i];
-    }
+    if (normalizeMemberPhone(rows[i].phone) === normalizedPhone &&
+        (includeInactive || truthy(rows[i].active))) return rows[i];
   }
   return null;
 }
