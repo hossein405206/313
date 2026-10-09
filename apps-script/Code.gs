@@ -427,21 +427,24 @@ function ensureMasterCoach(){
   if(!/^09\d{9}$/.test(master.phone)) throw new Error('در تنظیمات Script Properties، MASTER_COACH_PHONE را با شماره معتبر تنظیم کن');
   if(master.code.length<12) throw new Error('MASTER_COACH_CODE باید حداقل ۱۲ نویسه داشته باشد');
 
-  var sheet=getSheet('مربیان'), rows=getSheetObjects('مربیان'), found=false;
+  var sheet=getSheet('مربیان'), rows=getSheetObjects('مربیان'), masterRow=0;
   rows.forEach(function(r,i){
     if(String(r.role||'')!=='master') return;
-    var matches=String(r.phone||'')===master.phone && String(r.code||'')===master.code;
-    if(matches){
-      found=true;
-      sheet.getRange(i+2,2).setValue(master.name);
-      sheet.getRange(i+2,4).setValue(true);
-      sheet.getRange(i+2,6).setValue(JSON.stringify(allCoachPermissions()));
-      sheet.getRange(i+2,8).setValue(nowIso());
+    var rowNumber=i+2;
+    if(!masterRow){
+      masterRow=rowNumber;
+      var createdAt=String(r.createdAt||nowIso());
+      sheet.getRange(rowNumber,1,1,8).setValues([[
+        master.code, master.name, master.phone, true, 'master',
+        JSON.stringify(allCoachPermissions()), createdAt, nowIso()
+      ]]);
     } else {
-      sheet.getRange(i+2,4).setValue(false);
+      sheet.getRange(rowNumber,4).setValue(false);
     }
   });
-  if(!found) sheet.appendRow([master.code,master.name,master.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
+  if(!masterRow){
+    sheet.appendRow([master.code,master.name,master.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
+  }
 }
 function normalizeIranDigits(value){
   return String(value||'')
