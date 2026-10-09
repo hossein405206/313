@@ -739,10 +739,10 @@ function normalizePhone(value) {
 function isCircleMember(phone) {
   phone = normalizePhone(phone);
   if (!phone) return false;
-  var applications = getSheetObjects('درخواست عضویت');
-  if (applications.some(function(r) { return normalizePhone(r.phone) === phone && String(r.status || '') === 'تأیید شد'; })) return true;
   var member = findMemberByPhone(phone, true);
   if (!member || !truthy(member.active)) return false;
+  var applications = getSheetObjects('درخواست عضویت');
+  if (applications.some(function(r) { return normalizePhone(r.phone) === phone && String(r.status || '') === 'تأیید شد'; })) return true;
   // Legacy members are recognized by recorded attendance; account creation alone is not membership.
   return getSheetObjects('حضورغیاب').some(function(r) { return String(r.memberId || '') === String(member.id || ''); });
 }
