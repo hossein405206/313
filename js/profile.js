@@ -94,9 +94,13 @@
     var nm = $('#profileName');
     var ph = $('#profilePhone');
 
-    if (av) av.textContent = initial;
+    var role = String(member.profileRole || 'none');
+    var roleLabels = {none:'',member:'عضو حلقه',official:'مسئول',coach:'مربی',creator:'سازنده'};
+    if (av) { av.textContent = initial; av.classList.remove('profile-avatar--none','profile-avatar--member','profile-avatar--official','profile-avatar--coach','profile-avatar--creator'); av.classList.add('profile-avatar--' + (roleLabels[role] ? role : 'none')); }
     if (nm) nm.textContent = fullName;
     if (ph) ph.textContent = member.phone || '—';
+    var roleBadge = $('#profileRoleBadge');
+    if (roleBadge) { roleBadge.textContent = roleLabels[role] || ''; roleBadge.hidden = !roleLabels[role]; }
 
     // اطلاعات
     var membershipLabels = {approved:'عضو تاییدشده',pending:'در انتظار بررسی',rejected:'درخواست رد شده'};
