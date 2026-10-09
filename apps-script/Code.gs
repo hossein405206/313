@@ -206,9 +206,7 @@ function handleGet(p) {
   }
 
   if (action === 'verifyCoachCode') {
-    var coach = verifyCoachCode(String(p.code || '').trim().toUpperCase());
-    if (!coach) throw new Error('کد مربی نامعتبر است');
-    return { ok: true, coach: { name: coach.name, role: coach.role, isMaster: coach.isMaster, permissions: coachPermissions(coach) }, token: issueToken('coach', coach.code, coach.isMaster, coachPermissions(coach)) };
+    throw new Error('این مسیر قدیمی غیرفعال است؛ ورود مربی باید با شماره و کد از مسیر loginCoach انجام شود');
   }
 
   if (action === 'listMembers') {
@@ -436,7 +434,7 @@ function loginCoach(p){
   var coach=rows.filter(function(r){
     var rowPhone=normalizeIranDigits(String(r.phone||'').trim()).replace(/\s+/g,'');
     var rowCode=String(r.code||'').trim();
-    return truthy(r.active)&&rowPhone===phone&&rowCode===code;
+    return truthy(r.active)&&String(r.role||'')!=='master'&&rowPhone===phone&&rowCode===code;
   })[0];
 
   if(!coach) throw new Error('شماره یا کد مربی نادرست است');
@@ -450,9 +448,20 @@ function loginCoach(p){
 function ensureMasterCoach(){
   var master = getMasterCredentials();
   if (!master.phone || !master.code) throw new Error('ابتدا MASTER_COACH_PHONE و MASTER_COACH_CODE را در Script Properties تنظیم کن');
-  var rows=getSheetObjects('مربیان');
-  var found=rows.some(function(r){return String(r.phone)===master.phone&&String(r.code)===master.code;});
-  if(!found)getSheet('مربیان').appendRow([master.code,master.name,master.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
+  var sheet=getSheet('مربیان'), values=sheet.getDataRange().getValues(), headers=values[0].map(String);
+  var codeIndex=headers.indexOf('code'), nameIndex=headers.indexOf('name'), phoneIndex=headers.indexOf('phone'), activeIndex=headers.indexOf('active'), roleIndex=headers.indexOf('role'), permissionsIndex=headers.indexOf('permissions'), updatedIndex=headers.indexOf('updatedAt');
+  var target=-1;
+  for(var i=1;i<values.length;i++) if(String(values[i][phoneIndex]||'')===master.phone && String(values[i][codeIndex]||'')===master.code){target=i;break;}
+  if(target<0) for(var j=1;j<values.length;j++) if(String(values[j][roleIndex]||'')==='master'){target=j;break;}
+  if(target<0){sheet.appendRow([master.code,master.name,master.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);return;}
+  for(var k=1;k<values.length;k++){
+    if(k!==target && String(values[k][roleIndex]||'')==='master'){
+      values[k][activeIndex]=false;
+      sheet.getRange(k+1,1,1,values[k].length).setValues([values[k]]);
+    }
+  }
+  var row=values[target];row[codeIndex]=master.code;row[nameIndex]=master.name;row[phoneIndex]=master.phone;row[activeIndex]=true;row[roleIndex]='master';row[permissionsIndex]=JSON.stringify(allCoachPermissions());row[updatedIndex]=nowIso();
+  sheet.getRange(target+1,1,1,row.length).setValues([row]);
 }
 function normalizeIranDigits(value){
   return String(value||'')
