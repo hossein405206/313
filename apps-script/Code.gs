@@ -6,9 +6,12 @@
 
    پیش از انتشار:
    1) شناسه‌های SPREADSHEET_ID و DRIVE_FOLDER_ID را بررسی کن.
-   2) در Project Settings > Script Properties، مقدارهای MASTER_COACH_PHONE و
-      MASTER_COACH_CODE و در صورت نیاز MASTER_COACH_NAME را تنظیم کن.
-   3) از Sheet نسخه پشتیبان بگیر و تابع setup() را یک بار اجرا کن.
+   2) در Project Settings > Script Properties این مقدارها را وارد کن:
+      OWNER_PHONE, OWNER_PASSWORD, OWNER_FIRST_NAME, OWNER_LAST_NAME
+      در صورت نیاز MASTER_COACH_PHONE و MASTER_COACH_CODE را جداگانه تنظیم کن؛
+      اگر تنظیم نشوند، شماره و رمز مالک برای ورود مربی ارشد هم استفاده می‌شود.
+   3) رمز مالک را در این فایل یا مخزن عمومی قرار نده.
+   4) از Sheet نسخه پشتیبان بگیر و تابع setup() را یک بار اجرا کن.
    4) پس از پشتیبان‌گیری، در صورت نیاز توابع migrateLegacyMembersWithAttendance()
       و secureLegacyConsentPhotos() را یک بار اجرا کن.
    5) برای به‌روزرسانی سایت، Deploy > Manage deployments > Edit > New version > Deploy
@@ -31,11 +34,11 @@ var CFG = {
 
 function getMasterCredentials() {
   var properties = PropertiesService.getScriptProperties();
-  var ownerPhone = normalizeIranDigits(String(properties.getProperty('OWNER_PHONE') || '')).replace(/\\s+/g, '');
+  var ownerPhone = normalizeIranDigits(String(properties.getProperty('OWNER_PHONE') || '')).replace(/\s+/g, '');
   var ownerPassword = String(properties.getProperty('OWNER_PASSWORD') || '');
   var ownerName = [properties.getProperty('OWNER_FIRST_NAME') || '', properties.getProperty('OWNER_LAST_NAME') || ''].join(' ').trim();
   return {
-    phone: normalizeIranDigits(String(properties.getProperty('MASTER_COACH_PHONE') || ownerPhone)).replace(/\\s+/g, ''),
+    phone: normalizeIranDigits(String(properties.getProperty('MASTER_COACH_PHONE') || ownerPhone)).replace(/\s+/g, ''),
     code: String(properties.getProperty('MASTER_COACH_CODE') || ownerPassword).trim(),
     name: String(properties.getProperty('MASTER_COACH_NAME') || ownerName || 'سازنده').trim()
   };
@@ -679,7 +682,12 @@ function b64Bytes(bytes) {
 /* -------------------------------------------------------------------------- */
 
 function passwordDigest(password, salt) {
-  return b64Bytes(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(salt) + ':' + String(password), Utilities.Charset.UTF_8));
+  var digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(salt) + ':' + String(password), Utilities.Charset.UTF_8);
+  // تکرار هش، حدس‌زدن آفلاین رمزها را پرهزینه‌تر می‌کند.
+  for (var round = 0; round < 12000; round++) {
+    digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, digest);
+  }
+  return b64Bytes(digest);
 }
 function setMemberPassword(member, password) {
   var salt = Utilities.getUuid() + Utilities.getUuid();
