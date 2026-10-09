@@ -246,19 +246,18 @@ function handleGet(p) {
   }
 
   if (action === 'listRegistrations') {
-    if (p.token) {
-      requireToken(p.token, ['coach']);
-      return { ok: true, items: getSheetObjects('ثبت‌نام‌ها').sort(byNewest) };
+    if (!p.token) throw new Error('نشست معتبر نیست');
+    var registrationAuth = requireToken(p.token, ['coach', 'member']);
+    var registrations = getSheetObjects('ثبت‌نام‌ها');
+    if (registrationAuth.role === 'coach') {
+      return { ok: true, items: registrations.sort(byNewest) };
     }
-    if (p.memberPhone) {
-      return {
-        ok: true,
-        items: getSheetObjects('ثبت‌نام‌ها')
-          .filter(function(r){ return String(r.phone) === String(p.memberPhone); })
-          .sort(byNewest)
-      };
-    }
-    throw new Error('دسترسی نامعتبر');
+    return {
+      ok: true,
+      items: registrations
+        .filter(function(r){ return String(r.phone || '') === String(registrationAuth.subject || ''); })
+        .sort(byNewest)
+    };
   }
 
   if (action === 'getDashboard') { var dashAuth=requireToken(p.token,['coach']); var dash=dashboardData(dashAuth); dash.isMaster=!!dashAuth.isMaster; dash.permissions=dashAuth.isMaster?allCoachPermissions():dashAuth.permissions; return dash; }
