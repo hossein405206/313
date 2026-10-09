@@ -1423,6 +1423,25 @@ function uploadPublicFile(base64, mime, name) {
   return { id:file.getId(), url:'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200' };
 }
 
+// پس از پشتیبان‌گیری، این تابع اعضایی را که سابقه حضور و غیاب دارند به عضویت تأییدشده منتقل می‌کند.
+function migrateLegacyMembersWithAttendance() {
+  var attendance = getSheetObjects('حضورغیاب'), memberSheet = getSheet('اعضا'), values = memberSheet.getDataRange().getValues();
+  if (values.length < 2) return {ok:true,approved:0};
+  var headers = values[0].map(String), idIndex = headers.indexOf('id'), statusIndex = headers.indexOf('membershipStatus'), activeIndex = headers.indexOf('active'), reviewedIndex = headers.indexOf('membershipReviewedAt');
+  var attendanceIds = {};
+  attendance.forEach(function(row){if(row.memberId)attendanceIds[String(row.memberId)] = true;});
+  var approved = 0;
+  for (var i=1;i<values.length;i++) {
+    var row = values[i], id = String(row[idIndex] || '');
+    if (!id || !attendanceIds[id] || !truthy(row[activeIndex]) || String(row[statusIndex] || '') === 'approved') continue;
+    row[statusIndex] = 'approved';
+    if (reviewedIndex >= 0) row[reviewedIndex] = nowIso();
+    memberSheet.getRange(i+1,1,1,row.length).setValues([row]);
+    approved++;
+  }
+  return {ok:true,approved:approved};
+}
+
 // این تابع را یک‌بار پس از پشتیبان‌گیری اجرا کن تا لینک‌های قدیمی رضایت‌نامه‌ها خصوصی شوند.
 function secureLegacyConsentPhotos() {
   var rows = getSheetObjects('ثبت‌نام‌ها'), secured = 0, failed = 0;
