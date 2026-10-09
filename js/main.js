@@ -523,7 +523,7 @@
       btn.textContent = 'در حال بررسی...';
 
       try {
-        var res = await Api.get({ action: 'verifyOfficialCode', code: code });
+        var res = await Api.post({ action: 'verifyOfficialCode', code: code });
         if (!res.official) throw new Error('کد نامعتبر است');
 
         var official = res.official;
