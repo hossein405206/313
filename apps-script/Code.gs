@@ -218,6 +218,7 @@ function handleGet(p) {
 
   if (action === 'listMembers') {
     var auth = requireToken(p.token, ['attendance','coach']);
+    if (auth.role === 'coach') requireCoachPermission(p.token, 'registrations');
     return { ok: true, items: listActiveMembers(), role: auth.role };
   }
 
@@ -951,8 +952,9 @@ function listEventsPublic() {
 function uploadEventImage(p) {
   var data = String(p.base64 || '');
   if (!data) throw new Error('فایلی ارسال نشده');
-
-  var mime = String(p.mimeType || 'image/jpeg');
+  if (data.length > 7 * 1024 * 1024) throw new Error('حجم تصویر بیشتر از حد مجاز است');
+  var mime = String(p.mimeType || 'image/jpeg').toLowerCase();
+  if (['image/jpeg','image/png','image/webp','image/gif'].indexOf(mime) < 0) throw new Error('فرمت تصویر مجاز نیست');
   var ext = mime.split('/')[1] || 'jpg';
   var blob = Utilities.newBlob(Utilities.base64Decode(data), mime, 'event-' + Date.now() + '.' + ext);
   var folder = getDriveFolder();
@@ -960,7 +962,10 @@ function uploadEventImage(p) {
 
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {}
+  } catch (e) {
+    try { file.setTrashed(true); } catch (ignore) {}
+    throw new Error('Google Drive اجازه نمایش عمومی تصویر را نداد؛ تنظیمات اشتراک‌گذاری پوشه را بررسی کن');
+  }
 
   return {
     ok: true,
@@ -1411,13 +1416,19 @@ function setSetting(key, value) {
 /* -------------------------------------------------------------------------- */
 
 function uploadPublicFile(base64, mime, name) {
+  if (!base64 || String(base64).length > 7 * 1024 * 1024) throw new Error('فایل خالی است یا حجم آن بیش از حد مجاز است');
+  mime = String(mime || 'image/jpeg').toLowerCase();
+  if (['image/jpeg','image/png','image/webp','image/gif'].indexOf(mime) < 0) throw new Error('فرمت تصویر مجاز نیست');
   var blob = Utilities.newBlob(Utilities.base64Decode(base64), mime, name);
   var folder = getDriveFolder();
   var file = folder.createFile(blob);
 
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {}
+  } catch (e) {
+    try { file.setTrashed(true); } catch (ignore) {}
+    throw new Error('Google Drive اجازه نمایش عمومی تصویر را نداد؛ تنظیمات اشتراک‌گذاری پوشه را بررسی کن');
+  }
 
   return {
     id:file.getId(),
