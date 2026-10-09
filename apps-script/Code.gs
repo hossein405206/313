@@ -26,15 +26,14 @@ var CFG = {
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
   MASTER_COACH_PHONE: '09935661397',
-  MASTER_COACH_CODE: 'Hossein_313_1390',
-  MASTER_COACH_NAME: 'مربی ارشد'
+  MASTER_COACH_NAME: 'سیدحسین موسوی'
 };
 
 var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','role'],
   'درخواست عضویت': ['id','firstName','lastName','phone','birthDate','school','grade','guardianName','guardianPhone','notes','status','createdAt','updatedAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
@@ -111,6 +110,7 @@ function setup() {
 
   var coaches = getSheet('مربیان');
   migrateSheetHeaders(coaches, 'مربیان');
+  ensureOwnerMember();
   ensureMasterCoach();
   normalizeCoachRecords();
   ensureOfficialRoles();
@@ -142,23 +142,7 @@ function handleGet(p) {
 
   if (action === 'ping') return { ok: true, service: '313', version: '4.0.0-coach-auth', diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003' };
 
-  if (action === 'coachStatus') {
-    var masterRows = [];
-    try { masterRows = getSheetObjects('مربیان'); } catch (e) {}
-    var masterInSheet = masterRows.some(function(r){
-      return String(r.phone || '') === CFG.MASTER_COACH_PHONE && String(r.code || '') === CFG.MASTER_COACH_CODE && truthy(r.active);
-    });
-    return {
-      ok: true,
-      diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003',
-      version: '4.0.0-coach-auth',
-      masterConfigured: !!CFG.MASTER_COACH_PHONE && !!CFG.MASTER_COACH_CODE,
-      masterPhoneSuffix: String(CFG.MASTER_COACH_PHONE).slice(-2),
-      masterCodeLength: String(CFG.MASTER_COACH_CODE).length,
-      masterInSheet: masterInSheet,
-      loginCoachPresent: true
-    };
-  }
+  if (action === 'coachStatus') return {ok:true,version:'4.1.0-password-auth',masterConfigured:true,loginCoachPresent:true};
 
   if (action === 'listEvents' || action === 'listActivities') {
     return { ok: true, items: listEventsPublic() };
@@ -324,12 +308,6 @@ function handlePost(p) {
   if (action === 'addOfficial') return addOfficial(p);
   if (action === 'updateOfficial') return updateOfficial(p);
   if (action === 'setOfficialStatus') return setOfficialStatus(p);
-  if (action === 'generateLoginCode') { return generateLoginCode(String(p.phone || '').trim()); }
-
-  if (action === 'verifyLoginCode') {
-    return verifyLoginCode(String(p.phone || '').trim(), String(p.code || '').trim());
-  }
-
   if (action === 'updateMember') {
     requireToken(p.token, ['member']);
     return updateMember(p);
@@ -413,50 +391,19 @@ function verifyOfficialCode(code) {
   return null;
 }
 
-function verifyCoachCode(code) {
-  var rows=getSheetObjects('مربیان');
-  for(var i=0;i<rows.length;i++){var r=rows[i];if(truthy(r.active)&&String(r.code).toUpperCase()===String(code).toUpperCase())return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:String(r.role||'')==='master'};}
-  return null;
-}
+function verifyCoachCode(code){var rows=getSheetObjects('مربیان');for(var i=0;i<rows.length;i++){var r=rows[i];if(truthy(r.active)&&String(r.role||'')!=='master'&&String(r.code).toUpperCase()===String(code).toUpperCase())return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:false};}return null;}
 function loginCoach(p){
-  var phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,'');
-  var code=String(p.code||'').trim();
-  if(!/^09\d{9}$/.test(phone)) throw new Error('شماره مربی نامعتبر است');
-  if(!code) throw new Error('کد مربی را وارد کن');
-
-  // مربی ارشد مستقیماً از تنظیمات اصلی احراز می‌شود؛
-  // بنابراین ورود به وجود ردیف شیت مربیان وابسته نیست.
-  if(phone===CFG.MASTER_COACH_PHONE && code===CFG.MASTER_COACH_CODE){
-    ensureMasterCoach();
-    return {
-      ok:true,
-      coach:{name:CFG.MASTER_COACH_NAME,phone:CFG.MASTER_COACH_PHONE,role:'master',isMaster:true,permissions:allCoachPermissions()},
-      token:issueToken('coach',CFG.MASTER_COACH_CODE,true,allCoachPermissions())
-    };
-  }
-
-  var coachSheet=getSheet('مربیان');
-  migrateSheetHeaders(coachSheet,'مربیان');
-  var rows=getSheetObjects('مربیان');
-  var coach=rows.filter(function(r){
-    var rowPhone=normalizeIranDigits(String(r.phone||'').trim()).replace(/\s+/g,'');
-    var rowCode=String(r.code||'').trim();
-    return truthy(r.active)&&rowPhone===phone&&rowCode===code;
-  })[0];
-
-  if(!coach) throw new Error('شماره یا کد مربی نادرست است');
-  var isMaster=String(coach.role||'')==='master';
-  return {
-    ok:true,
-    coach:{name:coach.name,phone:phone,role:coach.role,isMaster:isMaster,permissions:coachPermissions(coach)},
-    token:issueToken('coach',coach.code,isMaster,coachPermissions(coach))
-  };
+var phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,'');var password=String(p.code||p.password||'');
+if(!/^09\d{9}$/.test(phone)||!password)throw new Error('شماره همراه و رمز عبور معتبر را وارد کن');
+if(phone===CFG.MASTER_COACH_PHONE){var owner=findMemberByPhone(phone,true);if(!owner||String(owner.role||'')!=='owner'||!verifyMemberPassword(owner,password))throw new Error('شماره همراه یا رمز عبور نادرست است');var master=getSheetObjects('مربیان').filter(function(r){return String(r.phone||'')===phone&&String(r.role||'')==='master';})[0];if(!master||!truthy(master.active))throw new Error('حساب مالک غیرفعال است');return {ok:true,coach:{name:'سیدحسین موسوی',phone:phone,role:'master',isMaster:true,permissions:allCoachPermissions()},token:issueToken('coach',String(master.code),true,allCoachPermissions())};}
+var rows=getSheetObjects('مربیان'),coach=rows.filter(function(r){return truthy(r.active)&&String(r.role||'')!=='master'&&normalizeIranDigits(String(r.phone||'')).replace(/\s+/g,'')===phone&&String(r.code||'').trim()===password;})[0];
+if(!coach)throw new Error('شماره همراه یا رمز ورود مربی نادرست است');return {ok:true,coach:{name:coach.name,phone:phone,role:coach.role,isMaster:false,permissions:coachPermissions(coach)},token:issueToken('coach',coach.code,false,coachPermissions(coach))};
 }
-function ensureMasterCoach(){
-  var rows=getSheetObjects('مربیان');
-  var found=rows.some(function(r){return String(r.phone)===CFG.MASTER_COACH_PHONE&&String(r.code)===CFG.MASTER_COACH_CODE;});
-  if(!found)getSheet('مربیان').appendRow([CFG.MASTER_COACH_CODE,CFG.MASTER_COACH_NAME,CFG.MASTER_COACH_PHONE,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
-}
+function ensureOwnerMember(){var phone=CFG.MASTER_COACH_PHONE,existing=findMemberByPhone(phone,true);if(existing){var sheet=getSheet('اعضا'),headers=sheet.getDataRange().getValues()[0].map(String),pos=findRow(sheet,'phone',phone),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.firstName]='سیدحسین';row[idx.lastName]='موسوی';row[idx.name]='سیدحسین موسوی';row[idx.nickname]='سیدحسین';row[idx.role]='owner';row[idx.active]=true;row[idx.profileCompleted]=true;sheet.getRange(pos,1,1,headers.length).setValues([row]);return;}addMemberInternal({firstName:'سیدحسین',lastName:'موسوی',phone:phone,nickname:'سیدحسین',profileCompleted:true,active:true,role:'owner'});}
+function ensureMasterCoach(){var sheet=getSheet('مربیان'),rows=getSheetObjects('مربیان'),phone=CFG.MASTER_COACH_PHONE,found=rows.filter(function(r){return String(r.phone||'')===phone&&String(r.role||'')==='master';})[0],code='OWNER-MASTER-'+Utilities.getUuid().replace(/-/g,'').slice(0,18).toUpperCase();if(found){var pos=findRow(sheet,'phone',phone,'role','master'),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.name]='سیدحسین موسوی';row[idx.active]=true;row[idx.permissions]=JSON.stringify(allCoachPermissions());row[idx.updatedAt]=nowIso();if(String(row[idx.code]||'').indexOf('OWNER-MASTER-')!==0)row[idx.code]=code;sheet.getRange(pos,1,1,headers.length).setValues([row]);}else sheet.appendRow([code,'سیدحسین موسوی',phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);}
+function initializeOwnerAccountPassword(){ensureOwnerMember();var owner=findMemberByPhone(CFG.MASTER_COACH_PHONE,true);if(owner&&owner.passwordHash)return {ok:true,message:'رمز حساب مالک از قبل تنظیم شده است.'};var ui=SpreadsheetApp.getUi(),response=ui.prompt('راه‌اندازی حساب مالک','رمز اولیه حساب مالک را وارد کن. این رمز در کد پروژه ذخیره نمی‌شود.',ui.ButtonSet.OK_CANCEL);if(response.getSelectedButton()!==ui.Button.OK)return {ok:false,message:'لغو شد'};var password=String(response.getResponseText()||'');if(password.length<8||password.length>128)throw new Error('رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد');var salt=Utilities.getUuid()+'-'+Utilities.getUuid(),hash=hashPassword(password,salt),sheet=getSheet('اعضا'),pos=findRow(sheet,'phone',CFG.MASTER_COACH_PHONE),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.passwordSalt]=salt;row[idx.passwordHash]=hash;row[idx.role]='owner';sheet.getRange(pos,1,1,headers.length).setValues([row]);return {ok:true,message:'رمز حساب مالک با هش ذخیره شد.'};}
+function hashPassword(password,salt){return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(salt)+'|'+String(password),Utilities.Charset.UTF_8)).replace(/=+$/,'');}
+function verifyMemberPassword(member,password){return !!(member&&member.passwordSalt&&member.passwordHash&&hashPassword(password,member.passwordSalt)===String(member.passwordHash));}
 function normalizeIranDigits(value){
   return String(value||'')
     .replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));})
@@ -747,6 +694,8 @@ function isCircleMember(phone) {
   if (!phone) return false;
   var member = findMemberByPhone(phone, true);
   if (!member || !truthy(member.active)) return false;
+  if (['owner','coach','responsible'].indexOf(String(member.role||'')) >= 0) return true;
+  var coaches=getSheetObjects('مربیان');if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone;}))return true;
   var applications = getSheetObjects('درخواست عضویت');
   if (applications.some(function(r) { return normalizePhone(r.phone) === phone && String(r.status || '') === 'تأیید شد'; })) return true;
   // Legacy members are recognized by recorded attendance; account creation alone is not membership.
@@ -761,18 +710,10 @@ function circleMembershipResponse(phone) {
 }
 
 function registerMember(p){
-  var fullName=String(p.name||'').trim().replace(/\s+/g,' '), phone=String(p.phone||'').trim();
-  if(!fullName)throw new Error('نام و نام خانوادگی را وارد کن');
-  if(!/^09\d{9}$/.test(phone))throw new Error('شماره همراه نامعتبر است');
-  var existing=findMemberByPhone(phone,true);
-  if(existing){
-    if(String(existing.name||'').trim()!==fullName)throw new Error('این شماره قبلاً با نام دیگری ثبت شده است');
-    return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};
-  }
-  var parts=fullName.split(' '), last=parts.length>1?parts.pop():'', first=parts.join(' ');
-  var member=addMemberInternal({firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true});
-  return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};
-}
+var fullName=String(p.name||'').trim().replace(/\s+/g,' '),phone=normalizeIranDigits(String(p.phone||'').trim()),password=String(p.password||'');
+if(!fullName)throw new Error('نام و نام خانوادگی را وارد کن');if(!/^09\d{9}$/.test(phone))throw new Error('شماره همراه نامعتبر است');if(password.length<8||password.length>128)throw new Error('رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد');
+var lock=LockService.getScriptLock();lock.waitLock(5000);try{var existing=findMemberByPhone(phone,true);if(existing){if(String(existing.name||'').trim()!==fullName)throw new Error('این شماره قبلاً با نام دیگری ثبت شده است');if(!truthy(existing.active))throw new Error('این حساب غیرفعال است');if(String(existing.role||'')==='owner'&&!existing.passwordHash)throw new Error('حساب مالک هنوز راه‌اندازی نشده؛ تابع initializeOwnerAccountPassword را اجرا کن');if(existing.passwordHash){if(!verifyMemberPassword(existing,password))throw new Error('شماره همراه یا رمز عبور نادرست است');}else{var salt=Utilities.getUuid()+'-'+Utilities.getUuid(),sheet=getSheet('اعضا'),pos=findRow(sheet,'phone',phone),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.passwordSalt]=salt;row[idx.passwordHash]=hashPassword(password,salt);sheet.getRange(pos,1,1,headers.length).setValues([row]);existing=findMemberByPhone(phone,true);}return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};}
+var parts=fullName.split(' '),last=parts.length>1?parts.pop():'',first=parts.join(' '),saltNew=Utilities.getUuid()+'-'+Utilities.getUuid(),member=addMemberInternal({firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true,passwordSalt:saltNew,passwordHash:hashPassword(password,saltNew),role:''});return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};}finally{lock.releaseLock();}}
 function generateLoginCode(phone) {
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
 
@@ -852,7 +793,10 @@ function addMemberInternal(o) {
     profileCompleted: o.profileCompleted === true,
     bestScore: Number(o.bestScore || 0),
     active: o.active !== false,
-    createdAt: nowIso()
+    createdAt: nowIso(),
+    passwordSalt: o.passwordSalt || '',
+    passwordHash: o.passwordHash || '',
+    role: o.role || ''
   };
   sheet.appendRow(rowToArray('اعضا', row));
   return row;
@@ -924,9 +868,12 @@ function publicMember(r) {
     profileCompleted: truthy(r.profileCompleted),
     bestScore: Number(r.bestScore || 0),
     active: truthy(r.active),
-    createdAt: r.createdAt
+    createdAt: r.createdAt,
+    badgeRole: profileBadgeRole(r),
+    isCircleMember: isCircleMember(r.phone)
   };
 }
+function profileBadgeRole(member){var phone=normalizePhone(member&&member.phone);if(String(member&&member.role||'')==='owner'||phone===CFG.MASTER_COACH_PHONE)return 'owner';if(String(member&&member.role||'')==='responsible')return 'responsible';var coaches=getSheetObjects('مربیان');if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone&&String(r.role||'')==='master';}))return 'owner';if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone;}))return 'coach';return isCircleMember(phone)?'member':'';}
 
 /* -------------------------------------------------------------------------- */
 /* Events / Drive                                                             */
