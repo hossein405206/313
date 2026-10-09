@@ -335,6 +335,9 @@ function handlePost(p) {
     return saveEvent(p);
   }
 
+  if (action === 'saveSchedule') return saveSchedule(p);
+  if (action === 'deleteSchedule') return deleteSchedule(p);
+
   if (action === 'deleteEvent') {
     requireCoachPermission(p.token, 'events');
     return deleteEvent(String(p.id || ''));
