@@ -81,27 +81,30 @@ function showWisdom(){
 var $=function(s){return document.querySelector(s);};
 function api(){return window.KanoonApp&&window.KanoonApp.api;}
 function toast(m,e){var t=window.KanoonApp&&window.KanoonApp.toast;if(t)(e?t.error:t.success)(m);else alert(m);}
-function validPhone(p){return /^09\d{9}$/.test(String(p||'').trim());}
+function normalizeDigits(value){return String(value||'').replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));}).replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c));});}
+function validPhone(p){return /^09\d{9}$/.test(normalizeDigits(p).trim());}
 function init(){
  showWisdom();
- var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), btn=$('#memberSubmit'); if(!form)return;
- phone.addEventListener('input',function(){phone.value=phone.value.replace(/\D/g,'').slice(0,11);});
+ var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), password=$('#passwordInput'), btn=$('#memberSubmit');
+ if(!form||!name||!phone||!password)return;
+ phone.addEventListener('input',function(){phone.value=normalizeDigits(phone.value).replace(/\D/g,'').slice(0,11);});
  form.addEventListener('submit',async function(e){
   e.preventDefault();
-  var n=name.value.trim().replace(/\s+/g,' '), p=phone.value.trim();
-  if(n.length<2){toast('نام را وارد کن','error');name.focus();return;}
+  var n=name.value.trim().replace(/\s+/g,' '), p=normalizeDigits(phone.value).trim(), pass=password.value;
   if(!validPhone(p)){toast('شماره همراه نامعتبر است','error');phone.focus();return;}
+  if(!pass||pass.length<8){toast('گذرواژه باید دست‌کم ۸ نویسه داشته باشد','error');password.focus();return;}
   var service=api(); if(!service){toast('اتصال به سرور آماده نیست','error');return;}
-  btn.disabled=true;btn.textContent='در حال ورود...';
+  btn.disabled=true;btn.textContent='در حال بررسی...';
   try{
-   var res=await service.post({action:'registerMember',name:n,phone:p});
+   var res=await service.post({action:'memberAuth',name:n,phone:p,password:pass});
    if(window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.setMember(res.member,res.token);
    $('#welcomeTitle').textContent=res.member&&res.member.firstName?'خوش آمدی، '+res.member.firstName:'خوش آمدی';
-   $('#welcomeSubtitle').textContent=res.existing?'ورود با موفقیت انجام شد':'حساب شما با موفقیت ساخته شد';
-   document.querySelectorAll('.auth-step').forEach(function(s){s.classList.toggle('active',s.getAttribute('data-step')==='2')});
+   $('#welcomeSubtitle').textContent=!res.existing?'حساب شما با موفقیت ساخته شد':(res.passwordInitialized?'حساب قدیمی فعال شد؛ از این به بعد با شماره و گذرواژه وارد شو':'ورود با موفقیت انجام شد');
+   document.querySelectorAll('.auth-step').forEach(function(step){step.classList.toggle('active',step.getAttribute('data-step')==='2')});
+   password.value='';
    window.scrollTo(0,0);
   }catch(err){toast(err.message||'خطا در ورود','error');}
-  finally{btn.disabled=false;btn.textContent='ورود به سایت';}
+  finally{btn.disabled=false;btn.textContent='ورود / ساخت حساب';}
  });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
