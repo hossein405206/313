@@ -49,7 +49,15 @@ function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHT
 function renderRegs(list){var box=$('#registrationsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(r){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small></div><div class="admin-actions">'+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>'}).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}})}
 function setReg(id,status){api().post({action:'setRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت ثبت شد ✓');load()}).catch(function(e){toast(e.message,1)})}
 function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
-function renderWarnings(rows){var box=$('#warningsAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+' · '+esc(r.reason)+'</span><span>'+esc(r.responsibility)+'</span></div>').join(''):'<p class="muted">برای ماه جاری اخطاری ثبت نشده</p>'}
+function renderWarnings(rows){
+ var box=$('#warningsAdmin');
+ if(!box)return;
+ if(!rows.length){box.innerHTML='<p class="muted">برای ماه جاری هنوز اخطاری ثبت نشده</p>';return;}
+ box.innerHTML=rows.map(function(r){
+  var date=esc(r.date), member=esc(r.memberName), reason=esc(r.reason), responsibility=esc(r.responsibility);
+  return '<div class="report-row"><span>'+date+'</span><span>'+member+' · '+reason+'</span><span>'+responsibility+'</span></div>';
+ }).join('');
+}
 function openEditor(e){$('#eventEditor').classList.remove('hidden');$('#eventId').value=e?e.id:'';$('#eventTitle').value=e?e.title:'';$('#eventLabel').value=e?e.label:'';$('#eventDescription').value=e?e.description:'';$('#eventDate').value=normalizeDateInput(e?e.date:'');$('#eventSort').value=e?e.sort||0:0;$('#eventPreview').textContent=e&&e.imageUrl?'تصویر فعلی ثبت شده':'تصویر جدید را انتخاب کن'}
 function normalizeDateInput(v){var s=String(v||'').trim();return /^\d{4}-\d{2}-\d{2}$/.test(s)?s:''}
 function editEvent(id){var e=state.events.find(function(x){return x.id===id});if(e)openEditor(e)}
@@ -63,8 +71,8 @@ function editCoach(code,list){var x=list.find(function(y){return y.code===code})
 function setCoachStatus(code,active){api().post({action:'setCoachStatus',token:state.token,code:code,active:active}).then(function(){toast(active?'مدیر فعال شد ✓':'دسترسی مدیر بسته شد');loadCoaches()}).catch(function(e){toast(e.message,1)})}
 function loadOfficials(){api().get({action:'listOfficialsManage',token:state.token}).then(function(r){var box=$('#officialList');box.innerHTML=r.items.map(function(x){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.role)+' · '+esc(x.code)+'</small></div><div class="admin-actions"><button data-off-edit="'+esc(x.code)+'">ویرایش</button><button data-off-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'اخراج':'فعال‌سازی')+'</button></div></div>'}).join('')}).catch(function(e){toast(e.message,1)})}
 function setupStaff(){
- renderPermissionChecks($('#newCoachPermissions'),{events:true,schedule:true,registrations:true,reports:true,game:true});
- $('#addCoachBtn').onclick=function(){var p=readPermissions($('#newCoachPermissions'));api().post({action:'addCoach',token:state.token,name:$('#newCoachName').value.trim(),phone:$('#newCoachPhone').value.trim(),code:$('#newCoachCode').value.trim(),permissions:p}).then(function(){toast('مدیر ثبت شد ✓');$('#newCoachName').value='';$('#newCoachPhone').value='';$('#newCoachCode').value='';renderPermissionChecks($('#newCoachPermissions'),{events:true,schedule:true,registrations:true,reports:true,game:true});loadCoaches()}).catch(function(e){toast(e.message,1)})};
+ renderPermissionChecks($('#newCoachPermissions'),{});
+ $('#addCoachBtn').onclick=function(){var p=readPermissions($('#newCoachPermissions'));api().post({action:'addCoach',token:state.token,name:$('#newCoachName').value.trim(),phone:$('#newCoachPhone').value.trim(),code:$('#newCoachCode').value.trim(),permissions:p}).then(function(){toast('مدیر ثبت شد ✓');$('#newCoachName').value='';$('#newCoachPhone').value='';$('#newCoachCode').value='';renderPermissionChecks($('#newCoachPermissions'),{});loadCoaches()}).catch(function(e){toast(e.message,1)})};
  $('#addOfficialBtn').onclick=function(){api().post({action:'addOfficial',token:state.token,name:$('#newOfficialName').value.trim(),code:$('#newOfficialCode').value.trim(),role:$('#newOfficialRole').value}).then(function(){toast('مسئول ثبت شد ✓');$('#newOfficialName').value='';$('#newOfficialCode').value='';loadOfficials()}).catch(function(e){toast(e.message,1)})};
  $('#officialList').addEventListener('click',function(e){var edit=e.target.closest('[data-off-edit]'),st=e.target.closest('[data-off-status]');if(st){api().post({action:'setOfficialStatus',token:state.token,code:st.dataset.offStatus,active:st.dataset.active==='1'}).then(function(){toast('وضعیت مسئول تغییر کرد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}else if(edit){var code=edit.dataset.offEdit;var name=prompt('نام مسئول جدید:');if(name===null)return;var newCode=prompt('کد جدید:');if(newCode===null)return;var role=prompt('نوع مسئولیت: حضور و غیاب - راهنمایی / حضور و غیاب - دبستان / نظارت');if(role===null)return;api().post({action:'updateOfficial',token:state.token,oldCode:code,name:name,code:newCode,role:role}).then(function(){toast('مسئول ویرایش شد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}})}
 function setup(){
@@ -73,7 +81,17 @@ function setup(){
  $('#savePrizeBtn').onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(e){toast(e.message,1)})};
  $('#coachLogout').onclick=function(){sessionStorage.removeItem('coach_token');sessionStorage.removeItem('coach_name');sessionStorage.removeItem('coach_master');sessionStorage.removeItem('coach_permissions');location.reload()};
  state.token=sessionStorage.getItem('coach_token')||'';state.name=sessionStorage.getItem('coach_name')||'';state.isMaster=sessionStorage.getItem('coach_master')==='1';try{state.permissions=JSON.parse(sessionStorage.getItem('coach_permissions')||'{}')}catch(e){state.permissions={}};
- if(state.token){$('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');$('#coachName').textContent=state.name;$('#coachRoleBadge').textContent=state.isMaster?'مالک اصلی':'مدیر';applyPermissions();load().catch(function(e){toast(e.message||'نشست مربی معتبر نیست؛ دوباره وارد شو',1)})}else login();
+ if(state.token){
+  $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');
+  $('#coachName').textContent=state.name;$('#coachRoleBadge').textContent=state.isMaster?'مالک اصلی':'مدیر';
+  applyPermissions();
+  load().then(function(){if(state.isMaster){loadCoaches();loadOfficials()}}).catch(function(e){
+   ['coach_token','coach_name','coach_master','coach_permissions'].forEach(function(k){sessionStorage.removeItem(k)});
+   state.token='';state.name='';state.isMaster=false;state.permissions={};
+   $('#coachDashboard').classList.add('hidden');$('#coachLogin').classList.remove('hidden');
+   toast('نشست معتبر نبود؛ دوباره وارد شو',1);
+  });
+ }else login();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
