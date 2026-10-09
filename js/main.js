@@ -11,12 +11,12 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   var CONFIG = {
-    API_URL: 'https://script.google.com/macros/s/AKfycbzI6-Csz0Fk8qixHiWTYOHrCGJq8W-7X2lWID6n5qkQOSLYGXC6-Jwixs7Bf38PunC0/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbwQu_bIijvel7wu1898AZVlWMKavL00egnJc6-eTT3HiWxxjOo54-LKUblvLNLZOCO9/exec',
     CAROUSEL_INTERVAL: 4500,
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
-    DEBUG: true,
-    VERSION: '5.3.0'
+    DEBUG: false,
+    VERSION: '5.3.1'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
