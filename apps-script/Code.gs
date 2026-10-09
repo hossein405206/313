@@ -1378,7 +1378,7 @@ function leaderboardForWeek(week) {
 
 function allTimeLeaderboard() {
   return getSheetObjects('اعضا')
-    .filter(function(r){ return truthy(r.active) && truthy(r.profileCompleted) && Number(r.bestScore || 0) > 0; })
+    .filter(function(r){ return truthy(r.active) && Number(r.bestScore || 0) > 0; })
     .map(function(r){ return { memberId:String(r.id || ''), playerName:String(r.nickname || r.name || 'عضو'), score:Number(r.bestScore || 0) }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
