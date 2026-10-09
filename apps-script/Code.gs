@@ -93,16 +93,28 @@ function safeError(err) {
 /* Setup                                                                      */
 /* -------------------------------------------------------------------------- */
 
+function scheduleDayIndex(day){
+  var normalized=String(day||'').replace(/\u200c/g,'').trim();
+  return ['شنبه','یکشنبه','دوشنبه','سهشنبه','چهارشنبه','پنجشنبه','جمعه'].indexOf(normalized);
+}
 function listSchedulePublic(){
   var rows=getSheetObjects('برنامه').filter(function(x){return String(x.active).toLowerCase()!=='false';});
-  rows.sort(function(a,b){return Number(a.sort||0)-Number(b.sort||0);});
+  rows.sort(function(a,b){
+    var ai=scheduleDayIndex(a.day),bi=scheduleDayIndex(b.day);
+    if(ai<0)ai=99;if(bi<0)bi=99;
+    if(ai!==bi)return ai-bi;
+    var ac=String(a.createdAt||''),bc=String(b.createdAt||'');
+    if(ac!==bc)return ac.localeCompare(bc);
+    return String(a.title||'').localeCompare(String(b.title||''),'fa');
+  });
   return {items:rows};
 }
 function saveSchedule(p){
   requireCoachPermission(p.token,'schedule');
   var sheet=getSheet('برنامه'), id=String(p.id||Utilities.getUuid()), rows=getSheetObjects('برنامه'), pos=findRowById('برنامه',id);
-  var obj={id:id,day:String(p.day||'').trim(),title:String(p.title||'').trim(),time:String(p.time||'').trim(),location:String(p.location||'').trim(),active:p.active!==false,sort:Number(p.sort||0),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-  if(!obj.day||!obj.title)throw new Error('روز و عنوان برنامه الزامی است');
+  var day=String(p.day||'').trim(),dayIndex=scheduleDayIndex(day);
+  var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  if(dayIndex<0||!obj.title)throw new Error('روز معتبر و عنوان برنامه را وارد کن');
   if(pos){var old=rows[pos-2];obj.createdAt=old.createdAt||obj.createdAt;sheet.getRange(pos,1,1,HEADERS['برنامه'].length).setValues([rowToArray('برنامه',obj)]);}else sheet.appendRow(rowToArray('برنامه',obj));
   return {item:obj};
 }
@@ -150,11 +162,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.4.0-officials-audit' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.5.0-jalali-deletes-polish' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.4.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.5.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -301,10 +313,12 @@ function handlePost(p) {
   }
   if (action === 'updateCoach') return updateCoach(p);
   if (action === 'setCoachStatus') return setCoachStatus(p);
+   if (action === 'deleteCoach') return deleteCoach(p);
   if (action === 'updateCoachCode') return updateCoachCode(p);
   if (action === 'addOfficial') return addOfficial(p);
   if (action === 'updateOfficial') return updateOfficial(p);
   if (action === 'setOfficialStatus') return setOfficialStatus(p);
+   if (action === 'deleteOfficial') return deleteOfficial(p);
   if (action === 'generateLoginCode' || action === 'verifyLoginCode') {
     throw new Error('ورود پیامکی فعال نیست؛ با شماره همراه و گذرواژه وارد شو');
   }
@@ -672,6 +686,18 @@ function setCoachStatus(p) {
   row[idx.active]=p.active===true || String(p.active).toLowerCase()==='true'; row[idx.updatedAt]=nowIso(); sheet.getRange(pos,1,1,headers.length).setValues([row]);
   return {ok:true,active:truthy(row[idx.active])};
 }
+function deleteCoach(p){
+  var auth=requireToken(p.token,['coach']);
+  if(!auth.isMaster)throw new Error('فقط مالک می‌تواند مربی را حذف کند');
+  var target=String(p.code||'').trim().toUpperCase();
+  if(!target)throw new Error('مربی انتخاب نشده است');
+  var rows=getSheetObjects('مربیان'),pos=0;
+  for(var i=0;i<rows.length;i++){if(String(rows[i].code||'').trim().toUpperCase()===target){pos=i+2;break;}}
+  if(!pos)throw new Error('مربی پیدا نشد');
+  if(String(rows[pos-2].role||'')==='master')throw new Error('حساب مالک قابل حذف نیست');
+  getSheet('مربیان').deleteRow(pos);
+  return {ok:true,deleted:true};
+}
 function updateCoachCode(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند کد را تغییر دهد');
   var pos=findCoachRowByCode(String(p.oldCode||'').trim()); if(!pos)throw new Error('مربی پیدا نشد');
@@ -733,6 +759,16 @@ function setOfficialStatus(p) {
     }
   }
   vals[3]=makeActive; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
+}
+function deleteOfficial(p){
+  requireCoachPermission(p.token,'officials');
+  var target=normalizeIranDigits(String(p.code||'').trim()).toUpperCase();
+  if(!target)throw new Error('مسئول انتخاب نشده است');
+  var rows=getSheetObjects('مسئولین'),pos=0;
+  for(var i=0;i<rows.length;i++){if(normalizeIranDigits(String(rows[i].code||'').trim()).toUpperCase()===target){pos=i+2;break;}}
+  if(!pos)throw new Error('مسئول پیدا نشد');
+  getSheet('مسئولین').deleteRow(pos);
+  return {ok:true,deleted:true};
 }
 function requireCoachPermission(token, permission) {
   var auth=requireToken(token,['coach']); if(auth.isMaster)return auth;
@@ -1150,6 +1186,23 @@ function getRingRegistration(p) {
   };
 }
 
+function isValidJalaliRingDate(value){
+  var m=/^(\d{4})\/(\d{2})\/(\d{2})$/.exec(String(value||'').trim());
+  if(!m)return false;
+  var y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]);
+  if(y<1300||y>1500||mo<1||mo>12||d<1)return false;
+  var breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+  var leapJ=-14,jp=breaks[0],jm,jump,leapG,march,n;
+  for(var i=1;i<breaks.length;i++){jm=breaks[i];jump=jm-jp;if(y<jm)break;leapJ=Math.floor(jump/33)*8+Math.floor((jump%33)/4);jp=jm;}
+  n=y-jp;leapJ+=Math.floor(n/33)*8+Math.floor(((n%33)+3)/4);
+  if(((jump%33)===4)&&(jump-n===4))leapJ++;
+  leapG=Math.floor((y+621)/4)-Math.floor((Math.floor((y+621)/100)+1)*3/4)-150;
+  march=20+leapJ-leapG;
+  if(jump-n<6)n=n-jump+Math.floor((jump+4)/33)*33;
+  var leap=((n+1)%33-1)%4;if(leap===-1)leap=4;
+  var leapYear=leap===0,max=mo<=6?31:(mo<=11?30:(leapYear?30:29));
+  return d<=max;
+}
 function saveRingRegistration(p) {
   var auth = requireToken(String(p.token || ''), ['member']);
   var phone = normalizeMemberPhone(auth.subject);
@@ -1163,17 +1216,17 @@ function saveRingRegistration(p) {
   var address = String(p.address || '').trim();
   var school = String(p.school || '').trim();
   var grade = String(p.grade || '').trim();
-  var guardianName = String(p.guardianName || '').trim();
+  var guardianName = String(p.guardianName || p.fatherName || '').trim();
   var emergencyPhone = normalizeMemberPhone(p.emergencyPhone || p.fatherPhone);
 
   if (!/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
-  if (!birthDate) throw new Error('تاریخ تولد را وارد کن');
+  if (!isValidJalaliRingDate(birthDate)) throw new Error('تاریخ تولد شمسی معتبر نیست؛ نمونه: ۱۳۸۹/۰۶/۱۵');
   if (!fatherName) throw new Error('نام پدر را وارد کن');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (address.length < 8) throw new Error('آدرس را کامل‌تر وارد کن');
   if (!school) throw new Error('نام مدرسه را وارد کن');
   if (!grade) throw new Error('پایه تحصیلی را انتخاب کن');
-  if (!guardianName) throw new Error('نام سرپرست را وارد کن');
+  if (!guardianName) throw new Error('نام پدر را وارد کن');
   if (!/^09\d{9}$/.test(emergencyPhone)) throw new Error('شماره تماس اضطراری نامعتبر است');
 
   var sheet = getSheet('ثبت‌نام حلقه');
