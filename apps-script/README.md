@@ -37,6 +37,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 - حضورغیاب
 - اخطارها
 - بازی
+- درخواست عضویت در حلقه: `درخواست عضویت`
 
 کدهای اولیه مسئولین را حتماً بعد از setup تغییر بده.
 
@@ -89,6 +90,13 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 ## Endpoint فعلی سایت
 
-`https://script.google.com/macros/s/AKfycbxxuOgL4x67CuF3aL6baLGURlxNIOKel3C3GU0zcvF6LlzvoBeK32D4uMkg9PDEEImM/exec`
+`https://script.google.com/macros/s/AKfycbzI6-Csz0Fk8qixHiWTYOHrCGJq8W-7X2lWID6n5qkQOSLYGXC6-Jwixs7Bf38PunC0/exec`
 
 این همان Web App endpoint است که در `js/main.js` تنظیم شده است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
+
+## عضویت در حلقه
+
+- درخواست‌ها در شیت `درخواست عضویت` ذخیره می‌شوند.
+- مالک اصلی درخواست‌ها را در پنل مربیان بررسی می‌کند.
+- بازی پرنده و بازی مار فقط برای اعضای فعال و تأییدشده حلقه باز هستند.
+- پس از جایگزینی `Code.gs`، تابع `setup()` را یک بار اجرا کن تا شیت جدید ساخته شود.
