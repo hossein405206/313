@@ -331,6 +331,9 @@ function handlePost(p) {
     return saveEvent(p);
   }
 
+  if (action === 'saveSchedule') return saveSchedule(p);
+  if (action === 'deleteSchedule') return deleteSchedule(p);
+
   if (action === 'deleteEvent') {
     requireCoachPermission(p.token, 'events');
     return deleteEvent(String(p.id || ''));
@@ -706,13 +709,25 @@ function updateOfficial(p) {
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
-  var rows=getSheetObjects('مسئولین'); if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
+  var rows=getSheetObjects('مسئولین');
+  if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
+  if(rows.some(function(r){return truthy(r.active) && String(r.role||'')===role && String(r.code||'').trim()!==oldCode;}))throw new Error('برای این نوع مسئولیت مسئول فعال دیگری وجود دارد؛ ابتدا او را غیرفعال کن');
   var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
 function setOfficialStatus(p) {
   requireCoachPermission(p.token, 'officials');
+  var code=normalizeIranDigits(String(p.code||'').trim()).toUpperCase();
   var pos=findRow(getSheet('مسئولین'),'code',String(p.code||'')); if(!pos)throw new Error('مسئول پیدا نشد');
-  var sheet=getSheet('مسئولین'), vals=sheet.getRange(pos,1,1,5).getValues()[0]; vals[3]=p.active===true || String(p.active).toLowerCase()==='true'; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
+  var sheet=getSheet('مسئولین'), vals=sheet.getRange(pos,1,1,5).getValues()[0];
+  var makeActive=p.active===true || String(p.active).toLowerCase()==='true';
+  if(makeActive){
+    var targetRole=String(vals[2]||'');
+    var rows=getSheetObjects('مسئولین');
+    if(rows.some(function(r){return truthy(r.active) && String(r.role||'')===targetRole && String(r.code||'').trim().toUpperCase()!==code;})){
+      throw new Error('برای این نوع مسئولیت، مسئول فعال دیگری وجود دارد');
+    }
+  }
+  vals[3]=makeActive; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
 }
 function requireCoachPermission(token, permission) {
   var auth=requireToken(token,['coach']); if(auth.isMaster)return auth;
