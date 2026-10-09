@@ -98,6 +98,11 @@ function init(){
   try{
    var res=await service.post({action:'memberAuth',name:n,phone:p,password:pass});
    if(window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.setMember(res.member,res.token);
+   var returnTo = new URLSearchParams(window.location.search).get('return') || '';
+   if (/^[a-z0-9-]+\\.html$/i.test(returnTo)) {
+    setTimeout(function(){ window.location.href = returnTo; }, 450);
+    return;
+   }
    $('#welcomeTitle').textContent=res.member&&res.member.firstName?'خوش آمدی، '+res.member.firstName:'خوش آمدی';
    $('#welcomeSubtitle').textContent=!res.existing?'حساب شما با موفقیت ساخته شد':(res.passwordInitialized?'حساب قدیمی فعال شد؛ از این به بعد با شماره و گذرواژه وارد شو':'ورود با موفقیت انجام شد');
    document.querySelectorAll('.auth-step').forEach(function(step){step.classList.toggle('active',step.getAttribute('data-step')==='2')});
