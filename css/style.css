@@ -2834,3 +2834,9 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 
 /* HOME WISDOM */
 .home-wisdom{margin:10px auto 0;max-width:520px;padding:15px 18px 14px;background:radial-gradient(170px 80px at 100% 0,rgba(201,154,53,.12),transparent 70%),linear-gradient(145deg,#fffaf0,#f6efdf);border:1px solid rgba(201,154,53,.22);border-radius:20px;box-shadow:0 9px 25px rgba(25,42,60,.06);text-align:center}.home-wisdom__ornament{font-size:.53rem;font-weight:800;color:#9a7122;letter-spacing:.03em}.home-wisdom__arabic{margin-top:8px;font-family:'Aref Ruqaa','Vazirmatn',serif;font-size:1.17rem;font-weight:700;line-height:1.9;color:#172b46}.home-wisdom__meaning{margin-top:5px;font-size:.61rem;line-height:1.9;color:#5a6676}.home-wisdom__source{margin-top:6px;padding-top:6px;border-top:1px solid rgba(23,43,70,.07);font-size:.5rem;color:#8b919a}.profile-actions #editProfileBtn{background:linear-gradient(135deg,#0f6b62,#178477)!important;color:#fff!important}.profile-actions #editProfileBtn:hover{box-shadow:0 11px 24px rgba(15,107,98,.18)!important}
+
+/* Public officials use turquoise as requested. */
+.official-card .avatar { background:linear-gradient(135deg,#99f6e4,#0f9d91); color:#064e4b; border:2px solid #ccfbf1; box-shadow:0 8px 20px rgba(13,148,136,.18); }
+.official-card .role { color:#0f766e; background:linear-gradient(135deg,#d9fbf3,#b9f2e8); border-color:#99f6e4; }
+.official-card { border-color:rgba(13,148,136,.16); }
+.official-card:hover { border-color:rgba(13,148,136,.34); }
