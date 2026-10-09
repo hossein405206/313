@@ -250,6 +250,7 @@ function handleGet(p) {
     var registrationAuth = requireToken(p.token, ['coach', 'member']);
     var registrations = getSheetObjects('ثبت‌نام‌ها');
     if (registrationAuth.role === 'coach') {
+      requireCoachPermission(p.token, 'registrations');
       return { ok: true, items: registrations.sort(byNewest) };
     }
     return {
