@@ -15,7 +15,7 @@
     CAROUSEL_INTERVAL: 4500,
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
-    DEBUG: true,
+    DEBUG: false,
     VERSION: '5.3.0'
   };
 
