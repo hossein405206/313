@@ -34,7 +34,7 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','membershipStatus','birthDate','schoolLevel','schoolGrade','guardianName','guardianPhone','membershipRequestedAt','membershipReviewedAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
@@ -263,6 +263,13 @@ function handleGet(p) {
 
   if (action === 'getDashboard') { var dashAuth=requireToken(p.token,['coach']); var dash=dashboardData(dashAuth); dash.isMaster=!!dashAuth.isMaster; dash.permissions=dashAuth.isMaster?allCoachPermissions():dashAuth.permissions; return dash; }
 
+  if (action === 'getMyMembershipStatus') {
+    var membershipAuth = requireToken(p.token, ['member']);
+    var currentMember = findMemberByPhone(membershipAuth.subject, true);
+    if (!currentMember || !truthy(currentMember.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+    return { ok:true, membershipStatus:String(currentMember.membershipStatus || ''), member:publicMember(currentMember) };
+  }
+
   if (action === 'getGameData') {
     var week = currentWeekKey();
     var prize = getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE;
@@ -310,6 +317,9 @@ function handlePost(p) {
     requireToken(p.token, ['member']);
     return updateMember(p);
   }
+
+  if (action === 'submitMembershipApplication') return submitMembershipApplication(p);
+  if (action === 'setMembershipStatus') return setMembershipStatus(p);
 
   if (action === 'registerCamp') {
     return registerCamp(p);
@@ -715,7 +725,8 @@ function addMember(p) {
     firstName: first,
     lastName: last,
     phone: phone,
-    active: true
+    active: true,
+    membershipStatus: 'approved'
   });
 
   return { ok: true, member: publicMember(m) };
@@ -734,10 +745,76 @@ function addMemberInternal(o) {
     profileCompleted: o.profileCompleted === true,
     bestScore: Number(o.bestScore || 0),
     active: o.active !== false,
-    createdAt: nowIso()
+    createdAt: nowIso(),
+    membershipStatus: String(o.membershipStatus || ''),
+    birthDate: String(o.birthDate || ''),
+    schoolLevel: String(o.schoolLevel || ''),
+    schoolGrade: String(o.schoolGrade || ''),
+    guardianName: String(o.guardianName || ''),
+    guardianPhone: String(o.guardianPhone || ''),
+    membershipRequestedAt: String(o.membershipRequestedAt || ''),
+    membershipReviewedAt: String(o.membershipReviewedAt || '')
   };
   sheet.appendRow(rowToArray('اعضا', row));
   return row;
+}
+
+function submitMembershipApplication(p) {
+  var auth = requireToken(p.token, ['member']);
+  var phone = String(auth.subject || '');
+  if (p.phone && String(p.phone).trim() !== phone) throw new Error('شماره فرم با حساب واردشده مطابقت ندارد');
+  var firstName = String(p.firstName || '').trim().replace(/\s+/g, ' ');
+  var lastName = String(p.lastName || '').trim().replace(/\s+/g, ' ');
+  var birthDate = String(p.birthDate || '').trim();
+  var schoolLevel = String(p.schoolLevel || '').trim();
+  var schoolGrade = String(p.schoolGrade || '').trim();
+  var guardianName = String(p.guardianName || '').trim().replace(/\s+/g, ' ');
+  var guardianPhone = String(p.guardianPhone || '').trim();
+  if (firstName.length < 2 || lastName.length < 2) throw new Error('نام و نام خانوادگی را کامل وارد کن');
+  if (!guardianName) throw new Error('نام ولی یا سرپرست الزامی است');
+  if (!/^09\d{9}$/.test(guardianPhone)) throw new Error('شماره همراه ولی نامعتبر است');
+  if (['دبستان','راهنمایی','متوسطه دوم','سایر'].indexOf(schoolLevel) < 0) throw new Error('مقطع تحصیلی را انتخاب کن');
+  if (!schoolGrade || schoolGrade.length > 30) throw new Error('پایه تحصیلی را وارد کن');
+  if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new Error('تاریخ تولد نامعتبر است');
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    var sheet = getSheet('اعضا');
+    var values = sheet.getDataRange().getValues();
+    if (values.length < 2) throw new Error('حساب عضو پیدا نشد');
+    var headers = values[0].map(String), phoneIndex = headers.indexOf('phone');
+    var memberRow = -1, member = null;
+    for (var i = 1; i < values.length; i++) {
+      if (String(values[i][phoneIndex] || '') === phone) { memberRow = i; member = rowToObject('اعضا', values[i]); break; }
+    }
+    if (memberRow < 0 || !member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+    if (String(member.membershipStatus || '') === 'approved') return { ok:true, alreadyMember:true, membershipStatus:'approved', member:publicMember(member) };
+    var row = values[memberRow];
+    var patch = {firstName:firstName,lastName:lastName,name:(firstName+' '+lastName).trim(),membershipStatus:'pending',birthDate:birthDate,schoolLevel:schoolLevel,schoolGrade:schoolGrade,guardianName:guardianName,guardianPhone:guardianPhone,membershipRequestedAt:nowIso(),membershipReviewedAt:''};
+    Object.keys(patch).forEach(function(key){var index=headers.indexOf(key);if(index>=0)row[index]=patch[key];});
+    sheet.getRange(memberRow+1,1,1,row.length).setValues([row]);
+    return {ok:true,alreadyMember:false,membershipStatus:'pending',member:publicMember(rowToObject('اعضا',row))};
+  } finally { lock.releaseLock(); }
+}
+
+function setMembershipStatus(p) {
+  var auth = requireToken(p.token, ['coach']);
+  if (!auth.isMaster) throw new Error('فقط مالک اصلی می‌تواند عضویت را تایید کند');
+  var memberId = String(p.memberId || '').trim();
+  var status = String(p.status || '').trim();
+  if (!memberId || ['approved','rejected'].indexOf(status) < 0) throw new Error('درخواست یا وضعیت عضویت نامعتبر است');
+  var sheet = getSheet('اعضا'), values = sheet.getDataRange().getValues();
+  if (values.length < 2) throw new Error('درخواست عضویت پیدا نشد');
+  var headers = values[0].map(String), idIndex = headers.indexOf('id');
+  for (var i=1;i<values.length;i++) {
+    if (String(values[i][idIndex] || '') !== memberId) continue;
+    var row = values[i];
+    if (headers.indexOf('membershipStatus') < 0) throw new Error('ساختار شیت اعضا به‌روز نیست؛ setup را اجرا کن');
+    row[headers.indexOf('membershipStatus')] = status;
+    if (headers.indexOf('membershipReviewedAt') >= 0) row[headers.indexOf('membershipReviewedAt')] = nowIso();
+    sheet.getRange(i+1,1,1,row.length).setValues([row]);
+    return {ok:true,memberId:memberId,membershipStatus:status};
+  }
+  throw new Error('درخواست عضویت پیدا نشد');
 }
 
 function updateMember(p) {
@@ -780,7 +857,7 @@ function deleteMember(id) {
 
 function listActiveMembers() {
   return getSheetObjects('اعضا')
-    .filter(function(r){ return truthy(r.active); })
+    .filter(function(r){ return truthy(r.active) && String(r.membershipStatus || '') === 'approved'; })
     .sort(function(a,b){ return String(a.name).localeCompare(String(b.name), 'fa'); })
     .map(publicMember);
 }
@@ -803,6 +880,7 @@ function publicMember(r) {
     name: r.name,
     phone: r.phone,
     nickname: r.nickname || '',
+    membershipStatus: String(r.membershipStatus || ''),
     profileCompleted: truthy(r.profileCompleted),
     bestScore: Number(r.bestScore || 0),
     active: truthy(r.active),
@@ -1153,6 +1231,7 @@ function dashboardData(auth) {
     stats:{
       activeMembers:listActiveMembers().length,
       pendingRegistrations:pending,
+      pendingMembershipApplications:auth && auth.isMaster ? getSheetObjects('اعضا').filter(function(m){return String(m.membershipStatus || '') === 'pending';}).length : 0,
       todayAttendance:todayAttendance.length,
       monthWarnings:warnings.length
     },
@@ -1161,6 +1240,7 @@ function dashboardData(auth) {
     attendance:(!auth || auth.isMaster || auth.permissions.reports) ? attendance : [],
     warnings:(!auth || auth.isMaster || auth.permissions.reports) ? warnings : [],
     prize:(!auth || auth.isMaster || auth.permissions.game) ? (getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE) : '',
+    membershipApplications:auth && auth.isMaster ? getSheetObjects('اعضا').filter(function(m){return String(m.membershipStatus || '') === 'pending';}).map(function(m){return {id:String(m.id||''),firstName:String(m.firstName||''),lastName:String(m.lastName||''),phone:String(m.phone||''),birthDate:String(m.birthDate||''),schoolLevel:String(m.schoolLevel||''),schoolGrade:String(m.schoolGrade||''),guardianName:String(m.guardianName||''),guardianPhone:String(m.guardianPhone||''),requestedAt:String(m.membershipRequestedAt||'')};}) : [],
     leaderboard:leaderboardForWeek(currentWeekKey()),
     previousWinner:previousWinner()
   };
@@ -1222,7 +1302,7 @@ function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
   if (!member) throw new Error('عضو پیدا نشد');
-  if (!truthy(member.profileCompleted)) throw new Error('ابتدا پروفایلت را تکمیل کن');
+  if (String(member.membershipStatus || '') !== 'approved') throw new Error('بازی فقط برای اعضای تاییدشده حلقه است');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
   var memberSheet = getSheet('اعضا');
@@ -1247,8 +1327,10 @@ function submitGameScore(p) {
   } finally { lock.releaseLock(); }
 }
 function leaderboardForWeek(week) {
+  var approvedIds = {};
+  getSheetObjects('اعضا').forEach(function(m){if(truthy(m.active) && String(m.membershipStatus || '') === 'approved') approvedIds[String(m.id)] = true;});
   return getSheetObjects('بازی')
-    .filter(function(r){ return String(r.weekKey) === String(week); })
+    .filter(function(r){ return String(r.weekKey) === String(week) && approvedIds[String(r.memberId || '')]; })
     .map(function(r){ return { memberId:String(r.memberId || ''), playerName:r.playerName, score:Number(r.score || 0) }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
@@ -1256,7 +1338,7 @@ function leaderboardForWeek(week) {
 
 function allTimeLeaderboard() {
   return getSheetObjects('اعضا')
-    .filter(function(r){ return truthy(r.active) && truthy(r.profileCompleted) && Number(r.bestScore || 0) > 0; })
+    .filter(function(r){ return truthy(r.active) && String(r.membershipStatus || '') === 'approved' && Number(r.bestScore || 0) > 0; })
     .map(function(r){ return { memberId:String(r.id || ''), playerName:String(r.nickname || r.name || 'عضو'), score:Number(r.bestScore || 0) }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
