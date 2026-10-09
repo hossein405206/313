@@ -12,7 +12,9 @@
 <form id="memberForm" class="auth-form" novalidate>
 <div class="form-group"><label for="nameInput">نام و نام خانوادگی</label><input type="text" id="nameInput" class="form-control" placeholder="مثلاً حسین محمدی" autocomplete="name" required></div>
 <div class="form-group"><label for="phoneInput">شماره همراه</label><input type="tel" id="phoneInput" class="form-control" placeholder="09xxxxxxxxx" dir="ltr" inputmode="numeric" autocomplete="tel" maxlength="11" required></div>
-<button type="submit" class="btn-submit" id="memberSubmit">ورود به سایت</button>
+<div class="form-group" id="passwordGroup" hidden><label for="passwordInput">رمز عبور</label><input type="password" id="passwordInput" class="form-control" minlength="8" maxlength="128" autocomplete="current-password" placeholder="حداقل ۸ نویسه"></div>
+<p class="auth-subtitle" id="authHint" aria-live="polite">اگر حساب نداری، بعد از واردکردن مشخصات رمز عبور می‌سازی.</p>
+<button type="submit" class="btn-submit" id="memberSubmit">ادامه</button>
 </form>
 
 </section>
