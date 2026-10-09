@@ -145,7 +145,7 @@
     try {
       var res = await api.get({
         action: 'listRegistrations',
-        memberPhone: member.phone
+        token: member.token
       });
       var items = res.items || [];
       var approved = items.filter(function (r) {
@@ -231,10 +231,19 @@
       btn.textContent = 'در حال ذخیره...';
 
       try {
-        await api.post({ action: 'updateMember', ...data });
+        if (!state.member.token) {
+          toast('نشست ورود پیدا نشد؛ یک‌بار خارج شو و دوباره وارد شو', 'error');
+          return;
+        }
 
-        // آپدیت state محلی
-        var updated = Object.assign({}, state.member, data);
+        var response = await api.post({
+          action: 'updateMember',
+          token: state.member.token,
+          ...data
+        });
+
+        // پاسخ سرور را مبنا قرار می‌دهیم و توکن فعلی را نگه می‌داریم
+        var updated = Object.assign({}, state.member, response.member || data);
         state.member = updated;
 
         // ذخیره در session
