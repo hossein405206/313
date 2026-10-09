@@ -8,11 +8,11 @@
   <div class="ali-wisdom__source">📌 منبع: <span id="aliWisdomSource"></span></div>
 </section>
 <section class="auth-step active" data-step="1">
-<div class="auth-hero"><div class="auth-hero__icon"><span>ح</span></div><h2 class="auth-title">ورود یا ثبت‌نام</h2><p class="auth-subtitle">برای حساب جدید نام، شماره و گذرواژه را وارد کن؛ دفعه‌های بعد شماره و گذرواژه کافی است.</p></div>
+<div class="auth-hero"><div class="auth-hero__icon"><span>ح</span></div><h2 class="auth-title">ورود یا ثبت‌نام</h2><p class="auth-subtitle">برای حساب جدید نام، شماره و گذرواژه را وارد کن؛ دفعه‌های بعد شماره و گذرواژه کافی است. <br><small>اگر حساب قدیمی‌ات هنوز گذرواژه ندارد، یک‌بار نام قبلی ثبت‌شده را هم وارد کن.</small></p></div>
 <form id="memberForm" class="auth-form" novalidate>
 <div class="form-group"><label for="nameInput">نام و نام خانوادگی <span class="auth-optional">(برای حساب جدید)</span></label><input type="text" id="nameInput" class="form-control" placeholder="مثلاً حسین محمدی" autocomplete="name"></div>
 <div class="form-group"><label for="phoneInput">شماره همراه</label><input type="tel" id="phoneInput" class="form-control" placeholder="09xxxxxxxxx" dir="ltr" inputmode="numeric" autocomplete="tel" maxlength="11" required></div>
-<div class="form-group"><label for="passwordInput">گذرواژه</label><input type="password" id="passwordInput" class="form-control" placeholder="حداقل ۸ نویسه" autocomplete="current-password" required></div>
+<div class="form-group"><label for="passwordInput">گذرواژه</label><input type="password" id="passwordInput" class="form-control" placeholder="حداقل ۸ نویسه" autocomplete="current-password" minlength="8" maxlength="128" required></div>
 <button type="submit" class="btn-submit" id="memberSubmit">ورود / ساخت حساب</button>
 </form>
 
