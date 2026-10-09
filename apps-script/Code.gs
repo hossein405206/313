@@ -385,13 +385,13 @@ function verifyOfficialCode(code) {
 }
 
 function verifyCoachCode(code) {
-  var masterConfig=getMasterCoachConfig();
   var rows=getSheetObjects('مربیان');
   for(var i=0;i<rows.length;i++){
-    var r=rows[i], isMaster=String(r.role||'')==='master';
+    var r=rows[i];
+    // مربی ارشد باید از مسیر loginCoach و با شماره + کد احراز شود؛ کد تنها کافی نیست.
+    if(String(r.role||'')==='master')continue;
     if(!truthy(r.active)||String(r.code||'').toUpperCase()!==String(code||'').toUpperCase())continue;
-    if(isMaster&&(!masterConfig.code||String(r.code||'').trim()!==masterConfig.code))continue;
-    return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:isMaster};
+    return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:false};
   }
   return null;
 }
