@@ -1059,6 +1059,13 @@ function getRingRegistrationByPhone(phone) {
   return null;
 }
 
+function ringRegistrationDate(value) {
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, CFG.TIMEZONE, 'yyyy-MM-dd');
+  }
+  return String(value || '');
+}
+
 function getRingRegistration(p) {
   var auth = requireToken(String(p.token || ''), ['member']);
   var registration = getRingRegistrationByPhone(auth.subject);
@@ -1069,7 +1076,7 @@ function getRingRegistration(p) {
     item:{
       id:String(registration.id || ''),
       nationalCode:String(registration.nationalCode || ''),
-      birthDate:String(registration.birthDate || ''),
+      birthDate:ringRegistrationDate(registration.birthDate),
       fatherName:String(registration.fatherName || ''),
       fatherPhone:String(registration.fatherPhone || ''),
       address:String(registration.address || ''),
