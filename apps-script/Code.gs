@@ -546,7 +546,7 @@ function updateOwnCoachCredentials(p) {
 function addCoach(p){
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مربی اضافه کند');
   var name=String(p.name||'').trim(),phone=String(p.phone||'').trim(),code=String(p.code||'').trim();
-  if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(!code)throw new Error('کد مربی را وارد کن');
+  if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(code.length<8)throw new Error('رمز ورود مربی باید دست‌کم ۸ نویسه داشته باشد');
   var rows=getSheetObjects('مربیان');
   if(rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\s+/g,'')===phone;}))throw new Error('این شماره قبلاً ثبت شده');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده');
@@ -597,7 +597,7 @@ function normalizeCoachRecords() {
     if(code)seenCode[code]=true;
     if(isMaster)masterKept=true;
     if(idx.permissions!==undefined){
-      if(!String(rows[i][idx.permissions]||'').trim() && String(rows[i][idx.role]||'')!=='master') rows[i][idx.permissions]=JSON.stringify({events:true,schedule:true,registrations:true,reports:true,game:true,coaches:false,officials:false});
+      if(!String(rows[i][idx.permissions]||'').trim() && String(rows[i][idx.role]||'')!=='master') rows[i][idx.permissions]=JSON.stringify({events:true,schedule:true,registrations:true,reports:true,game:true,coaches:false,officials:false,feedback:false});
       var normalized=JSON.stringify(coachPermissions(rowToObject('مربیان',rows[i])));
       if(String(rows[i][idx.permissions]||'')!==normalized){rows[i][idx.permissions]=normalized;changed=true;}
     }
@@ -620,7 +620,7 @@ function updateCoach(p) {
   headers.forEach(function(h,i){idx[h]=i;});
   if(String(row[idx.role]||'')==='master')throw new Error('مربی ارشد قابل ویرایش از این بخش نیست');
   var name=String(p.name||'').trim(), phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,''), code=String(p.code||'').trim();
-  if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(!code)throw new Error('کد مربی را وارد کن');
+  if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(code.length<8)throw new Error('رمز ورود مربی باید دست‌کم ۸ نویسه داشته باشد');
   for(var i=1;i<rows.length;i++){if(i===pos-1)continue;var rr=rows[i];if(String(normalizeIranDigits(rr[idx.phone]||'')).replace(/\s+/g,'')===phone)throw new Error('این شماره قبلاً ثبت شده');if(String(rr[idx.code]||'').trim().toUpperCase()===code.toUpperCase())throw new Error('این کد قبلاً استفاده شده');}
   row[idx.name]=name; row[idx.phone]=phone; row[idx.code]=code; row[idx.permissions]=JSON.stringify(normalizePermissions(p.permissions)); row[idx.updatedAt]=nowIso();
   sheet.getRange(pos,1,1,headers.length).setValues([row]); return {ok:true,item:{name:name,phone:phone,code:code,role:'admin',active:truthy(row[idx.active]),permissions:normalizePermissions(p.permissions)}};
@@ -636,7 +636,7 @@ function setCoachStatus(p) {
 function updateCoachCode(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند کد را تغییر دهد');
   var pos=findCoachRowByCode(String(p.oldCode||'').trim()); if(!pos)throw new Error('مربی پیدا نشد');
-  var newCode=String(p.code||'').trim(); if(!newCode)throw new Error('کد جدید را وارد کن');
+  var newCode=String(p.code||'').trim(); if(newCode.length<8)throw new Error('رمز ورود جدید باید دست‌کم ۸ نویسه داشته باشد');
   var rows=getSheetObjects('مربیان'); if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===newCode.toUpperCase() && String(r.code||'').trim()!==String(p.oldCode||'').trim();}))throw new Error('این کد قبلاً استفاده شده');
   var sheet=getSheet('مربیان'), headers=sheet.getDataRange().getValues()[0].map(String), ci=headers.indexOf('code'), ui=headers.indexOf('updatedAt'); var row=sheet.getRange(pos,1,1,headers.length).getValues()[0]; if(String(row[headers.indexOf('role')]||'')==='master')throw new Error('کد مربی ارشد قابل تغییر نیست'); row[ci]=newCode; row[ui]=nowIso(); sheet.getRange(pos,1,1,headers.length).setValues([row]); return {ok:true,code:newCode};
 }
