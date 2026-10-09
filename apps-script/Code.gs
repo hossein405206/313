@@ -696,6 +696,21 @@ function hashMemberPassword(password, salt) {
   }
   return digest;
 }
+function saveMemberPassword(phone, salt, hash) {
+  var sheet = getSheet('اعضا'), values = sheet.getDataRange().getValues();
+  if (values.length < 2) throw new Error('حساب عضو پیدا نشد');
+  var headers = values[0].map(String), phoneCol = headers.indexOf('phone');
+  var saltCol = headers.indexOf('passwordSalt'), hashCol = headers.indexOf('passwordHash');
+  if (phoneCol < 0 || saltCol < 0 || hashCol < 0) throw new Error('ساختار شیت اعضا به‌روز نیست؛ setup را پس از پشتیبان‌گیری اجرا کن');
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeMemberPhone(values[i][phoneCol]) !== normalizeMemberPhone(phone)) continue;
+    sheet.getRange(i + 1, saltCol + 1).setValue(salt);
+    sheet.getRange(i + 1, hashCol + 1).setValue(hash);
+    return true;
+  }
+  throw new Error('حساب عضو پیدا نشد');
+}
+
 function registerMember(p) {
   var fullName = String(p.name || '').trim().replace(/\s+/g, ' ');
   var phone = normalizeMemberPhone(p.phone);
@@ -707,7 +722,19 @@ function registerMember(p) {
   if (existing) {
     if (!truthy(existing.active)) throw new Error('این حساب غیرفعال است؛ با مسئول سایت تماس بگیر');
     if (!String(existing.passwordSalt || '') || !String(existing.passwordHash || '')) {
-      return { ok: true, legacyAccount: true, message: 'این حساب قدیمی هنوز رمز عبور ندارد؛ برای فعال‌سازی امن با مسئول سایت تماس بگیر.' };
+      // One-time migration for accounts created before passwords existed.
+      // Exact saved name is required for this migration; after setup, login uses phone + password.
+      if (!password) return { ok: true, needsPassword: true, mode: 'legacy-register' };
+      validateMemberPassword(password);
+      if (String(existing.name || '').trim().replace(/\s+/g, ' ') !== fullName) {
+        throw new Error('این حساب قدیمی است؛ برای ساخت رمز، نام باید مطابق اطلاعات ثبت‌شده باشد. اگر نام تغییر کرده، با مسئول سایت تماس بگیر.');
+      }
+      var legacySalt = Utilities.getUuid() + Utilities.getUuid();
+      var legacyHash = hashMemberPassword(password, legacySalt);
+      saveMemberPassword(existing.phone, legacySalt, legacyHash);
+      existing.passwordSalt = legacySalt;
+      existing.passwordHash = legacyHash;
+      return { ok: true, member: publicMember(existing), token: issueToken('member', phone), existing: true, passwordCreated: true };
     }
     if (!password) return { ok: true, needsPassword: true, mode: 'login' };
     validateMemberPassword(password);
