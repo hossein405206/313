@@ -101,13 +101,12 @@ function init(){
   btn.disabled=true;btn.textContent='در حال بررسی...';
   try{
    var res=await service.post({action:'registerMember',name:n,phone:p,password:pw});
-   if(res.legacyAccount){toast(res.message||'برای فعال‌سازی این حساب با مسئول سایت تماس بگیر','error');return;}
    if(res.needsPassword){
     passwordMode=res.mode;
     if(passwordGroup)passwordGroup.hidden=false;
-    if(password){password.value='';password.autocomplete=res.mode==='register'?'new-password':'current-password';password.placeholder=res.mode==='register'?'یک رمز حداقل ۸ نویسه‌ای بساز':'رمز عبور حساب را وارد کن';password.focus();}
-    if(hint)hint.textContent=res.mode==='register'?'این شماره هنوز حساب ندارد؛ یک رمز عبور بساز تا حساب ایجاد شود.':'حساب با این شماره وجود دارد؛ برای ورود رمز عبور همان حساب را وارد کن.';
-    btn.textContent=res.mode==='register'?'ساخت حساب و ورود':'ورود به حساب';
+    if(password){password.value='';password.autocomplete=res.mode==='register'?'new-password':'current-password';password.placeholder=(res.mode==='register'||res.mode==='legacy-register')?'یک رمز حداقل ۸ نویسه‌ای بساز':'رمز عبور حساب را وارد کن';password.focus();}
+    if(hint)hint.textContent=res.mode==='register'?'این شماره هنوز حساب ندارد؛ یک رمز عبور بساز تا حساب ایجاد شود.':res.mode==='legacy-register'?'این حساب از قبل در فهرست اعضا بوده ولی رمز ندارد؛ برای فعال‌سازی یک‌باره، نام باید مطابق اطلاعات ثبت‌شده باشد و یک رمز بساز.':'حساب با این شماره وجود دارد؛ برای ورود رمز عبور همان حساب را وارد کن.';
+    btn.textContent=(res.mode==='register'||res.mode==='legacy-register')?'ساخت رمز و ورود':'ورود به حساب';
     return;
    }
    if(window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.setMember(res.member,res.token);
@@ -118,7 +117,7 @@ function init(){
   }catch(err){toast(err.message||'خطا در ورود','error');}
   finally{
    btn.disabled=false;
-   btn.textContent=passwordMode==='register'?'ساخت حساب و ورود':passwordMode==='login'?'ورود به حساب':'ادامه';
+   btn.textContent=(passwordMode==='register'||passwordMode==='legacy-register')?'ساخت رمز و ورود':passwordMode==='login'?'ورود به حساب':'ادامه';
   }
  });
 }
