@@ -32,7 +32,7 @@ var CFG = {
 var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
-  'مسئولین': ['code','name','role','active','createdAt'],
+  'مسئولین': ['code','name','role','active','createdAt','phone'],
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','role'],
   'درخواست عضویت': ['id','firstName','lastName','phone','birthDate','school','grade','guardianName','guardianPhone','notes','status','createdAt','updatedAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
@@ -518,23 +518,23 @@ function ensureOfficialRoles() {
   });
 }
 function listOfficialRecords() {
-  return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),active:truthy(r.active),createdAt:r.createdAt||''};});
+  return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),phone:String(r.phone||''),active:truthy(r.active),createdAt:r.createdAt||''};});
 }
 function addOfficial(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مسئول اضافه کند');
-  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
-  if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeIranDigits(String(p.phone||'').trim());
+  if(!code||!name||!role||!/^09\d{9}$/.test(phone))throw new Error('نام، کد، نوع مسئولیت و شماره همراه معتبر الزامی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
-  getSheet('مسئولین').appendRow([code,name,role,true,nowIso()]); return {ok:true};
+  getSheet('مسئولین').appendRow([code,name,role,true,nowIso(),phone]); return {ok:true};
 }
 function updateOfficial(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مسئولین را ویرایش کند');
   var oldCode=String(p.oldCode||'').trim(), pos=findRow(getSheet('مسئولین'),'code',oldCode); if(!pos)throw new Error('مسئول پیدا نشد');
-  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
-  if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeIranDigits(String(p.phone||'').trim());
+  if(!code||!name||!role||!/^09\d{9}$/.test(phone))throw new Error('نام، کد، نوع مسئولیت و شماره همراه معتبر الزامی است');
   var rows=getSheetObjects('مسئولین'); if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
-  var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
+  var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;vals[5]=phone;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
 function setOfficialStatus(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند وضعیت مسئولین را تغییر دهد');
@@ -873,7 +873,7 @@ function publicMember(r) {
     isCircleMember: isCircleMember(r.phone)
   };
 }
-function profileBadgeRole(member){var phone=normalizePhone(member&&member.phone);if(String(member&&member.role||'')==='owner'||phone===CFG.MASTER_COACH_PHONE)return 'owner';if(String(member&&member.role||'')==='responsible')return 'responsible';var coaches=getSheetObjects('مربیان');if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone&&String(r.role||'')==='master';}))return 'owner';if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone;}))return 'coach';return isCircleMember(phone)?'member':'';}
+function profileBadgeRole(member){var phone=normalizePhone(member&&member.phone);if(String(member&&member.role||'')==='owner'||phone===CFG.MASTER_COACH_PHONE)return 'owner';if(String(member&&member.role||'')==='responsible')return 'responsible';var officials=getSheetObjects('مسئولین');if(officials.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone&&!!String(r.phone||'').trim();}))return 'responsible';var coaches=getSheetObjects('مربیان');if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone&&String(r.role||'')==='master';}))return 'owner';if(coaches.some(function(r){return truthy(r.active)&&normalizePhone(r.phone)===phone;}))return 'coach';return isCircleMember(phone)?'member':'';}
 
 /* -------------------------------------------------------------------------- */
 /* Events / Drive                                                             */
