@@ -174,8 +174,7 @@ function handleGet(p) {
   }
 
   if (action === 'listOfficialsManage') {
-    var officialManageAuth = requireToken(p.token, ['coach']);
-    if (!officialManageAuth.isMaster) throw new Error('فقط مربی ارشد می‌تواند مسئولین را مدیریت کند');
+    requireCoachPermission(p.token, 'officials');
     return { ok:true, items:listOfficialRecords() };
   }
 
@@ -656,7 +655,7 @@ function listOfficialRecords() {
   return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),active:truthy(r.active),createdAt:r.createdAt||''};});
 }
 function addOfficial(p) {
-  var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مسئول اضافه کند');
+  requireCoachPermission(p.token, 'officials');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
@@ -664,7 +663,7 @@ function addOfficial(p) {
   getSheet('مسئولین').appendRow([code,name,role,true,nowIso()]); return {ok:true};
 }
 function updateOfficial(p) {
-  var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مسئولین را ویرایش کند');
+  requireCoachPermission(p.token, 'officials');
   var oldCode=String(p.oldCode||'').trim(), pos=findRow(getSheet('مسئولین'),'code',oldCode); if(!pos)throw new Error('مسئول پیدا نشد');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
@@ -672,7 +671,7 @@ function updateOfficial(p) {
   var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
 function setOfficialStatus(p) {
-  var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند وضعیت مسئولین را تغییر دهد');
+  requireCoachPermission(p.token, 'officials');
   var pos=findRow(getSheet('مسئولین'),'code',String(p.code||'')); if(!pos)throw new Error('مسئول پیدا نشد');
   var sheet=getSheet('مسئولین'), vals=sheet.getRange(pos,1,1,5).getValues()[0]; vals[3]=p.active===true || String(p.active).toLowerCase()==='true'; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
 }
