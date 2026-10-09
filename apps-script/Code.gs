@@ -25,10 +25,16 @@ var CFG = {
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
-  MASTER_COACH_PHONE: '09935661397',
-  MASTER_COACH_CODE: 'Hossein_313_1390',
-  MASTER_COACH_NAME: 'مربی ارشد'
 };
+
+function getMasterCoachConfig(){
+  var props=PropertiesService.getScriptProperties();
+  return {
+    phone:normalizeIranDigits(String(props.getProperty('MASTER_COACH_PHONE')||'').trim()).replace(/\\s+/g,''),
+    code:String(props.getProperty('MASTER_COACH_CODE')||'').trim(),
+    name:String(props.getProperty('MASTER_COACH_NAME')||'مربی ارشد').trim()||'مربی ارشد'
+  };
+}
 
 var HEADERS = {
   'تنظیمات': ['key','value'],
@@ -139,25 +145,7 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.0.0-coach-auth', diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003' };
-
-  if (action === 'coachStatus') {
-    var masterRows = [];
-    try { masterRows = getSheetObjects('مربیان'); } catch (e) {}
-    var masterInSheet = masterRows.some(function(r){
-      return String(r.phone || '') === CFG.MASTER_COACH_PHONE && String(r.code || '') === CFG.MASTER_COACH_CODE && truthy(r.active);
-    });
-    return {
-      ok: true,
-      diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003',
-      version: '4.0.0-coach-auth',
-      masterConfigured: !!CFG.MASTER_COACH_PHONE && !!CFG.MASTER_COACH_CODE,
-      masterPhoneSuffix: String(CFG.MASTER_COACH_PHONE).slice(-2),
-      masterCodeLength: String(CFG.MASTER_COACH_CODE).length,
-      masterInSheet: masterInSheet,
-      loginCoachPresent: true
-    };
-  }
+  if (action === 'ping') return { ok: true, service: '313', version: '4.1.0' };
 
   if (action === 'listEvents' || action === 'listActivities') {
     return { ok: true, items: listEventsPublic() };
@@ -391,23 +379,28 @@ function verifyOfficialCode(code) {
 
 function verifyCoachCode(code) {
   var rows=getSheetObjects('مربیان');
-  for(var i=0;i<rows.length;i++){var r=rows[i];if(truthy(r.active)&&String(r.code).toUpperCase()===String(code).toUpperCase())return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:String(r.role||'')==='master'};}
+  var master=getMasterCoachConfig();
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i], isMaster=String(r.role||'')==='master';
+    if(!truthy(r.active)||String(r.code).toUpperCase()!==String(code).toUpperCase()) continue;
+    if(isMaster && String(r.code)!==master.code) continue;
+    return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:isMaster};
+  }
   return null;
 }
 function loginCoach(p){
   var phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,'');
   var code=String(p.code||'').trim();
+  var master=getMasterCoachConfig();
   if(!/^09\d{9}$/.test(phone)) throw new Error('شماره مربی نامعتبر است');
   if(!code) throw new Error('کد مربی را وارد کن');
 
-  // مربی ارشد مستقیماً از تنظیمات اصلی احراز می‌شود؛
-  // بنابراین ورود به وجود ردیف شیت مربیان وابسته نیست.
-  if(phone===CFG.MASTER_COACH_PHONE && code===CFG.MASTER_COACH_CODE){
+  if(master.phone && master.code && phone===master.phone && code===master.code){
     ensureMasterCoach();
     return {
       ok:true,
-      coach:{name:CFG.MASTER_COACH_NAME,phone:CFG.MASTER_COACH_PHONE,role:'master',isMaster:true,permissions:allCoachPermissions()},
-      token:issueToken('coach',CFG.MASTER_COACH_CODE,true,allCoachPermissions())
+      coach:{name:master.name,phone:master.phone,role:'master',isMaster:true,permissions:allCoachPermissions()},
+      token:issueToken('coach',master.code,true,allCoachPermissions())
     };
   }
 
@@ -417,7 +410,8 @@ function loginCoach(p){
   var coach=rows.filter(function(r){
     var rowPhone=normalizeIranDigits(String(r.phone||'').trim()).replace(/\s+/g,'');
     var rowCode=String(r.code||'').trim();
-    return truthy(r.active)&&rowPhone===phone&&rowCode===code;
+    var isMaster=String(r.role||'')==='master';
+    return truthy(r.active)&&rowPhone===phone&&rowCode===code&&(!isMaster||(rowPhone===master.phone&&rowCode===master.code));
   })[0];
 
   if(!coach) throw new Error('شماره یا کد مربی نادرست است');
@@ -429,9 +423,25 @@ function loginCoach(p){
   };
 }
 function ensureMasterCoach(){
-  var rows=getSheetObjects('مربیان');
-  var found=rows.some(function(r){return String(r.phone)===CFG.MASTER_COACH_PHONE&&String(r.code)===CFG.MASTER_COACH_CODE;});
-  if(!found)getSheet('مربیان').appendRow([CFG.MASTER_COACH_CODE,CFG.MASTER_COACH_NAME,CFG.MASTER_COACH_PHONE,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
+  var master=getMasterCoachConfig();
+  if(!/^09\\d{9}$/.test(master.phone)) throw new Error('در تنظیمات Script Properties، MASTER_COACH_PHONE را با شماره معتبر تنظیم کن');
+  if(master.code.length<12) throw new Error('MASTER_COACH_CODE باید حداقل ۱۲ نویسه داشته باشد');
+
+  var sheet=getSheet('مربیان'), rows=getSheetObjects('مربیان'), found=false;
+  rows.forEach(function(r,i){
+    if(String(r.role||'')!=='master') return;
+    var matches=String(r.phone||'')===master.phone && String(r.code||'')===master.code;
+    if(matches){
+      found=true;
+      sheet.getRange(i+2,2).setValue(master.name);
+      sheet.getRange(i+2,4).setValue(true);
+      sheet.getRange(i+2,6).setValue(JSON.stringify(allCoachPermissions()));
+      sheet.getRange(i+2,8).setValue(nowIso());
+    } else {
+      sheet.getRange(i+2,4).setValue(false);
+    }
+  });
+  if(!found) sheet.appendRow([master.code,master.name,master.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
 }
 function normalizeIranDigits(value){
   return String(value||'')
