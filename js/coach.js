@@ -131,6 +131,8 @@ function setup(){
  setupSchedule();setupStaff();setupOwnCredentials();
  var coachPhoneInput=$('#coachPhone');
  if(coachPhoneInput)coachPhoneInput.addEventListener('input',function(){coachPhoneInput.value=normalizeDigits(coachPhoneInput.value).replace(/\D/g,'').slice(0,11)});
+ var refreshFeedbackBtn=$('#refreshFeedbackBtn');
+ if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
  $('#newEventBtn').onclick=function(){openEditor(null)};$('#cancelEventBtn').onclick=function(){$('#eventEditor').classList.add('hidden')};$('#saveEventBtn').onclick=saveEvent;
  $('#savePrizeBtn').onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(e){toast(e.message,1)})};
  $('#coachLogout').onclick=function(){sessionStorage.removeItem('coach_token');sessionStorage.removeItem('coach_name');sessionStorage.removeItem('coach_master');sessionStorage.removeItem('coach_permissions');location.reload()};
