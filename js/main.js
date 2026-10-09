@@ -15,8 +15,8 @@
     CAROUSEL_INTERVAL: 4500,
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
-    DEBUG: true,
-    VERSION: '5.3.0'
+    DEBUG: false,
+    VERSION: '5.4.0'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -126,6 +126,8 @@
     },
 
     get: async function (params) {
+      // توکن‌های نشست را در query string قرار نده؛ آن‌ها را در بدنه POST بفرست.
+      if (params && params.token) return Api.post(params);
       var url = Api._buildUrl(params);
       Logger.info('GET', url);
 

@@ -94,7 +94,10 @@
     var nm = $('#profileName');
     var ph = $('#profilePhone');
 
-    if (av) av.textContent = initial;
+    if (av) { av.textContent = initial; av.classList.remove('badge-none','badge-member','badge-responsible','badge-coach','badge-owner'); av.classList.add('badge-' + (member.badgeRole || 'none')); }
+    var roleBadge = $('#profileRoleBadge');
+    var roleLabels = { member: 'عضو حلقه', responsible: 'مسئول', coach: 'مربی', owner: 'سازنده' };
+    if (roleBadge) { var role = member.badgeRole || ''; roleBadge.textContent = roleLabels[role] || ''; roleBadge.classList.remove('badge-none','badge-member','badge-responsible','badge-coach','badge-owner'); roleBadge.classList.add('badge-' + (role || 'none')); roleBadge.hidden = !role; }
     if (nm) nm.textContent = fullName;
     if (ph) ph.textContent = member.phone || '—';
 

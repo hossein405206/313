@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14243b"><meta name="description" content="درخواست عضویت در حلقه شهید هادی ذوالفقاری">
+<title>ثبت‌نام در حلقه | مسجد امام رضا (ع)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/circle-register.css">
+</head>
+<body><div class="app-container">
+<header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><h1>ثبت‌نام در حلقه</h1></header>
+<main class="page circle-register-page">
+<section class="circle-register-hero"><span class="eyebrow">JOIN THE CIRCLE</span><h2>به جمع ما بپیوند 🌱</h2><p>اطلاعات زیر برای بررسی درخواست عضویت استفاده می‌شود. عضویت پس از بررسی و تأیید مالک حلقه فعال خواهد شد.</p></section>
+<div id="circleFormNotice" class="circle-form-notice hidden" role="status" aria-live="polite"></div>
+<form id="circleRegisterForm" class="circle-register-form" novalidate>
+<h3>اطلاعات عضو</h3>
+<div class="form-grid">
+<label>نام <span>*</span><input id="circleFirstName" class="form-control" maxlength="60" autocomplete="given-name" required></label>
+<label>نام خانوادگی <span>*</span><input id="circleLastName" class="form-control" maxlength="80" autocomplete="family-name" required></label>
+<label>شماره همراه عضو <span>*</span><input id="circlePhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx" autocomplete="tel" required></label>
+<label>تاریخ تولد <small>(اختیاری)</small><input id="circleBirthDate" class="form-control" type="date"></label>
+<label>نام مدرسه <span>*</span><input id="circleSchool" class="form-control" maxlength="100" required></label>
+<label>پایه تحصیلی <span>*</span><select id="circleGrade" class="form-control" required><option value="">انتخاب پایه</option><option>چهارم دبستان</option><option>پنجم دبستان</option><option>ششم دبستان</option><option>هفتم</option><option>هشتم</option><option>نهم</option><option>دهم</option><option>یازدهم</option><option>دوازدهم</option><option>فارغ‌التحصیل</option><option>سایر</option></select></label>
+</div>
+<h3>اطلاعات ولی</h3>
+<div class="form-grid">
+<label>نام پدر یا ولی <span>*</span><input id="circleGuardianName" class="form-control" maxlength="100" required></label>
+<label>شماره همراه ولی <span>*</span><input id="circleGuardianPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx" required></label>
+</div>
+<label class="circle-notes-label">توضیحات تکمیلی <small>(اختیاری)</small><textarea id="circleNotes" class="form-control" rows="3" maxlength="500" placeholder="اگر نکته‌ای برای مربیان داری بنویس"></textarea></label>
+<label class="circle-consent"><input id="circleGuardianConsent" type="checkbox" required><span>ولی من از ارسال این درخواست عضویت اطلاع دارد و با آن موافق است. <b>*</b></span></label>
+<button id="circleSubmit" type="submit" class="btn-submit">ارسال درخواست عضویت</button>
+<p class="circle-privacy-note">اطلاعات این فرم برای بررسی عضویت حلقه دریافت می‌شود؛ از وارد کردن اطلاعات غیرضروری خودداری کن.</p>
+</form>
+<a class="circle-back-link" href="index.html">بازگشت به صفحه اصلی ←</a>
+</main>
+<nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
+</div>
+<script src="js/main.js" defer></script><script src="js/circle-register.js" defer></script>
+</body></html>

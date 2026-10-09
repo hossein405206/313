@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#14243b"><title>بازی مار | حلقه شهید هادی ذوالفقاری</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/snake.css"></head>
+<body><div class="app-container"><header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><h1>بازی مار</h1></header>
+<main class="page snake-page">
+<section id="snakeGate" class="game-access-gate"><div class="gate-symbol">♧</div><h2>بازی فقط برای اعضای حلقه است</h2><p id="snakeGateMessage">برای بازی مار باید عضو تأییدشده حلقه باشی.</p><a class="gate-join-btn" href="circle-register.html">ثبت‌نام در حلقه <span>←</span></a><a class="gate-home-link" href="index.html">بازگشت به خانه</a></section>
+<div id="snakeContent" class="hidden">
+<section class="snake-hero"><span class="snake-kicker">ARCADE • SNAKE</span><h2>مارِ رئیس‌ها 🐍</h2><p>مار را هدایت کن، هدف‌ها را جمع کن و مراقب برخورد با خودت باش.</p></section>
+<section class="snake-game-card"><div class="snake-stats"><span>امتیاز <b id="snakeScore">۰</b></span><span>بهترین <b id="snakeBest">۰</b></span></div><canvas id="snakeCanvas" width="420" height="560" aria-label="صفحه بازی مار"></canvas><button id="snakeStart" class="btn-submit">شروع بازی</button><p class="snake-hint">با کشیدن انگشت روی صفحه، کلیدهای جهت‌دار یا دکمه‌های پایین حرکت کن.</p></section>
+<div class="snake-controls" aria-label="کنترل‌های بازی"><button data-dir="up" aria-label="بالا">↑</button><div><button data-dir="left" aria-label="چپ">←</button><button data-dir="down" aria-label="پایین">↓</button><button data-dir="right" aria-label="راست">→</button></div></div>
+<p class="snake-disclaimer">چهره‌ها به‌شکل کارتونی و غیرواقع‌گرا نمایش داده می‌شوند.</p>
+</div>
+</main><nav class="bottom-nav" aria-label="ناوبری اصلی"></nav></div>
+<script src="js/main.js" defer></script><script src="js/snake.js" defer></script></body></html>

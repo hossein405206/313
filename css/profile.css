@@ -56,7 +56,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 2.1rem;
-  border: 3px solid var(--gold-300);
+  border: 3px solid transparent;
   box-shadow: 0 6px 20px rgba(15, 107, 98, 0.3);
   position: relative;
   z-index: 1;
@@ -305,3 +305,5 @@
     height: 36px;
   }
 }
+
+.profile-avatar.badge-none{border-color:transparent;box-shadow:none}.profile-avatar.badge-member{border-color:#2583e8;box-shadow:0 0 0 3px rgba(37,131,232,.14)}.profile-avatar.badge-responsible{border-color:#20c9bd;box-shadow:0 0 0 3px rgba(32,201,189,.16)}.profile-avatar.badge-coach{border-color:#d6a629;box-shadow:0 0 0 3px rgba(214,166,41,.18)}.profile-avatar.badge-owner{border-color:#151515;box-shadow:0 0 0 3px rgba(20,20,20,.16)}.profile-role-badge[hidden],.profile-role-badge.badge-none{display:none}.profile-role-badge.badge-member{background:#2583e8;box-shadow:0 3px 10px rgba(37,131,232,.22)}.profile-role-badge.badge-responsible{background:#20bfb3;box-shadow:0 3px 10px rgba(32,191,179,.22)}.profile-role-badge.badge-coach{background:#d6a629;box-shadow:0 3px 10px rgba(214,166,41,.22)}.profile-role-badge.badge-owner{background:#151515;box-shadow:0 3px 10px rgba(20,20,20,.2)}
