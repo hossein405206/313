@@ -612,18 +612,56 @@ function requireToken(token, roles) {
   if (!token) throw new Error('نشست معتبر نیست');
   var parts = String(token).split('.');
   if (parts.length !== 2) throw new Error('نشست نامعتبر است');
-
   var expected = b64Bytes(Utilities.computeHmacSha256Signature(parts[0], getSecret()));
   if (expected !== parts[1]) throw new Error('نشست نامعتبر است');
 
   var payload;
   try { payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString()); }
   catch (e) { throw new Error('نشست نامعتبر است'); }
-
   if (!payload.exp || Date.now() > Number(payload.exp)) throw new Error('نشست منقضی شده');
   if (roles.indexOf(payload.r) < 0) throw new Error('دسترسی کافی نیست');
 
-  return { role: payload.r, subject: payload.s, exp: payload.exp, isMaster: !!payload.m, permissions: payload.p || {} };
+  // Re-check the live account and role on every protected request.
+  if (payload.r === 'member') {
+    var memberPhone = normalizeMemberPhone(payload.s);
+    var memberRecord = findMemberByPhone(memberPhone, true);
+    if (!memberRecord || !truthy(memberRecord.active)) throw new Error('حساب عضو غیرفعال است یا وجود ندارد');
+    return { role: 'member', subject: memberPhone, exp: payload.exp, isMaster: false, permissions: {} };
+  }
+
+  if (payload.r === 'coach') {
+    var masterConfig = getMasterCoachConfig();
+    if (payload.m) {
+      if (!masterConfig.phone || !masterConfig.code || String(payload.s) !== masterConfig.code) {
+        throw new Error('نشست مربی ارشد باطل شده است');
+      }
+      return { role: 'coach', subject: masterConfig.code, exp: payload.exp, isMaster: true, permissions: allCoachPermissions() };
+    }
+    var coachRows = getSheetObjects('مربیان'), activeCoach = null;
+    for (var ci = 0; ci < coachRows.length; ci++) {
+      if (String(coachRows[ci].code || '') === String(payload.s || '') &&
+          truthy(coachRows[ci].active) && String(coachRows[ci].role || '') !== 'master') {
+        activeCoach = coachRows[ci]; break;
+      }
+    }
+    if (!activeCoach) throw new Error('حساب مربی غیرفعال شده یا دسترسی آن تغییر کرده است');
+    return { role: 'coach', subject: String(activeCoach.code), exp: payload.exp, isMaster: false, permissions: coachPermissions(activeCoach) };
+  }
+
+  if (payload.r === 'attendance' || payload.r === 'supervision') {
+    var officialRows = getSheetObjects('مسئولین'), activeOfficial = null;
+    for (var oi = 0; oi < officialRows.length; oi++) {
+      var officialRow = officialRows[oi];
+      if (String(officialRow.code || '').toUpperCase() === String(payload.s || '').toUpperCase() &&
+          truthy(officialRow.active) && normalizeRole(String(officialRow.role || '')) === payload.r) {
+        activeOfficial = officialRow; break;
+      }
+    }
+    if (!activeOfficial) throw new Error('حساب مسئول غیرفعال شده یا نقش آن تغییر کرده است');
+    return { role: payload.r, subject: String(activeOfficial.code), exp: payload.exp, isMaster: false, permissions: {} };
+  }
+
+  throw new Error('نوع نشست پشتیبانی نمی‌شود');
 }
 
 function ensureSecret() {
