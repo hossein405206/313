@@ -32,7 +32,7 @@ var CFG = {
 function getMasterCoachConfig() {
   var props = PropertiesService.getScriptProperties();
   return {
-    phone: normalizeIranDigits(String(props.getProperty('MASTER_COACH_PHONE') || '')).replace(/\\s+/g, ''),
+    phone: normalizeIranDigits(String(props.getProperty('MASTER_COACH_PHONE') || '')).replace(/\s+/g, ''),
     code: String(props.getProperty('MASTER_COACH_CODE') || '').trim(),
     name: String(props.getProperty('MASTER_COACH_NAME') || CFG.MASTER_COACH_NAME).trim() || CFG.MASTER_COACH_NAME
   };
@@ -434,7 +434,7 @@ function ensureMasterCoach(){
   var config=getMasterCoachConfig();
   if(!config.phone||!config.code)return;
   var rows=getSheetObjects('مربیان');
-  var found=rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\\s+/g,'')===config.phone&&String(r.code||'').trim()===config.code&&String(r.role||'')==='master';});
+  var found=rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\s+/g,'')===config.phone&&String(r.code||'').trim()===config.code&&String(r.role||'')==='master';});
   if(!found)getSheet('مربیان').appendRow([config.code,config.name,config.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
 }
 function normalizeIranDigits(value){
@@ -660,7 +660,7 @@ function registerMember(p){
   return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};
 }
 function generateLoginCode(phone) {
-  if (!/^09\\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
   // Do not disclose one-time login codes in public API responses.
   throw new Error('ورود پیامکی هنوز پیکربندی نشده است؛ کد ورود به‌صورت عمومی صادر نمی‌شود');
 }
