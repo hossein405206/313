@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#14243b">
+  <title>بازی مار | حلقه شهید هادی ذوالفقاری</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/game.css"><link rel="stylesheet" href="css/snake.css">
+</head>
+<body>
+<div class="app-container">
+  <header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><div class="header-brand"><div><strong>بازی مار</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header>
+  <section id="gameAccessGate" class="game-access-gate"><div class="gate-mark">🔒</div><h2>بازی فقط برای اعضای حلقه است</h2><p id="gameGateNote">برای بازی، درخواست عضویت در حلقه را ثبت کن. پس از تأیید مربی می‌توانی بازی کنی.</p><a class="gate-cta" href="circle-register.html">ثبت‌نام در حلقه <span>←</span></a></section>
+  <main id="gameContent" class="page snake-page hidden">
+    <section class="snake-hero"><span class="snake-eyebrow">SNAKE CHALLENGE</span><h2>مارِ هدف‌یاب 🐍</h2><p>هدف‌ها را جمع کن، رشد کن و به دیواره‌ها یا خودت برخورد نکن.</p></section>
+    <section class="snake-shell">
+      <div class="snake-scorebar"><div><small>امتیاز</small><strong id="snakeScore">۰</strong></div><div><small>بهترین رکورد این دستگاه</small><strong id="snakeBest">۰</strong></div></div>
+      <div class="snake-target-label" id="snakeTarget">هدف بعدی: آماده‌ای؟</div>
+      <div class="snake-board-wrap"><canvas id="snakeCanvas" width="420" height="560" aria-label="صفحه بازی مار"></canvas><button id="snakeStart" class="snake-start">شروع بازی</button></div>
+      <p class="snake-hint">روی صفحه بکش یا از دکمه‌های جهت‌نما استفاده کن. با هر هدف صدای گاز زدن پخش می‌شود.</p>
+      <div class="snake-controls" aria-label="کنترل جهت حرکت">
+        <button type="button" data-dir="up" aria-label="بالا">▲</button>
+        <div><button type="button" data-dir="left" aria-label="چپ">◀</button><button type="button" data-dir="down" aria-label="پایین">▼</button><button type="button" data-dir="right" aria-label="راست">▶</button></div>
+      </div>
+      <p class="snake-sound-note">تصویر هدف‌ها کارتونی و نمادین است؛ صدا به‌صورت افکت ساده داخل بازی ساخته می‌شود.</p>
+    </section>
+  </main>
+  <nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
+</div>
+<script src="js/main.js" defer></script><script src="js/game-access.js" defer></script><script src="js/snake.js" defer></script>
+</body>
+</html>

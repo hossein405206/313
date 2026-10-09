@@ -21,9 +21,10 @@ function applyPermissions(){
  document.querySelectorAll('.coach-permission-section').forEach(function(s){
    var p=s.getAttribute('data-permission');s.classList.toggle('permission-hidden',!state.isMaster && state.permissions[p]!==true);
  });
- var staff=$('#coachStaffPanel'),official=$('#officialStaffPanel');
+ var staff=$('#coachStaffPanel'),official=$('#officialStaffPanel'),membership=$('#membershipApplicationsPanel');
  if(staff)staff.classList.toggle('hidden',!state.isMaster);
  if(official)official.classList.toggle('hidden',!state.isMaster);
+ if(membership)membership.classList.toggle('hidden',!state.isMaster);
 }
 function login(){
  var f=$('#coachLoginForm');if(!f)return;
@@ -43,11 +44,32 @@ function login(){
  })
 }
 async function load(){
- var r=await api().get({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';}
-function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
+ var r=await api().get({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderMembershipApplications(r.membershipApplications||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';}
+function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار اردو',s.pendingRegistrations],['درخواست عضویت',s.pendingMembershipApplications],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
-function renderRegs(list){var box=$('#registrationsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(r){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small></div><div class="admin-actions">'+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>'}).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}})}
+function renderRegs(list){
+ var box=$('#registrationsAdmin');if(!box)return;
+ box.innerHTML=list.length?list.map(function(r){
+  var consent=state.isMaster&&r.photoId?'<a class="consent-file-link" href="https://drive.google.com/file/d/'+encodeURIComponent(r.photoId)+'/view" target="_blank" rel="noopener">مشاهده رضایت‌نامه</a>':'';
+  return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small>'+(consent?'<small>'+consent+'</small>':'')+'</div><div class="admin-actions">'+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>';
+ }).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';
+ box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});
+ box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}});
+}
 function setReg(id,status){api().post({action:'setRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت ثبت شد ✓');load()}).catch(function(e){toast(e.message,1)})}
+function renderMembershipApplications(rows){
+ var box=$('#membershipApplicationsAdmin');if(!box)return;
+ box.innerHTML=rows.length?rows.map(function(r){
+  var name=esc((r.firstName||'')+' '+(r.lastName||'')),phone=esc(r.phone),guardian=esc(r.guardianName),guardianPhone=esc(r.guardianPhone),school=esc((r.schoolLevel||'')+' · '+(r.schoolGrade||'')),birth=esc(r.birthDate||'ثبت نشده');
+  return '<div class="admin-item membership-admin-item"><div class="admin-item-main"><strong>'+name+'</strong><small>عضو: '+phone+' · '+school+'</small><small>ولی: '+guardian+' · '+guardianPhone+' · تولد: '+birth+'</small></div><div class="admin-actions"><button data-membership-ok="'+esc(r.id)+'">تأیید عضویت</button><button class="danger" data-membership-no="'+esc(r.id)+'">رد درخواست</button></div></div>';
+ }).join(''):'<div class="empty"><p>درخواست عضویت در انتظار بررسی وجود ندارد</p></div>';
+ box.querySelectorAll('[data-membership-ok]').forEach(function(b){b.onclick=function(){setMembershipStatus(b.dataset.membershipOk,'approved')}});
+ box.querySelectorAll('[data-membership-no]').forEach(function(b){b.onclick=function(){setMembershipStatus(b.dataset.membershipNo,'rejected')}});
+}
+function setMembershipStatus(memberId,status){
+ var message=status==='approved'?'عضویت تأیید شد ✓':'درخواست رد شد';
+ api().post({action:'setMembershipStatus',token:state.token,memberId:memberId,status:status}).then(function(){toast(message);load()}).catch(function(e){toast(e.message||'ثبت وضعیت عضویت ناموفق بود',1)});
+}
 function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
 function renderWarnings(rows){
  var box=$('#warningsAdmin');
