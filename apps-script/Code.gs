@@ -450,7 +450,7 @@ function ensureMasterCoach(){
 function normalizeMemberPhone(value) {
   var phone = normalizeIranDigits(String(value || '')).replace(/[^0-9]/g, '');
   // اگر Google Sheets صفر ابتدایی شماره را به‌صورت عددی حذف کرده باشد، آن را برمی‌گردانیم.
-  if (/^9\\d{9}$/.test(phone)) phone = '0' + phone;
+  if (/^9\d{9}$/.test(phone)) phone = '0' + phone;
   return phone;
 }
 
@@ -1089,7 +1089,7 @@ function saveRingRegistration(p) {
   var member = findMemberByPhone(phone, true);
   if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد؛ یک‌بار خارج شو و دوباره وارد شو');
 
-  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\\s+/g, '');
+  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\s+/g, '');
   var birthDate = String(p.birthDate || '').trim();
   var fatherName = String(p.fatherName || '').trim();
   var fatherPhone = normalizeMemberPhone(p.fatherPhone);
@@ -1099,15 +1099,15 @@ function saveRingRegistration(p) {
   var guardianName = String(p.guardianName || '').trim();
   var emergencyPhone = normalizeMemberPhone(p.emergencyPhone || p.fatherPhone);
 
-  if (!/^\\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
+  if (!/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
   if (!birthDate) throw new Error('تاریخ تولد را وارد کن');
   if (!fatherName) throw new Error('نام پدر را وارد کن');
-  if (!/^09\\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
+  if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (address.length < 8) throw new Error('آدرس را کامل‌تر وارد کن');
   if (!school) throw new Error('نام مدرسه را وارد کن');
   if (!grade) throw new Error('پایه تحصیلی را انتخاب کن');
   if (!guardianName) throw new Error('نام سرپرست را وارد کن');
-  if (!/^09\\d{9}$/.test(emergencyPhone)) throw new Error('شماره تماس اضطراری نامعتبر است');
+  if (!/^09\d{9}$/.test(emergencyPhone)) throw new Error('شماره تماس اضطراری نامعتبر است');
 
   var sheet = getSheet('ثبت‌نام حلقه');
   var existingRow = findRingRegistrationRow(sheet, phone);
