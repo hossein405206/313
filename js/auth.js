@@ -84,24 +84,25 @@ function toast(m,e){var t=window.KanoonApp&&window.KanoonApp.toast;if(t)(e?t.err
 function validPhone(p){return /^09\d{9}$/.test(String(p||'').trim());}
 function init(){
  showWisdom();
- var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), btn=$('#memberSubmit'); if(!form)return;
+ var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), password=$('#passwordInput'), confirmPassword=$('#confirmPasswordInput'), btn=$('#memberSubmit'); if(!form)return;
  phone.addEventListener('input',function(){phone.value=phone.value.replace(/\D/g,'').slice(0,11);});
  form.addEventListener('submit',async function(e){
   e.preventDefault();
-  var n=name.value.trim().replace(/\s+/g,' '), p=phone.value.trim();
-  if(n.length<2){toast('نام را وارد کن','error');name.focus();return;}
+  var n=name.value.trim().replace(/\s+/g,' '), p=phone.value.trim(), pw=password.value, cp=confirmPassword.value;
   if(!validPhone(p)){toast('شماره همراه نامعتبر است','error');phone.focus();return;}
+  if(pw.length<8){toast('رمز عبور باید حداقل ۸ نویسه داشته باشد','error');password.focus();return;}
+  if(cp && cp!==pw){toast('رمز عبور و تکرار آن یکسان نیست','error');confirmPassword.focus();return;}
   var service=api(); if(!service){toast('اتصال به سرور آماده نیست','error');return;}
-  btn.disabled=true;btn.textContent='در حال ورود...';
+  btn.disabled=true;btn.textContent='در حال بررسی حساب...';
   try{
-   var res=await service.post({action:'registerMember',name:n,phone:p});
+   var res=await service.post({action:'registerMember',name:n,phone:p,password:pw,confirmPassword:cp});
    if(window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.setMember(res.member,res.token);
    $('#welcomeTitle').textContent=res.member&&res.member.firstName?'خوش آمدی، '+res.member.firstName:'خوش آمدی';
    $('#welcomeSubtitle').textContent=res.existing?'ورود با موفقیت انجام شد':'حساب شما با موفقیت ساخته شد';
    document.querySelectorAll('.auth-step').forEach(function(s){s.classList.toggle('active',s.getAttribute('data-step')==='2')});
    window.scrollTo(0,0);
   }catch(err){toast(err.message||'خطا در ورود','error');}
-  finally{btn.disabled=false;btn.textContent='ورود به سایت';}
+  finally{btn.disabled=false;btn.textContent='ورود / ساخت حساب';}
  });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
