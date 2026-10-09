@@ -30,7 +30,7 @@ var CFG = {
 function getMasterCoachConfig(){
   var props=PropertiesService.getScriptProperties();
   return {
-    phone:normalizeIranDigits(String(props.getProperty('MASTER_COACH_PHONE')||'').trim()).replace(/\\s+/g,''),
+    phone:normalizeIranDigits(String(props.getProperty('MASTER_COACH_PHONE')||'').trim()).replace(/\s+/g,''),
     code:String(props.getProperty('MASTER_COACH_CODE')||'').trim(),
     name:String(props.getProperty('MASTER_COACH_NAME')||'مربی ارشد').trim()||'مربی ارشد'
   };
@@ -424,7 +424,7 @@ function loginCoach(p){
 }
 function ensureMasterCoach(){
   var master=getMasterCoachConfig();
-  if(!/^09\\d{9}$/.test(master.phone)) throw new Error('در تنظیمات Script Properties، MASTER_COACH_PHONE را با شماره معتبر تنظیم کن');
+  if(!/^09\d{9}$/.test(master.phone)) throw new Error('در تنظیمات Script Properties، MASTER_COACH_PHONE را با شماره معتبر تنظیم کن');
   if(master.code.length<12) throw new Error('MASTER_COACH_CODE باید حداقل ۱۲ نویسه داشته باشد');
 
   var sheet=getSheet('مربیان'), rows=getSheetObjects('مربیان'), found=false;
