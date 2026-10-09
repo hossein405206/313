@@ -243,7 +243,7 @@
 
   function setupForm() {
     var form = $('#warningForm');
-    var select = $('#officialSelect');
+    var select = $('#memberSelect');
     var textarea = $('#warningText');
     var charCount = $('#charCount');
     var submitBtn = $('#submitWarning');
