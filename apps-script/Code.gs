@@ -43,7 +43,7 @@ var HEADERS = {
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','membershipStatus','birthDate','schoolLevel','schoolGrade','guardianName','guardianPhone','membershipRequestedAt','membershipReviewedAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
-  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
+  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','photoId'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
@@ -941,7 +941,10 @@ function uploadEventImage(p) {
 
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {}
+  } catch (e) {
+    try { file.setTrashed(true); } catch (ignored) {}
+    throw new Error('تصویر بارگذاری شد اما Google Drive اجازه نمایش عمومی نداد؛ تنظیمات اشتراک‌گذاری Drive را بررسی کن.');
+  }
 
   return {
     ok: true,
@@ -1039,14 +1042,14 @@ function registerCamp(p) {
   if (!/^09\d{9}$/.test(String(p.phone || ''))) throw new Error('شماره همراه نامعتبر است');
   if (!/^09\d{9}$/.test(String(p.fatherPhone || ''))) throw new Error('شماره همراه پدر نامعتبر است');
 
-  var photoUrl = '';
+  var photoUrl = '', photoId = '';
   if (p.photoBase64) {
-    var uploaded = uploadPublicFile(
+    var uploaded = uploadPrivateFile(
       String(p.photoBase64),
       String(p.photoMimeType || 'image/jpeg'),
       'registration-' + Date.now()
     );
-    photoUrl = uploaded.url;
+    photoId = uploaded.id;
   }
 
   var sheet = getSheet('ثبت‌نام‌ها');
@@ -1060,6 +1063,7 @@ function registerCamp(p) {
     phone: String(p.phone).trim(),
     nationalCode: String(p.nationalCode || '').trim(),
     photoUrl: photoUrl,
+    photoId: photoId,
     status: 'در انتظار تایید',
     createdAt: nowIso(),
     updatedAt: nowIso()
@@ -1395,19 +1399,43 @@ function setSetting(key, value) {
 /* Drive                                                                      */
 /* -------------------------------------------------------------------------- */
 
+function uploadPrivateFile(base64, mime, name) {
+  var blob = Utilities.newBlob(Utilities.base64Decode(base64), mime, name);
+  var file = getDriveFolder().createFile(blob);
+  try {
+    file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+  } catch (e) {
+    try { file.setTrashed(true); } catch (ignored) {}
+    throw new Error('فایل رضایت‌نامه ذخیره نشد؛ پوشه Drive باید خصوصی و قابل مدیریت باشد.');
+  }
+  return { id:file.getId() };
+}
+
 function uploadPublicFile(base64, mime, name) {
   var blob = Utilities.newBlob(Utilities.base64Decode(base64), mime, name);
-  var folder = getDriveFolder();
-  var file = folder.createFile(blob);
-
+  var file = getDriveFolder().createFile(blob);
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {}
+  } catch (e) {
+    try { file.setTrashed(true); } catch (ignored) {}
+    throw new Error('فایل بارگذاری شد اما دسترسی عمومی Drive تنظیم نشد.');
+  }
+  return { id:file.getId(), url:'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200' };
+}
 
-  return {
-    id:file.getId(),
-    url:'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200'
-  };
+// این تابع را یک‌بار پس از پشتیبان‌گیری اجرا کن تا لینک‌های قدیمی رضایت‌نامه‌ها خصوصی شوند.
+function secureLegacyConsentPhotos() {
+  var rows = getSheetObjects('ثبت‌نام‌ها'), secured = 0, failed = 0;
+  rows.forEach(function(row) {
+    var url = String(row.photoUrl || ''), queryMatch = url.match(/[?&]id=([^&]+)/), pathParts = url.split('/d/');
+    var id = queryMatch ? queryMatch[1] : (pathParts.length > 1 ? pathParts[1].split('/')[0] : '');
+    if (!id) return;
+    try {
+      DriveApp.getFileById(decodeURIComponent(id)).setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+      secured++;
+    } catch (e) { failed++; }
+  });
+  return {ok:failed===0,secured:secured,failed:failed};
 }
 
 function getDriveFolder() {
