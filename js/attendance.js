@@ -312,7 +312,7 @@
 
         records.push({
           memberId: m.id,
-          fullName: fullName,
+          memberName: fullName,
           status: statusFa,
           note: rec.note || ''
         });
