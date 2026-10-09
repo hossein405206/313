@@ -1301,7 +1301,7 @@ function ensureLifetimeGameRecords() {
 function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
-  if (!member) throw new Error('عضو پیدا نشد');
+  if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
   if (String(member.membershipStatus || '') !== 'approved') throw new Error('بازی فقط برای اعضای تاییدشده حلقه است');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
