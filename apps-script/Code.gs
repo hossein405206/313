@@ -35,6 +35,7 @@ var HEADERS = {
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt'],
+  'درخواست عضویت': ['id','firstName','lastName','phone','birthDate','school','grade','guardianName','guardianPhone','notes','status','createdAt','updatedAt'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
@@ -181,6 +182,17 @@ function handleGet(p) {
     return { ok: true, items: listCamps() };
   }
 
+  if (action === 'getCircleMembership') {
+    var memberAuth = requireToken(p.token, ['member']);
+    return circleMembershipResponse(memberAuth.subject);
+  }
+
+  if (action === 'listCircleApplications') {
+    var applicationsAuth = requireToken(p.token, ['coach']);
+    if (!applicationsAuth.isMaster) throw new Error('فقط مالک اصلی می‌تواند درخواست عضویت را بررسی کند');
+    return { ok: true, items: getSheetObjects('درخواست عضویت').sort(byNewest) };
+  }
+
   if (action === 'listOfficials') {
     return {
       ok: true,
@@ -287,6 +299,12 @@ function handlePost(p) {
   var action = String(p.action || '');
 
   if (action === 'registerMember') { return registerMember(p); }
+  if (action === 'applyCircleMembership') { return applyCircleMembership(p); }
+  if (action === 'setCircleApplicationStatus') {
+    var applicationAuth = requireToken(p.token, ['coach']);
+    if (!applicationAuth.isMaster) throw new Error('فقط مالک اصلی می‌تواند درخواست عضویت را بررسی کند');
+    return setCircleApplicationStatus(p);
+  }
   if (action === 'loginCoach') { return loginCoach(p); }
   if (action === 'addCoach') { return addCoach(p); }
   if (action === 'listCoaches') {
@@ -641,6 +659,100 @@ function b64Bytes(bytes) {
 /* -------------------------------------------------------------------------- */
 /* Member auth                                                                */
 /* -------------------------------------------------------------------------- */
+
+function applyCircleMembership(p) {
+  var firstName = String(p.firstName || '').trim();
+  var lastName = String(p.lastName || '').trim();
+  var phone = normalizePhone(p.phone);
+  var birthDate = String(p.birthDate || '').trim();
+  var school = String(p.school || '').trim();
+  var grade = String(p.grade || '').trim();
+  var guardianName = String(p.guardianName || '').trim();
+  var guardianPhone = normalizePhone(p.guardianPhone);
+  var notes = String(p.notes || '').trim().slice(0, 500);
+  if (!firstName || !lastName) throw new Error('نام و نام خانوادگی را وارد کن');
+  if (!/^09\\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (!guardianName || !/^09\\d{9}$/.test(guardianPhone)) throw new Error('نام و شماره همراه ولی الزامی است');
+  if (!school || !grade) throw new Error('نام مدرسه و پایه تحصیلی را وارد کن');
+  if (p.guardianConsent !== true && String(p.guardianConsent) !== 'true') throw new Error('تأیید ولی الزامی است');
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = getSheet('درخواست عضویت');
+    var rows = getSheetObjects('درخواست عضویت');
+    var existing = rows.filter(function(r) { return String(r.phone || '') === phone; }).sort(byNewest)[0];
+    if (existing && String(existing.status) === 'تأیید شد') {
+      return { ok: true, status: 'تأیید شد', existing: true, message: 'عضویت شما قبلاً تأیید شده است' };
+    }
+    var now = nowIso();
+    var obj = {
+      id: existing ? existing.id : uid('CIR'),
+      firstName: firstName, lastName: lastName, phone: phone,
+      birthDate: birthDate, school: school, grade: grade,
+      guardianName: guardianName, guardianPhone: guardianPhone,
+      notes: notes, status: 'در انتظار بررسی',
+      createdAt: existing ? (existing.createdAt || now) : now,
+      updatedAt: now
+    };
+    if (existing) {
+      var rowNo = findRowById('درخواست عضویت', String(existing.id));
+      sheet.getRange(rowNo, 1, 1, HEADERS['درخواست عضویت'].length).setValues([rowToArray('درخواست عضویت', obj)]);
+    } else {
+      sheet.appendRow(rowToArray('درخواست عضویت', obj));
+    }
+    return { ok: true, status: obj.status, existing: !!existing, message: 'درخواست ثبت شد و پس از بررسی مالک حلقه نتیجه اعلام می‌شود' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function setCircleApplicationStatus(p) {
+  var id = String(p.id || '').trim();
+  var status = String(p.status || '').trim();
+  if (!id || ['تأیید شد', 'رد شد', 'در انتظار بررسی'].indexOf(status) < 0) throw new Error('درخواست یا وضعیت نامعتبر است');
+  var rowNo = findRowById('درخواست عضویت', id);
+  if (!rowNo) throw new Error('درخواست عضویت پیدا نشد');
+  var sheet = getSheet('درخواست عضویت');
+  var row = sheet.getRange(rowNo, 1, 1, HEADERS['درخواست عضویت'].length).getValues()[0];
+  var app = rowToObject('درخواست عضویت', row);
+  row[10] = status;
+  row[12] = nowIso();
+  sheet.getRange(rowNo, 1, 1, row.length).setValues([row]);
+  if (status === 'تأیید شد') {
+    var member = findMemberByPhone(String(app.phone || ''), true);
+    if (!member) {
+      addMemberInternal({ firstName: app.firstName, lastName: app.lastName, phone: app.phone, nickname: '', profileCompleted: false, active: true });
+    } else {
+      var memberSheet = getSheet('اعضا');
+      var memberRow = findRow(memberSheet, 'id', member.id);
+      if (memberRow) memberSheet.getRange(memberRow, 9).setValue(true);
+    }
+  }
+  return { ok: true, id: id, status: status };
+}
+
+function normalizePhone(value) {
+  return String(value || '').replace(/[\\s-]/g, '').replace(/[۰-۹]/g, function(d) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); }).replace(/[٠-٩]/g, function(d) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)); });
+}
+
+function isCircleMember(phone) {
+  phone = normalizePhone(phone);
+  if (!phone) return false;
+  var applications = getSheetObjects('درخواست عضویت');
+  if (applications.some(function(r) { return normalizePhone(r.phone) === phone && String(r.status || '') === 'تأیید شد'; })) return true;
+  var member = findMemberByPhone(phone, true);
+  if (!member || !truthy(member.active)) return false;
+  // Legacy members are recognized by recorded attendance; account creation alone is not membership.
+  return getSheetObjects('حضورغیاب').some(function(r) { return String(r.memberId || '') === String(member.id || ''); });
+}
+
+function circleMembershipResponse(phone) {
+  var apps = getSheetObjects('درخواست عضویت').filter(function(r) { return normalizePhone(r.phone) === normalizePhone(phone); }).sort(byNewest);
+  var latest = apps[0] || null;
+  var isMember = isCircleMember(phone);
+  return { ok: true, isMember: isMember, status: isMember ? 'عضو حلقه' : (latest ? String(latest.status || 'در انتظار بررسی') : 'ثبت‌نام نکرده'), application: latest ? { id: latest.id, status: latest.status, updatedAt: latest.updatedAt } : null };
+}
 
 function registerMember(p){
   var fullName=String(p.name||'').trim().replace(/\s+/g,' '), phone=String(p.phone||'').trim();
@@ -1222,7 +1334,7 @@ function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
   if (!member) throw new Error('عضو پیدا نشد');
-  if (!truthy(member.profileCompleted)) throw new Error('ابتدا پروفایلت را تکمیل کن');
+  if (!isCircleMember(auth.subject)) throw new Error('بازی فقط برای اعضای حلقه است');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
   var memberSheet = getSheet('اعضا');
