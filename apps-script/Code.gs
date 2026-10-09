@@ -39,7 +39,7 @@ function getMasterCredentials() {
   var ownerName = [properties.getProperty('OWNER_FIRST_NAME') || '', properties.getProperty('OWNER_LAST_NAME') || ''].join(' ').trim();
   return {
     phone: normalizeIranDigits(String(properties.getProperty('MASTER_COACH_PHONE') || ownerPhone)).replace(/\s+/g, ''),
-    code: String(properties.getProperty('MASTER_COACH_CODE') || ownerPassword).trim(),
+    code: String(ownerPassword || properties.getProperty('MASTER_COACH_CODE') || '').trim(),
     name: String(properties.getProperty('MASTER_COACH_NAME') || ownerName || 'سازنده').trim()
   };
 }
