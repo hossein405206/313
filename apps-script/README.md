@@ -40,6 +40,8 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 کدهای اولیه مسئولین را حتماً بعد از setup تغییر بده.
 
+**امنیت مربی ارشد:** اطلاعات ورود را فقط در `Project Settings → Script Properties` ذخیره کن: `MASTER_COACH_PHONE`، `MASTER_COACH_CODE` و اختیاری `MASTER_COACH_NAME`. اطلاعات ورود واقعی نباید در فایل کد یا مخزن عمومی قرار بگیرد. پس از تنظیم، `setup()` را اجرا کن.
+
 ### 5) Deploy
 از Apps Script:
 
@@ -89,6 +91,6 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 ## Endpoint فعلی سایت
 
-`https://script.google.com/macros/s/AKfycbxxuOgL4x67CuF3aL6baLGURlxNIOKel3C3GU0zcvF6LlzvoBeK32D4uMkg9PDEEImM/exec`
+`https://script.google.com/macros/s/AKfycbwQu_bIijvel7wu1898AZVlWMKavL00egnJc6-eTT3HiWxxjOo54-LKUblvLNLZOCO9/exec`
 
-این همان Web App endpoint است که در `js/main.js` تنظیم شده است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
+این همان Web App endpoint است که در `js/main.js` تنظیم شده است. پس از تغییر `Code.gs`، Deployment فعلی را ویرایش و نسخه جدید را Deploy کن؛ تغییر فایل GitHub به‌تنهایی کد منتشرشده Google Apps Script را تغییر نمی‌دهد.
