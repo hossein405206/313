@@ -31,10 +31,13 @@ var CFG = {
 
 function getMasterCredentials() {
   var properties = PropertiesService.getScriptProperties();
+  var ownerPhone = normalizeIranDigits(String(properties.getProperty('OWNER_PHONE') || '')).replace(/\\s+/g, '');
+  var ownerPassword = String(properties.getProperty('OWNER_PASSWORD') || '');
+  var ownerName = [properties.getProperty('OWNER_FIRST_NAME') || '', properties.getProperty('OWNER_LAST_NAME') || ''].join(' ').trim();
   return {
-    phone: normalizeIranDigits(String(properties.getProperty('MASTER_COACH_PHONE') || '')).replace(/\\s+/g, ''),
-    code: String(properties.getProperty('MASTER_COACH_CODE') || '').trim(),
-    name: String(properties.getProperty('MASTER_COACH_NAME') || 'مربی ارشد').trim()
+    phone: normalizeIranDigits(String(properties.getProperty('MASTER_COACH_PHONE') || ownerPhone)).replace(/\\s+/g, ''),
+    code: String(properties.getProperty('MASTER_COACH_CODE') || ownerPassword).trim(),
+    name: String(properties.getProperty('MASTER_COACH_NAME') || ownerName || 'سازنده').trim()
   };
 }
 
@@ -42,7 +45,7 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','membershipStatus','birthDate','schoolLevel','schoolGrade','guardianName','guardianPhone','membershipRequestedAt','membershipReviewedAt'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','membershipStatus','birthDate','schoolLevel','schoolGrade','guardianName','guardianPhone','membershipRequestedAt','membershipReviewedAt','passwordSalt','passwordHash','profileRole'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','photoId'],
@@ -136,6 +139,7 @@ function setup() {
 
   ensureLifetimeGameRecords();
   ensureSecret();
+  ensureOwnerMember();
 
   return { ok: true, message: 'راه‌اندازی اولیه انجام شد' };
 }
@@ -674,18 +678,88 @@ function b64Bytes(bytes) {
 /* Member auth                                                                */
 /* -------------------------------------------------------------------------- */
 
+function passwordDigest(password, salt) {
+  return b64Bytes(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(salt) + ':' + String(password), Utilities.Charset.UTF_8));
+}
+function setMemberPassword(member, password) {
+  var salt = Utilities.getUuid() + Utilities.getUuid();
+  member.passwordSalt = salt;
+  member.passwordHash = passwordDigest(password, salt);
+}
+function saveMemberPassword(phone, password) {
+  var sheet = getSheet('اعضا'), values = sheet.getDataRange().getValues();
+  if (!values.length) throw new Error('حساب پیدا نشد');
+  var headers = values[0].map(String), phoneIndex = headers.indexOf('phone');
+  var saltIndex = headers.indexOf('passwordSalt'), hashIndex = headers.indexOf('passwordHash');
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][phoneIndex] || '') !== String(phone)) continue;
+    var salt = Utilities.getUuid() + Utilities.getUuid();
+    values[i][saltIndex] = salt;
+    values[i][hashIndex] = passwordDigest(password, salt);
+    sheet.getRange(i + 1, 1, 1, values[i].length).setValues([values[i]]);
+    return rowToObject('اعضا', values[i]);
+  }
+  throw new Error('حساب پیدا نشد');
+}
 function registerMember(p){
-  var fullName=String(p.name||'').trim().replace(/\s+/g,' '), phone=String(p.phone||'').trim();
-  if(!fullName)throw new Error('نام و نام خانوادگی را وارد کن');
+  var fullName=String(p.name||'').trim().replace(/\s+/g,' '), phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,'');
+  var password=String(p.password||''), confirm=String(p.confirmPassword||'');
   if(!/^09\d{9}$/.test(phone))throw new Error('شماره همراه نامعتبر است');
+  if(password.length < 8)throw new Error('رمز عبور باید حداقل ۸ نویسه داشته باشد');
   var existing=findMemberByPhone(phone,true);
   if(existing){
-    if(String(existing.name||'').trim()!==fullName)throw new Error('این شماره قبلاً با نام دیگری ثبت شده است');
-    return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};
+    if(!truthy(existing.active))throw new Error('این حساب غیرفعال است؛ با مدیر حلقه تماس بگیر');
+    if(String(existing.passwordHash||'')){
+      if(!fullName || String(existing.name||'').trim()!==fullName) {
+        // نام در ورود حساب‌های موجود تعیین‌کننده هویت نیست؛ رمز عبور معیار ورود است.
+      }
+      if(String(existing.passwordHash)!==passwordDigest(password, String(existing.passwordSalt||'')))throw new Error('شماره همراه یا رمز عبور نادرست است');
+      return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};
+    }
+    if(!fullName || String(existing.name||'').trim()!==fullName)throw new Error('برای فعال‌سازی حساب قدیمی، نام کامل ثبت‌شده را دقیق وارد کن');
+    if(confirm!==password)throw new Error('رمز عبور و تکرار آن یکسان نیست');
+    var upgraded=saveMemberPassword(phone,password);
+    return {ok:true,member:publicMember(upgraded),token:issueToken('member',phone),existing:true,passwordSet:true};
   }
+  if(fullName.length<2)throw new Error('نام و نام خانوادگی را وارد کن');
+  if(confirm!==password)throw new Error('رمز عبور و تکرار آن یکسان نیست');
   var parts=fullName.split(' '), last=parts.length>1?parts.pop():'', first=parts.join(' ');
-  var member=addMemberInternal({firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true});
-  return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};
+  var member={firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true};
+  setMemberPassword(member,password);
+  var created=addMemberInternal(member);
+  // Save the generated password fields explicitly after the row has been created.
+  created=saveMemberPassword(phone,password);
+  return {ok:true,member:publicMember(created),token:issueToken('member',phone),existing:false};
+}
+function ensureOwnerMember() {
+  var props=PropertiesService.getScriptProperties();
+  var phone=normalizeIranDigits(String(props.getProperty('OWNER_PHONE')||'')).replace(/\s+/g,'');
+  var password=String(props.getProperty('OWNER_PASSWORD')||'');
+  var first=String(props.getProperty('OWNER_FIRST_NAME')||'').trim();
+  var last=String(props.getProperty('OWNER_LAST_NAME')||'').trim();
+  if(!phone || !password || !first || !last) throw new Error('اطلاعات مالک را در Script Properties با کلیدهای OWNER_PHONE، OWNER_PASSWORD، OWNER_FIRST_NAME و OWNER_LAST_NAME تنظیم کن');
+  if(!/^09\d{9}$/.test(phone) || password.length<8) throw new Error('شماره یا رمز مالک معتبر نیست');
+  var existing=findMemberByPhone(phone,true);
+  var salt=Utilities.getUuid()+Utilities.getUuid(), hash=passwordDigest(password,salt);
+  var sheet=getSheet('اعضا');
+  if(!existing) {
+    addMemberInternal({firstName:first,lastName:last,phone:phone,active:true,membershipStatus:'approved',profileRole:'creator',passwordSalt:salt,passwordHash:hash});
+    return;
+  }
+  var values=sheet.getDataRange().getValues(), headers=values[0].map(String);
+  for(var i=1;i<values.length;i++) {
+    if(String(values[i][headers.indexOf('phone')]||'')!==phone) continue;
+    values[i][headers.indexOf('firstName')]=first;
+    values[i][headers.indexOf('lastName')]=last;
+    values[i][headers.indexOf('name')]=(first+' '+last).trim();
+    values[i][headers.indexOf('active')]=true;
+    values[i][headers.indexOf('membershipStatus')]='approved';
+    values[i][headers.indexOf('profileRole')]='creator';
+    values[i][headers.indexOf('passwordSalt')]=salt;
+    values[i][headers.indexOf('passwordHash')]=hash;
+    sheet.getRange(i+1,1,1,values[i].length).setValues([values[i]]);
+    return;
+  }
 }
 function generateLoginCode(phone) {
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
@@ -775,7 +849,10 @@ function addMemberInternal(o) {
     guardianName: String(o.guardianName || ''),
     guardianPhone: String(o.guardianPhone || ''),
     membershipRequestedAt: String(o.membershipRequestedAt || ''),
-    membershipReviewedAt: String(o.membershipReviewedAt || '')
+    membershipReviewedAt: String(o.membershipReviewedAt || ''),
+    passwordSalt: String(o.passwordSalt || ''),
+    passwordHash: String(o.passwordHash || ''),
+    profileRole: String(o.profileRole || '')
   };
   sheet.appendRow(rowToArray('اعضا', row));
   return row;
@@ -906,8 +983,27 @@ function publicMember(r) {
     profileCompleted: truthy(r.profileCompleted),
     bestScore: Number(r.bestScore || 0),
     active: truthy(r.active),
-    createdAt: r.createdAt
+    createdAt: r.createdAt,
+    profileRole: resolveProfileRole(r),
+    roleLabel: profileRoleLabel(resolveProfileRole(r))
   };
+}
+
+function resolveProfileRole(r) {
+  var role=String(r.profileRole||'').toLowerCase();
+  var props=PropertiesService.getScriptProperties();
+  var ownerPhone=normalizeIranDigits(String(props.getProperty('OWNER_PHONE')||'')).replace(/\\s+/g,'');
+  if(ownerPhone && String(r.phone||'')===ownerPhone) return 'creator';
+  if(['creator','coach','official'].indexOf(role)>=0) return role;
+  try {
+    var coaches=getSheetObjects('مربیان');
+    if(coaches.some(function(c){return truthy(c.active)&&normalizeIranDigits(String(c.phone||'')).replace(/\\s+/g,'')===normalizeIranDigits(String(r.phone||'')).replace(/\\s+/g,'');})) return 'coach';
+  } catch(e) {}
+  if(String(r.membershipStatus||'')==='approved' && truthy(r.active)) return 'member';
+  return 'none';
+}
+function profileRoleLabel(role) {
+  return ({creator:'سازنده',coach:'مربی',official:'مسئول',member:'عضو حلقه',none:''})[role] || '';
 }
 
 /* -------------------------------------------------------------------------- */
