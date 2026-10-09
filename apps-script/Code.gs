@@ -180,18 +180,6 @@ function handleGet(p) {
     };
   }
 
-  if (action === 'verifyOfficialCode') {
-    var official = verifyOfficialCode(String(p.code || '').trim().toUpperCase());
-    if (!official) throw new Error('کد مسئولیت نامعتبر است');
-    return { ok: true, official: officialPublic(official), token: issueToken(official.roleCode, official.code) };
-  }
-
-  if (action === 'verifyCoachCode') {
-    var coach = verifyCoachCode(String(p.code || '').trim().toUpperCase());
-    if (!coach) throw new Error('کد مربی نامعتبر است');
-    return { ok: true, coach: { name: coach.name, role: coach.role, isMaster: coach.isMaster, permissions: coachPermissions(coach) }, token: issueToken('coach', coach.code, coach.isMaster, coachPermissions(coach)) };
-  }
-
   if (action === 'listMembers') {
     var auth = requireToken(p.token, ['attendance','coach']);
     return { ok: true, items: listActiveMembers(), role: auth.role };
@@ -275,6 +263,11 @@ function handlePost(p) {
   var action = String(p.action || '');
 
   if (action === 'registerMember') { return registerMember(p); }
+  if (action === 'verifyOfficialCode') {
+    var official = verifyOfficialCode(String(p.code || '').trim().toUpperCase());
+    if (!official) throw new Error('کد مسئولیت نامعتبر است');
+    return { ok: true, official: officialPublic(official), token: issueToken(official.roleCode, official.code) };
+  }
   if (action === 'loginCoach') { return loginCoach(p); }
   if (action === 'addCoach') { return addCoach(p); }
   if (action === 'listCoaches') {
