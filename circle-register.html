@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14243b">
+  <meta name="description" content="فرم درخواست عضویت در حلقه شهید هادی ذوالفقاری">
+  <title>ثبت‌نام در حلقه | مسجد امام رضا (ع)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/membership.css">
+</head>
+<body>
+<div class="app-container">
+  <header class="app-header">
+    <a href="index.html" class="header-back" aria-label="بازگشت به خانه">←</a>
+    <div class="header-brand"><div><strong>ثبت‌نام در حلقه</strong><small>مسجد امام رضا (ع)</small></div></div>
+  </header>
+  <main class="page membership-page">
+    <section class="membership-hero">
+      <span class="membership-hero__icon">✦</span>
+      <span class="eyebrow">CIRCLE MEMBERSHIP</span>
+      <h2>به حلقه شهید هادی ذوالفقاری بپیوند</h2>
+      <p>اطلاعات ضروری را وارد کن. درخواست پس از بررسی مسئول حلقه تأیید می‌شود؛ تا پیش از تأیید، بازی‌ها در دسترس نیستند.</p>
+      <div class="membership-steps"><span>۱. ثبت درخواست</span><i></i><span>۲. بررسی مربی</span><i></i><span>۳. فعال‌شدن عضویت</span></div>
+    </section>
+    <div id="membershipStatusBox" class="membership-status hidden" role="status" aria-live="polite"></div>
+    <form id="membershipForm" class="membership-form" novalidate>
+      <div class="membership-form__heading"><h3>اطلاعات عضو</h3><small>موارد ستاره‌دار الزامی‌اند</small></div>
+      <div class="membership-grid">
+        <label class="form-group"><span>نام <b>*</b></span><input id="memberFirstName" class="form-control" autocomplete="given-name" maxlength="60" required placeholder="نام"></label>
+        <label class="form-group"><span>نام خانوادگی <b>*</b></span><input id="memberLastName" class="form-control" autocomplete="family-name" maxlength="60" required placeholder="نام خانوادگی"></label>
+        <label class="form-group membership-full"><span>شماره همراه عضو <b>*</b></span><input id="memberPhone" class="form-control" type="tel" dir="ltr" inputmode="numeric" maxlength="11" autocomplete="tel" required placeholder="09xxxxxxxxx"><small class="field-note">برای پیگیری درخواست از همین شماره استفاده می‌شود.</small></label>
+        <label class="form-group"><span>تاریخ تولد</span><input id="memberBirthDate" class="form-control" type="date"></label>
+        <label class="form-group"><span>مقطع تحصیلی <b>*</b></span><select id="memberSchoolLevel" class="form-control" required><option value="">انتخاب کن</option><option>دبستان</option><option>راهنمایی</option><option>متوسطه دوم</option><option>سایر</option></select></label>
+        <label class="form-group membership-full"><span>پایه یا کلاس <b>*</b></span><input id="memberSchoolGrade" class="form-control" maxlength="30" required placeholder="مثلاً پایه هشتم"></label>
+      </div>
+      <div class="membership-divider"></div>
+      <div class="membership-form__heading"><h3>اطلاعات ولی یا سرپرست</h3><small>برای هماهنگی برنامه‌ها</small></div>
+      <div class="membership-grid">
+        <label class="form-group"><span>نام ولی یا سرپرست <b>*</b></span><input id="memberGuardianName" class="form-control" autocomplete="name" maxlength="80" required placeholder="نام و نام خانوادگی"></label>
+        <label class="form-group"><span>شماره همراه ولی <b>*</b></span><input id="memberGuardianPhone" class="form-control" type="tel" dir="ltr" inputmode="numeric" maxlength="11" autocomplete="tel" required placeholder="09xxxxxxxxx"></label>
+      </div>
+      <p class="membership-privacy">اطلاعات این فرم برای بررسی عضویت و هماهنگی برنامه‌های حلقه استفاده می‌شود. نشانی منزل و کد ملی در این فرم درخواست نمی‌شود.</p>
+      <button id="membershipSubmit" type="submit" class="btn-submit">ثبت درخواست عضویت <span>←</span></button>
+      <a href="index.html" class="membership-backlink">بازگشت به خانه</a>
+    </form>
+  </main>
+  <nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
+</div>
+<script src="js/main.js" defer></script>
+<script src="js/membership.js" defer></script>
+</body>
+</html>
