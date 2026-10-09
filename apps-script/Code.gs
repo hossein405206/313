@@ -234,7 +234,8 @@ function handleGet(p) {
   }
 
   if (action === 'listWarnings') {
-    var warnAuth = requireCoachPermission(p.token, 'reports');
+    var warningAuth = requireToken(p.token, ['supervision', 'coach']);
+    if (warningAuth.role === 'coach') requireCoachPermission(p.token, 'reports');
     var requestedMonth = String(p.month || currentMonth());
     if (requestedMonth !== currentMonth()) {
       throw new Error('فقط اطلاعات ماه جاری قابل مشاهده است');
@@ -243,7 +244,7 @@ function handleGet(p) {
       ok: true,
       month: requestedMonth,
       items: warningsForMonth(requestedMonth),
-      role: warnAuth.role
+      role: warningAuth.role
     };
   }
 
@@ -368,6 +369,12 @@ function handlePost(p) {
   if (action === 'submitGameScore') {
     return submitGameScore(p);
   }
+  if (action === 'verifyOfficialCode') {
+    var official = verifyOfficialCode(String(p.code || '').trim().toUpperCase());
+    if (!official) throw new Error('کد مسئولیت نامعتبر است');
+    return { ok:true, official:officialPublic(official), token:issueToken(official.roleCode, official.code) };
+  }
+
   if (action === 'feedback') { return submitFeedback(p); }
 
   throw new Error('عملیات شناخته نشد: ' + action);
@@ -1460,10 +1467,11 @@ function saveAttendanceBatch(p) {
     var values = [];
 
     records.forEach(function(r){
-      if (!r.memberId || !r.memberName || !r.status) return;
+      var recordName = String(r.memberName || r.fullName || '').trim();
+      if (!r.memberId || !recordName || !r.status) return;
       var status = String(r.status);
       if (['حاضر','موجه','غیبت'].indexOf(status) < 0) return;
-      values.push([date, String(r.memberId), String(r.memberName), status, String(r.note || ''), official.subject, now]);
+      values.push([date, String(r.memberId), recordName, status, String(r.note || ''), official.subject, now]);
     });
 
     if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
