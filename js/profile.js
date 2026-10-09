@@ -94,7 +94,15 @@
     var nm = $('#profileName');
     var ph = $('#profilePhone');
 
-    if (av) av.textContent = initial;
+    if (av) {
+      if (member.profileImage) {
+        av.innerHTML = '<img class="profile-avatar__img" src="' + escapeHtml(member.profileImage) + '" alt="عکس پروفایل">';
+        av.classList.add('has-image');
+      } else {
+        av.textContent = initial;
+        av.classList.remove('has-image');
+      }
+    }
     if (nm) nm.textContent = fullName;
     if (ph) ph.textContent = member.phone || '—';
 
@@ -157,6 +165,105 @@
       console.error('Camp count error:', err);
       el.textContent = '۰';
     }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     Profile photo upload
+     ══════════════════════════════════════════════════════════════════════ */
+
+  function imageFileToJpeg(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function() { reject(new Error('خواندن عکس ناموفق بود')); };
+      reader.onload = function() {
+        var image = new Image();
+        image.onerror = function() { reject(new Error('فایل عکس قابل‌خواندن نیست')); };
+        image.onload = function() {
+          var max = 640;
+          var scale = Math.min(1, max / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+          canvas.height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+          var context = canvas.getContext('2d');
+          if (!context) { reject(new Error('پردازش عکس در این مرورگر ممکن نیست')); return; }
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          var url = canvas.toDataURL('image/jpeg', 0.82);
+          resolve({base64:url.split(',')[1], mimeType:'image/jpeg'});
+        };
+        image.src = String(reader.result || '');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleSessionFailure(err) {
+    var message = String(err && err.message || '');
+    if (!/نشست|توکن|session|token|منقضی/i.test(message)) return false;
+    var session = getSession();
+    if (session) session.clearMember();
+    toast('نشست قبلی با نسخه فعلی سازگار نیست؛ دوباره با شماره و گذرواژه وارد شو', 'error');
+    setTimeout(function() { location.href = 'login.html'; }, 1100);
+    return true;
+  }
+
+  function setupProfilePhoto() {
+    var btn = $('#changeProfilePhoto');
+    var input = $('#profilePhotoInput');
+    if (!btn || !input) return;
+    btn.addEventListener('click', function() {
+      if (!state.member || !state.member.token) {
+        toast('برای تغییر عکس دوباره وارد شو', 'error');
+        return;
+      }
+      input.click();
+    });
+
+    input.addEventListener('change', async function() {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/i.test(file.type || '')) {
+        toast('فرمت عکس باید JPG، PNG یا WebP باشد', 'error');
+        input.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast('حجم عکس باید کمتر از ۵ مگابایت باشد', 'error');
+        input.value = '';
+        return;
+      }
+      var api = getAPI();
+      if (!api || !state.member || !state.member.token) {
+        toast('نشست ورود پیدا نشد؛ دوباره وارد شو', 'error');
+        input.value = '';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'در حال ذخیره عکس...';
+      try {
+        var image = await imageFileToJpeg(file);
+        var response = await api.post({
+          action: 'uploadProfileImage',
+          token: state.member.token,
+          base64: image.base64,
+          mimeType: image.mimeType
+        });
+        var updated = Object.assign({}, state.member, response.member || {}, {
+          profileImage: response.profileImage || (response.member && response.member.profileImage) || ''
+        });
+        state.member = updated;
+        var session = getSession();
+        if (session) session.setMember(updated, updated.token);
+        renderProfile(updated);
+        toast('عکس پروفایل ذخیره شد ✓');
+      } catch (err) {
+        console.error('Profile photo upload:', err);
+        if (!handleSessionFailure(err)) toast(err.message || 'ذخیره عکس ناموفق بود', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تغییر عکس پروفایل';
+        input.value = '';
+      }
+    });
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -258,7 +365,7 @@
 
       } catch (err) {
         console.error(err);
-        toast(err.message || 'خطا در ذخیره', 'error');
+        if (!handleSessionFailure(err)) toast(err.message || 'خطا در ذخیره', 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = 'ذخیره تغییرات';
@@ -317,11 +424,12 @@
     var member = session.getMember();
 
     // اگه کاربر وارد نشده، برو به login
-    if (!member) {
-      toast('اول باید وارد بشی', 'error');
+    if (!member || !member.token) {
+      session.clearMember();
+      toast('برای ورود دوباره شماره همراه و گذرواژه را وارد کن', 'error');
       setTimeout(function () {
         location.href = 'login.html';
-      }, 1200);
+      }, 900);
       return;
     }
 
@@ -341,6 +449,7 @@
     if (editBtn) editBtn.addEventListener('click', openEditModal);
 
     setupEditForm();
+    setupProfilePhoto();
     setupLogout();
   }
 
