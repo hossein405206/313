@@ -81,6 +81,25 @@
      Render
      ══════════════════════════════════════════════════════════════════════ */
 
+  function updateMembershipBadge(member) {
+    var badge = $('#profileRoleBadge'), hero = $('.profile-hero');
+    if (!badge) return;
+    function setState(registered) {
+      badge.className = 'profile-role-badge ' + (registered ? 'role-badge--member' : 'role-badge--unregistered');
+      badge.textContent = registered ? 'عضو حلقه' : 'عضویت تکمیل نشده';
+      if (hero) {
+        hero.classList.toggle('profile-hero--registered', !!registered);
+        hero.classList.toggle('profile-hero--unregistered', !registered);
+      }
+    }
+    setState(false);
+    var api = getAPI();
+    if (!member || !member.token || !api) return;
+    api.get({ action: 'getRingRegistration', token: member.token }).then(function (res) {
+      setState(!!(res && res.registered));
+    }).catch(function () { setState(false); });
+  }
+
   function renderProfile(member) {
     if (!member) return;
 
@@ -105,6 +124,7 @@
     }
     if (nm) nm.textContent = fullName;
     if (ph) ph.textContent = member.phone || '—';
+    updateMembershipBadge(member);
 
     // اطلاعات
     var map = {
