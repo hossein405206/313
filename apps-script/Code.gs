@@ -4,15 +4,17 @@
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
-   قبل از Deploy:
-   1) SPREADSHEET_ID را وارد کن
-   2) DRIVE_FOLDER_ID را وارد کن
-   3) تابع setup() را یک بار اجرا کن
-   4) کدهای پیش‌فرض ساخته‌شده در شیت «مسئولین» و «مربیان» را عوض کن
-   5) Deploy > Manage deployments > ویرایش Deployment فعلی > انتخاب نسخه جدید > Deploy
+   پیش از انتشار:
+   1) شناسه‌های SPREADSHEET_ID و DRIVE_FOLDER_ID را بررسی کن.
+   2) در Project Settings > Script Properties، مقدارهای MASTER_COACH_PHONE و
+      MASTER_COACH_CODE و در صورت نیاز MASTER_COACH_NAME را تنظیم کن.
+   3) از Sheet نسخه پشتیبان بگیر و تابع setup() را یک بار اجرا کن.
+   4) پس از پشتیبان‌گیری، در صورت نیاز توابع migrateLegacyMembersWithAttendance()
+      و secureLegacyConsentPhotos() را یک بار اجرا کن.
+   5) برای به‌روزرسانی سایت، Deploy > Manage deployments > Edit > New version > Deploy
+      را انتخاب کن تا URL فعلی /exec حفظ شود.
       Execute as: Me
       Who has access: Anyone
-   6) برای انتشار نهایی، یک Deployment جدید بساز و URL همان Deployment را در js/main.js قرار بده
 
    ساختار داده‌ها در Google Sheets:
    تنظیمات، مربیان، مسئولین، اعضا، رویدادها، اردوها،
