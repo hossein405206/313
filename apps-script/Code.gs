@@ -150,11 +150,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.3.0-ring-registration' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.4.0-officials-audit' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.3.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.4.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -717,7 +717,12 @@ function updateOfficial(p) {
 function setOfficialStatus(p) {
   requireCoachPermission(p.token, 'officials');
   var code=normalizeIranDigits(String(p.code||'').trim()).toUpperCase();
-  var pos=findRow(getSheet('مسئولین'),'code',String(p.code||'')); if(!pos)throw new Error('مسئول پیدا نشد');
+  var officialRows=getSheetObjects('مسئولین');
+  var pos=0;
+  for(var oi=0;oi<officialRows.length;oi++){
+    if(normalizeIranDigits(String(officialRows[oi].code||'').trim()).toUpperCase()===code){pos=oi+2;break;}
+  }
+  if(!pos)throw new Error('مسئول پیدا نشد');
   var sheet=getSheet('مسئولین'), vals=sheet.getRange(pos,1,1,5).getValues()[0];
   var makeActive=p.active===true || String(p.active).toLowerCase()==='true';
   if(makeActive){
