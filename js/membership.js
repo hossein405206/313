@@ -15,7 +15,13 @@
   function setStatus(title, message, kind) {
     if (!statusBox) return;
     statusBox.className = 'membership-status ' + (kind || 'info');
-    statusBox.innerHTML = '<strong>' + title + '</strong><p>' + message + '</p>';
+    statusBox.textContent = '';
+    var heading = document.createElement('strong');
+    var paragraph = document.createElement('p');
+    heading.textContent = title;
+    paragraph.textContent = message;
+    statusBox.appendChild(heading);
+    statusBox.appendChild(paragraph);
     statusBox.classList.remove('hidden');
   }
   function setFormVisible(visible) {
