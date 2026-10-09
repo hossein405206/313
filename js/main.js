@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.3.1'
+    VERSION: '5.4.0'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -488,17 +488,27 @@
     var openBtn = DOM.qs('#openOfficialLogin');
     var form = DOM.qs('#officialLoginForm');
     var input = DOM.qs('#officialCodeInput');
+    var expectedRole = '';
 
     if (!modal || !form || !input) return;
 
+    DOM.qsa('.role-gate').forEach(function (gate) {
+      DOM.on(gate, 'click', function () {
+        expectedRole = String(gate.getAttribute('data-role') || '');
+        Modal.open(modal);
+      });
+    });
+
     if (openBtn) {
       DOM.on(openBtn, 'click', function () {
+        expectedRole = '';
         Modal.open(modal);
       });
     }
 
     DOM.on(modal, 'click', function (e) {
       if (e.target === modal || e.target.hasAttribute('data-close-modal')) {
+        expectedRole = '';
         Modal.close(modal);
       }
     });
@@ -527,6 +537,12 @@
         if (!res.official) throw new Error('کد نامعتبر است');
 
         var official = res.official;
+        if (expectedRole === 'attendance' && String(official.role || '').indexOf('حضور') < 0) {
+          throw new Error('این کد برای مسئول نظارت است؛ کد مسئول حضور و غیاب را وارد کن');
+        }
+        if (expectedRole === 'supervision' && String(official.role || '').indexOf('نظارت') < 0) {
+          throw new Error('این کد برای مسئول حضور و غیاب است؛ کد مسئول نظارت را وارد کن');
+        }
         Session.setOfficial(official, res.token);
 
         Toast.success('خوش آمدی، ' + (official.name || 'مسئول'));
@@ -1131,7 +1147,8 @@
 function buildBottomNav() {
   var nav=document.querySelector('.bottom-nav'); if(!nav)return;
   var path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
-  var member=Session.getMember();
+  var session=window.KanoonApp&&window.KanoonApp.session;
+  var member=session?session.getMember():null;
   var items=[
     ['index.html','⌂','خانه'],
     ['activities.html','✦','فعالیت‌ها'],
@@ -1143,7 +1160,7 @@ function buildBottomNav() {
 }
 function bindGlobalNavigation(){
   buildBottomNav();
-  Array.prototype.slice.call(document.querySelectorAll('[data-open-login]')).forEach(function(b){b.addEventListener('click',function(){location.href=Session.getMember()?'profile.html':'login.html'})});
+  Array.prototype.slice.call(document.querySelectorAll('[data-open-login]')).forEach(function(b){b.addEventListener('click',function(){location.href=((window.KanoonApp&&window.KanoonApp.session&&window.KanoonApp.session.getMember())?'profile.html':'login.html')})});
   var drawer=document.querySelector('.app-drawer'),back=document.querySelector('.drawer-backdrop');
   Array.prototype.slice.call(document.querySelectorAll('[data-open-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.add('open');if(back)back.classList.add('open');document.body.classList.add('drawer-open')}})});
   Array.prototype.slice.call(document.querySelectorAll('[data-close-drawer]')).forEach(function(b){b.addEventListener('click',function(){if(drawer){drawer.classList.remove('open');if(back)back.classList.remove('open');document.body.classList.remove('drawer-open')}})});
