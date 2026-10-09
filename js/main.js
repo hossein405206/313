@@ -533,7 +533,7 @@
       btn.textContent = 'در حال بررسی...';
 
       try {
-        var res = await Api.get({ action: 'verifyOfficialCode', code: code });
+        var res = await Api.post({ action: 'verifyOfficialCode', code: code });
         if (!res.official) throw new Error('کد نامعتبر است');
 
         var official = res.official;
@@ -1149,12 +1149,14 @@ function buildBottomNav() {
   var path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
   var session=window.KanoonApp&&window.KanoonApp.session;
   var member=session?session.getMember():null;
+  var official=session?session.getOfficial():null;
+  var staffPage=['officials.html','attendance.html','supervision.html'].indexOf(path)>=0 || !!official;
   var items=[
     ['index.html','⌂','خانه'],
     ['activities.html','✦','فعالیت‌ها'],
     ['schedule.html','◷','برنامه'],
     ['game.html','◉','بازی'],
-    [member?'profile.html':'login.html',member?'♙':'↗',member?'پروفایل':'ورود']
+    staffPage?['officials.html','♙','مسئولین']:[member?'profile.html':'login.html',member?'♙':'↗',member?'پروفایل':'ورود']
   ];
   nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
 }
