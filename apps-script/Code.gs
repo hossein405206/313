@@ -99,7 +99,7 @@ function scheduleDayIndex(day){
 }
 function listSchedulePublic(){
   var rows=getSheetObjects('برنامه').filter(function(x){return String(x.active).toLowerCase()!=='false';});
-  rows=rows.map(function(x){x.category=(String(x.category||'بازی')==='حلقه')?'حلقه':'بازی';return x;});
+  rows=rows.map(function(x){x.category=(String(x.category||'حلقه')==='بازی')?'بازی':'حلقه';return x;});
   rows.sort(function(a,b){
     var ai=scheduleDayIndex(a.day),bi=scheduleDayIndex(b.day);
     if(ai<0)ai=99;if(bi<0)bi=99;
@@ -165,11 +165,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.6.0-ring-welcome-game-schedule-reset' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.7.0-ring-welcome-game-role-badges' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.6.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.7.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -1813,9 +1813,18 @@ function submitGameScore(p) {
     return {ok:true,saved:true,score:score,weekKey:week,lifetimeBest:lifetimeBest,leaderboard:leaderboardForWeek(week),allTimeLeaderboard:allTimeLeaderboard()};
   } finally { lock.releaseLock(); }
 }
+function registeredRingPhones_(){
+  var phones={};
+  getSheetObjects('ثبت‌نام حلقه').forEach(function(r){
+    var phone=normalizeMemberPhone(r.phone);
+    if(phone)phones[phone]=true;
+  });
+  return phones;
+}
 function leaderboardForWeek(week) {
   var memberById = {};
   getSheetObjects('اعضا').forEach(function(m) { memberById[String(m.id || '')] = m; });
+  var registeredPhones=registeredRingPhones_();
   return getSheetObjects('بازی')
     .filter(function(r){ return String(r.weekKey) === String(week); })
     .map(function(r){
@@ -1824,7 +1833,8 @@ function leaderboardForWeek(week) {
         memberId:String(r.memberId || ''),
         playerName:r.playerName,
         score:Number(r.score || 0),
-        profileImage:String(member.profileImage || '')
+        profileImage:String(member.profileImage || ''),
+        registered:!!registeredPhones[normalizeMemberPhone(member.phone)]
       };
     })
     .sort(function(a,b){ return b.score - a.score; })
@@ -1832,9 +1842,10 @@ function leaderboardForWeek(week) {
 }
 
 function allTimeLeaderboard() {
+  var registeredPhones=registeredRingPhones_();
   return getSheetObjects('اعضا')
     .filter(function(r){ return truthy(r.active) && Number(r.bestScore || 0) > 0; })
-    .map(function(r){ return { memberId:String(r.id || ''), playerName:String(r.nickname || r.name || 'عضو'), score:Number(r.bestScore || 0), profileImage:String(r.profileImage || '') }; })
+    .map(function(r){ return { memberId:String(r.id || ''), playerName:String(r.nickname || r.name || 'عضو'), score:Number(r.bestScore || 0), profileImage:String(r.profileImage || ''), registered:!!registeredPhones[normalizeMemberPhone(r.phone)] }; })
     .sort(function(a,b){ return b.score - a.score; })
     .slice(0,10);
 }
