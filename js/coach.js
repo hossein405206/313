@@ -163,7 +163,7 @@ function setup(){
   $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');
   $('#coachName').textContent=state.name;renderCoachRoleBadge();
   applyPermissions();
-  load().then(function(){
+  Promise.resolve().then(function(){return api().checkBackendVersion?api().checkBackendVersion():null;}).then(function(){return load();}).then(function(){
     if(state.isMaster)loadCoaches();
     if(state.isMaster || state.permissions.officials)loadOfficials();
     if(state.isMaster || state.permissions.feedback)loadFeedback();
