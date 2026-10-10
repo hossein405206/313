@@ -2855,3 +2855,6 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 /* Neutral game-record identity for accounts not registered in the ring. */
 .leader-row.is-registered .leader-avatar{border-color:#93c5fd}
 .leader-row.is-unregistered .leader-avatar{border-color:#d9e0e7;background:#eef2f5;color:#7b8794;box-shadow:none}
+/* Member-role badge is shared by the game scoreboards and historical records. */
+.member-role-badge{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1px solid #bfdbfe;color:#1d4ed8;font-size:.48rem;font-weight:800;line-height:1.65}
+.member-role-badge--neutral{color:#8994a1!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;font-weight:600!important}
