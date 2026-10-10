@@ -16,6 +16,9 @@
   function say(text){if(message)message.textContent=text;}
   function setButton(label,disabled){start.textContent=label;start.disabled=!!disabled;start.classList.toggle('playing',!!disabled);}
   function esc(value){return String(value==null?'':value).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c];});}
+  function memberBadgeMarkup(item){
+    return item&&item.registered?'<small class="member-role-badge">عضو حلقه</small>':'<small class="member-role-badge member-role-badge--neutral">عضو نشده</small>';
+  }
   function avatarMarkup(url,name){
     var initial=esc((name||'ع').charAt(0));
     return '<span class="leader-avatar"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>';
@@ -24,14 +27,14 @@
     if(!board)return;
     board.innerHTML=list.length?list.map(function(x,i){
       var me=member&&String(x.memberId)===String(member.id);
-      return '<div class="leader-row'+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+'<small class="member-role-badge">عضو حلقه</small></span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
+      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
     }).join(''):'<div class="empty"><p>هنوز رکوردی برای این هفته ثبت نشده</p></div>';
   }
   function renderAllTimeBoard(list){
     if(!allTimeBoard)return;
     allTimeBoard.innerHTML=list.length?list.map(function(x,i){
       var me=member&&String(x.memberId)===String(member.id);
-      return '<div class="leader-row'+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+'<small class="member-role-badge">عضو حلقه</small></span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
+      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
     }).join(''):'<div class="empty"><p>هنوز رکورد تاریخی ثبت نشده</p></div>';
   }
   async function boot(){
