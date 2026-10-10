@@ -49,13 +49,22 @@
 <div class="editor-actions"><button id="addCoachBtn" class="btn-submit">ثبت مربی</button></div></div>
 <div id="coachList" class="admin-list"></div></section>
 
+<section class="coach-panel hidden" id="memberResetPanel">
+  <div class="panel-head"><div><h3>پاک‌کردن سابقه عضویت</h3><small class="panel-subtitle">ویژه مالک اصلی؛ فقط اطلاعات عضویت این شماره پاک می‌شود.</small></div><span class="prize-heading-icon" aria-hidden="true">♻️</span></div>
+  <div class="event-editor">
+    <p class="reset-member-warning">این عملیات ثبت‌نام حلقه، رکوردهای بازی، حضور و غیاب، درخواست‌های اردو و پیام‌های ثبت‌شده با این شماره را حذف می‌کند. حساب ورود مالک و تنظیمات مربی ارشد دست‌نخورده می‌ماند.</p>
+    <label>شماره همراه حساب عضویت<input id="resetMemberPhone" class="form-control" inputmode="numeric" dir="ltr" maxlength="11" placeholder="09xxxxxxxxx" autocomplete="off"></label>
+    <div class="editor-actions"><button type="button" id="resetMemberHistoryBtn" class="btn-submit">پاک‌کردن کامل سابقه عضو</button></div>
+  </div>
+</section>
+
 <section class="coach-panel hidden coach-permission-section" data-permission="officials" id="officialStaffPanel"><div class="panel-head"><div><h3>مدیریت مسئولین</h3><small class="panel-subtitle">دو مسئول حضور و غیاب: راهنمایی و دبستان + مسئول نظارت</small></div></div>
 <div class="event-editor"><div class="form-grid"><label>نام مسئول<input id="newOfficialName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>کد مسئول<input id="newOfficialCode" class="form-control" dir="ltr" placeholder="مثلاً ATT-GUIDE"></label><label class="full">نوع مسئولیت<select id="newOfficialRole" class="form-control"><option value="حضور و غیاب - راهنمایی">حضور و غیاب — راهنمایی</option><option value="حضور و غیاب - دبستان">حضور و غیاب — دبستان</option><option value="نظارت">نظارت</option></select></label></div>
 <div class="editor-actions"><button id="addOfficialBtn" class="btn-submit">ثبت مسئول</button></div></div>
 <div id="officialList" class="admin-list"></div></section>
 
 <section class="coach-panel coach-permission-section" id="coachScheduleSection" data-permission="schedule"><div class="panel-head"><div><h3>مدیریت برنامه هفتگی</h3></div><button id="newScheduleBtn" class="mini-action">＋ برنامه جدید</button></div>
-<div id="scheduleEditor" class="event-editor hidden"><input id="scheduleId" type="hidden"><div class="form-grid"><label>روز<select id="scheduleDay" class="form-control"><option value="">انتخاب روز</option><option>شنبه</option><option>یک‌شنبه</option><option>دوشنبه</option><option>سه‌شنبه</option><option>چهارشنبه</option><option>پنج‌شنبه</option><option>جمعه</option></select></label><label>عنوان برنامه<input id="scheduleTitle" class="form-control" placeholder="مثلاً جلسه حلقه"></label></div><div class="editor-actions"><button id="saveScheduleBtn" class="btn-submit">ذخیره برنامه</button><button id="cancelScheduleBtn" class="btn-secondary">انصراف</button></div></div><div id="scheduleAdmin" class="admin-list"></div></section>
+<div id="scheduleEditor" class="event-editor hidden"><input id="scheduleId" type="hidden"><div class="form-grid"><label>روز<select id="scheduleDay" class="form-control"><option value="">انتخاب روز</option><option>شنبه</option><option>یک‌شنبه</option><option>دوشنبه</option><option>سه‌شنبه</option><option>چهارشنبه</option><option>پنج‌شنبه</option><option>جمعه</option></select></label><label>عنوان برنامه<input id="scheduleTitle" class="form-control" placeholder="مثلاً جلسه حلقه"></label><label>دسته برنامه<select id="scheduleCategory" class="form-control"><option value="حلقه">حلقه</option><option value="بازی">بازی</option></select></label></div><div class="editor-actions"><button id="saveScheduleBtn" class="btn-submit">ذخیره برنامه</button><button id="cancelScheduleBtn" class="btn-secondary">انصراف</button></div></div><div id="scheduleAdmin" class="admin-list"></div></section>
 
 <section class="coach-panel coach-permission-section" id="coachRegistrationsSection" data-permission="registrations"><div class="panel-head"><div><h3>ثبت‌نام‌ها</h3></div></div><div id="registrationsAdmin" class="admin-list"></div></section>
 <section class="coach-panel coach-permission-section" id="coachAttendanceReportsSection" data-permission="reports"><div class="panel-head"><div><h3>گزارش ماه جاری</h3></div></div><div id="attendanceAdmin" class="report-box"></div></section>
@@ -72,4 +81,4 @@
 </section>
 </section></main>
 <nav class="bottom-nav"></nav>
-</div><script src="js/main.js" defer></script><script src="js/coach.js" defer></script></body></html>
+</div><script src="js/main.js?v=5.5.0" defer></script><script src="js/coach.js?v=5.5.0" defer></script></body></html>
