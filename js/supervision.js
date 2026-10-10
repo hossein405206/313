@@ -118,7 +118,7 @@
       }
     } catch (err) {
       console.error(err);
-      select.innerHTML = '<option value="">خطا در بارگذاری</option>';
+      select.innerHTML = '<option value="">'+escapeHtml(err.message||'خطا در بارگذاری مسئولین')+'</option>';
     }
   }
 
@@ -142,7 +142,7 @@
       renderWarnings();
     } catch (err) {
       console.error(err);
-      list.innerHTML = '<div class="empty"><p>خطا در بارگذاری اخطارها</p></div>';
+      list.innerHTML = '<div class="empty"><p>بارگذاری اخطارها ناموفق بود</p><small>'+escapeHtml(err.message||'خطای نامشخص')+'</small></div>';
     }
   }
 
