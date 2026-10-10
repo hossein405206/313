@@ -22,6 +22,29 @@
     .ring-register-account span{display:block;color:#66736f;direction:ltr;text-align:right}
     .ring-register-privacy{font-size:.88rem;color:#586761;line-height:1.9;margin:14px 0}
     .ring-register-submit{width:100%;margin-top:8px}
+      .jalali-date-control{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:8px;align-items:stretch}
+    .jalali-date-control input{cursor:pointer;background:#fff}
+    .jalali-calendar-toggle{display:grid;place-items:center;border:1px solid #cfe3dd;border-radius:12px;background:linear-gradient(145deg,#e7f7f2,#eef2ff);color:#0f6b62;font-size:1.25rem;cursor:pointer}
+    .jalali-picker{margin-top:9px;padding:13px;border:1px solid #cfe3dd;border-radius:18px;background:#fff;box-shadow:0 14px 35px rgba(14,73,67,.12)}
+    .jalali-picker[hidden]{display:none!important}
+    .jalali-picker__head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+    .jalali-picker__head strong{font-size:.8rem;color:#184b49}
+    .jalali-picker__head button,.jalali-picker__foot button{border:0;border-radius:10px;padding:7px 10px;background:#eaf6f2;color:#0f6b62;font:800 .7rem Vazirmatn;cursor:pointer}
+    .jalali-picker__head button:disabled{opacity:.28;cursor:default}
+    .jalali-picker__weekdays,.jalali-picker__days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+    .jalali-picker__weekdays{margin-bottom:6px;color:#84938f;font-size:.58rem;font-weight:800}
+    .jalali-picker__days button,.jalali-picker__days span{min-width:0;aspect-ratio:1;display:grid;place-items:center;border-radius:10px;font:700 .69rem Vazirmatn}
+    .jalali-picker__days button{border:1px solid transparent;background:#f5f8f7;color:#244743;cursor:pointer}
+    .jalali-picker__days button:hover{background:#dff4ee}
+    .jalali-picker__days button.is-selected{background:linear-gradient(135deg,#0f8b7d,#2563eb);color:#fff;box-shadow:0 4px 10px rgba(15,107,98,.18)}
+    .jalali-picker__days button:disabled{opacity:.22;cursor:default;background:#f5f5f5}
+    .jalali-picker__foot{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+    .jalali-picker__foot button:last-child{background:#f1f4f5;color:#596b6d}
+    .form-control.field-invalid{border-color:#dc4545!important;background:#fff8f8!important;box-shadow:0 0 0 3px rgba(220,69,69,.10)!important}
+    .field-error-message{display:block;margin-top:5px;color:#bd2d2d;font-size:.67rem;font-weight:700;line-height:1.8}
+    .field-error-message[hidden]{display:none!important}
+    .ring-register-status.error{border:1px solid #ffd0ca}
+    @media(max-width:370px){.jalali-picker{padding:9px}.jalali-picker__days{gap:2px}.jalali-picker__days button,.jalali-picker__days span{font-size:.62rem;border-radius:7px}}
   </style>
 </head>
 <body>
@@ -47,7 +70,21 @@
         <div class="form-group"><label for="firstName">نام</label><input id="firstName" class="form-control" type="text" readonly maxlength="60" autocomplete="given-name"></div>
         <div class="form-group"><label for="lastName">نام خانوادگی</label><input id="lastName" class="form-control" type="text" readonly maxlength="80" autocomplete="family-name"></div>
         <div class="form-group"><label for="nationalCode">کد ملی <span class="req">*</span></label><input id="nationalCode" class="form-control" type="text" inputmode="numeric" dir="ltr" maxlength="10" minlength="10" placeholder="۱۰ رقم" required></div>
-        <div class="form-group"><label for="birthDate">تاریخ تولد (شمسی) <span class="req">*</span></label><input id="birthDate" class="form-control" type="text" inputmode="numeric" dir="ltr" maxlength="10" autocomplete="bday" placeholder="مثلاً ۱۳۸۹/۰۶/۱۵" aria-describedby="birthDateHint" required><small id="birthDateHint" class="field-hint">تاریخ را به صورت سال/ماه/روز وارد کن.</small></div>
+        <div class="form-group">
+          <label for="birthDate">تاریخ تولد (شمسی) <span class="req">*</span></label>
+          <div class="jalali-date-control">
+            <input id="birthDate" class="form-control" type="text" dir="ltr" maxlength="10" autocomplete="bday" placeholder="برای انتخاب تاریخ تقویم را باز کن" aria-describedby="birthDateHint birthDateError" aria-haspopup="dialog" aria-expanded="false" readonly required>
+            <button type="button" id="openBirthDatePicker" class="jalali-calendar-toggle" aria-label="باز کردن تقویم شمسی" aria-controls="birthDatePicker">▦</button>
+          </div>
+          <small id="birthDateHint" class="field-hint">تاریخ را از تقویم شمسی انتخاب کن.</small>
+          <div id="birthDatePicker" class="jalali-picker" role="dialog" aria-label="انتخاب تاریخ تولد شمسی" hidden>
+            <div class="jalali-picker__head"><button type="button" id="jalaliPrevMonth" aria-label="ماه قبل">‹</button><strong id="jalaliPickerTitle">فروردین</strong><button type="button" id="jalaliNextMonth" aria-label="ماه بعد">›</button></div>
+            <div class="jalali-picker__weekdays" aria-hidden="true"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span></div>
+            <div class="jalali-picker__days" id="jalaliPickerDays"></div>
+            <div class="jalali-picker__foot"><button type="button" id="jalaliToday">انتخاب امروز</button><button type="button" id="closeBirthDatePicker">بستن تقویم</button></div>
+          </div>
+          <small id="birthDateError" class="field-error-message" hidden></small>
+        </div>
         <div class="form-group"><label for="school">نام مدرسه <span class="req">*</span></label><input id="school" class="form-control" type="text" maxlength="120" required></div>
         <div class="form-group"><label for="grade">پایه تحصیلی <span class="req">*</span></label><select id="grade" class="form-control" required><option value="">انتخاب کن</option><option>سوم دبستان</option><option>چهارم دبستان</option><option>پنجم دبستان</option><option>ششم دبستان</option><option>هفتم</option><option>هشتم</option><option>نهم</option><option>دهم</option><option>یازدهم</option><option>دوازدهم</option><option>فارغ‌التحصیل</option><option>سایر</option></select></div>
 
@@ -126,12 +163,103 @@
       if(y>=1300&&y<=1500)return y+'/'+pad2(mo)+'/'+pad2(d);
       return String(value||'');
     }
+        var alreadyRegistered=false, pickerYear=1400, pickerMonth=1;
+    var jalaliMonthNames=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    var fieldIds=['nationalCode','birthDate','school','grade','fatherName','fatherPhone','emergencyPhone','address'];
+    function toPersianDigits(value){return String(value||'').replace(/\d/g,function(c){return '۰۱۲۳۴۵۶۷۸۹'.charAt(Number(c));});}
+    function todayJalali(){var d=new Date();return jdnJalaaliShamsi(gregorianJdnShamsi(d.getFullYear(),d.getMonth()+1,d.getDate()));}
+    function jalaliToGregorianShamsi(jy,jm,jd){
+      var cal=jalCalShamsi(jy),offset=(jm-1)*31-Math.floor(jm/7)*(jm-7)+jd-1;
+      return jdnGregorianShamsi(gregorianJdnShamsi(cal.gy,3,cal.march)+offset);
+    }
+    function compareJalali(a,b){return a.jy-b.jy||a.jm-b.jm||a.jd-b.jd;}
+    function isFutureJalali(y,m,d){return compareJalali({jy:y,jm:m,jd:d},todayJalali())>0;}
+    function hideDatePicker(){
+      $('birthDatePicker').hidden=true;
+      $('birthDate').setAttribute('aria-expanded','false');
+    }
+    function clearFieldError(id){
+      var field=$(id),err=$(id+'Error');
+      if(field){field.classList.remove('field-invalid');field.removeAttribute('aria-invalid');}
+      if(err){err.textContent='';err.hidden=true;}
+    }
+    function clearAllFieldErrors(){fieldIds.forEach(clearFieldError);}
+    function markFieldError(id,message){
+      var field=$(id),err=$(id+'Error');
+      if(field){field.classList.add('field-invalid');field.setAttribute('aria-invalid','true');}
+      if(err){err.textContent=message;err.hidden=false;}
+      if(field){field.scrollIntoView({behavior:'smooth',block:'center'});field.focus({preventScroll:true});}
+      show('قسمت مشخص‌شده را اصلاح کن.','error');
+    }
+    function openDatePicker(){
+      var typed=normalizeDateText($('birthDate').value),m=/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(typed),today=todayJalali();
+      if(m){pickerYear=Number(m[1]);pickerMonth=Number(m[2]);}
+      else{pickerYear=today.jy;pickerMonth=today.jm;}
+      $('birthDatePicker').hidden=false;
+      $('birthDate').setAttribute('aria-expanded','true');
+      renderDatePicker();
+    }
+    function renderDatePicker(){
+      var grid=$('jalaliPickerDays'),title=$('jalaliPickerTitle'),prev=$('jalaliPrevMonth'),next=$('jalaliNextMonth'),today=todayJalali();
+      title.textContent=jalaliMonthNames[pickerMonth-1]+' '+toPersianDigits(pickerYear);
+      prev.disabled=pickerYear<=1300&&pickerMonth<=1;
+      next.disabled=pickerYear>=today.jy&&pickerMonth>=today.jm;
+      grid.innerHTML='';
+      var days=pickerMonth<=6?31:(pickerMonth<=11?30:(jalCalShamsi(pickerYear).leap===0?30:29));
+      var first=jalaliToGregorianShamsi(pickerYear,pickerMonth,1);
+      var offset=(new Date(first.gy,first.gm-1,first.gd).getDay()+1)%7;
+      var selected=normalizeDateText($('birthDate').value),sm=/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(selected);
+      for(var blank=0;blank<offset;blank++)grid.appendChild(document.createElement('span'));
+      for(var day=1;day<=days;day++){
+        var b=document.createElement('button'),y=pickerYear,m=pickerMonth,d=day;
+        b.type='button';b.textContent=toPersianDigits(day);b.setAttribute('aria-label',toPersianDigits(y+'/'+pad2(m)+'/'+pad2(d)));
+        if(sm&&Number(sm[1])===y&&Number(sm[2])===m&&Number(sm[3])===d)b.classList.add('is-selected');
+        if(isFutureJalali(y,m,d))b.disabled=true;
+        b.addEventListener('click',function(y,m,d){return function(){
+          var canonical=y+'/'+pad2(m)+'/'+pad2(d);
+          if(!validJalaliDate(canonical)){markFieldError('birthDate','تاریخ تولد معتبر نیست.');return;}
+          $('birthDate').value=toPersianDigits(canonical);
+          clearFieldError('birthDate');hideDatePicker();
+        };}(y,m,d));
+        grid.appendChild(b);
+      }
+    }
+    function movePickerMonth(delta){
+      pickerMonth+=delta;
+      if(pickerMonth<1){pickerMonth=12;pickerYear--;}
+      if(pickerMonth>12){pickerMonth=1;pickerYear++;}
+      renderDatePicker();
+    }
+    function setupDatePicker(){
+      var field=$('birthDate'),open=$('openBirthDatePicker');
+      if(!field||!open)return;
+      field.addEventListener('click',openDatePicker);
+      open.addEventListener('click',openDatePicker);
+      $('jalaliPrevMonth').addEventListener('click',function(){movePickerMonth(-1);});
+      $('jalaliNextMonth').addEventListener('click',function(){movePickerMonth(1);});
+      $('closeBirthDatePicker').addEventListener('click',hideDatePicker);
+      $('jalaliToday').addEventListener('click',function(){var t=todayJalali();field.value=toPersianDigits(t.jy+'/'+pad2(t.jm)+'/'+pad2(t.jd));clearFieldError('birthDate');hideDatePicker();});
+      document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('birthDatePicker').hidden)hideDatePicker();});
+      document.addEventListener('click',function(e){var picker=$('birthDatePicker');if(!picker.hidden&&!picker.contains(e.target)&&e.target!==field&&e.target!==open)hideDatePicker();});
+    }
+    function serverErrorField(message){
+      var m=String(message||'');
+      if(m.indexOf('کد ملی')>=0)return ['nationalCode',m];
+      if(m.indexOf('تاریخ تولد')>=0||m.indexOf('شمسی')>=0)return ['birthDate',m];
+      if(m.indexOf('مدرسه')>=0)return ['school',m];
+      if(m.indexOf('پایه')>=0)return ['grade',m];
+      if(m.indexOf('نام پدر')>=0)return ['fatherName',m];
+      if(m.indexOf('شماره همراه پدر')>=0)return ['fatherPhone',m];
+      if(m.indexOf('آدرس')>=0)return ['address',m];
+      if(m.indexOf('اضطراری')>=0)return ['emergencyPhone',m];
+      return null;
+    }
     function show(message,type){status.textContent=message;status.className='ring-register-status show '+(type||'info');}
     function set(id,value){var el=$(id);if(el)el.value=value==null?'':String(value);}
     function fill(item){
       if(!item)return;
       ['nationalCode','fatherName','fatherPhone','address','school','grade','emergencyPhone'].forEach(function(k){set(k,item[k]||'');});
-      set('birthDate',birthDateToJalali(item.birthDate));
+      set('birthDate',toPersianDigits(birthDateToJalali(item.birthDate)));
     }
     function boot(){
       if(!window.KanoonApp||!window.KanoonApp.session||!window.KanoonApp.api){setTimeout(boot,80);return;}
@@ -142,26 +270,43 @@
       $('ringRegisterPhone').textContent=member.phone||'';
       set('firstName',member.firstName||'');set('lastName',member.lastName||'');
       window.KanoonApp.api.get({action:'getRingRegistration',token:member.token}).then(function(res){
-        if(res.registered&&res.item){fill(res.item);show('ثبت‌نام حلقه برای این حساب وجود دارد؛ در صورت نیاز اطلاعات را اصلاح و دوباره ذخیره کن.','success');button.textContent='ذخیره تغییرات ثبت‌نام';}
+        if(res.registered&&res.item){alreadyRegistered=true;fill(res.item);show('ثبت‌نام حلقه برای این حساب وجود دارد؛ در صورت نیاز اطلاعات را اصلاح و دوباره ذخیره کن.','success');button.textContent='ذخیره تغییرات ثبت‌نام';}
         else if(new URLSearchParams(location.search).get('required')) show('برای ورود به بازی، ابتدا فرم ثبت‌نام در حلقه را کامل کن.','info');
       }).catch(function(err){show(err.message||'دریافت وضعیت عضویت ناموفق بود.','error');});
     }
     form.addEventListener('submit',async function(e){
       e.preventDefault();
+      clearAllFieldErrors();
       if(!member||!member.token){show('نشست ورود پیدا نشد؛ دوباره وارد شو.','error');return;}
       var data={action:'saveRingRegistration',token:member.token,
         nationalCode:digits($('nationalCode').value),birthDate:validJalaliDate($('birthDate').value),
         fatherName:$('fatherName').value.trim(),fatherPhone:digits($('fatherPhone').value),
         address:$('address').value.trim(),school:$('school').value.trim(),grade:$('grade').value,
         guardianName:$('fatherName').value.trim(),emergencyPhone:digits($('emergencyPhone').value)};
-      if(data.nationalCode.length!==10){show('کد ملی باید دقیقاً ۱۰ رقم باشد.','error');return;}
-      if(!data.birthDate){show('تاریخ تولد شمسی را درست وارد کن؛ نمونه: ۱۳۸۹/۰۶/۱۵.','error');return;}
-      if(!/^09\d{9}$/.test(data.fatherPhone)||!/^09\d{9}$/.test(data.emergencyPhone)){show('شماره‌های همراه باید با ۰۹ شروع شوند و ۱۱ رقم داشته باشند.','error');return;}
+      if(data.nationalCode.length!==10){markFieldError('nationalCode','کد ملی باید دقیقاً ۱۰ رقم باشد.');return;}
+      if(!data.birthDate){markFieldError('birthDate','تاریخ تولد شمسی را از تقویم انتخاب کن.');return;}
+      if(!data.school){markFieldError('school','نام مدرسه را وارد کن.');return;}
+      if(!data.grade){markFieldError('grade','پایه تحصیلی را انتخاب کن.');return;}
+      if(!data.fatherName){markFieldError('fatherName','نام پدر را وارد کن.');return;}
+      if(!/^09\d{9}$/.test(data.fatherPhone)){markFieldError('fatherPhone','شماره همراه پدر باید ۱۱ رقم و با ۰۹ شروع شود.');return;}
+      if(!/^09\d{9}$/.test(data.emergencyPhone)){markFieldError('emergencyPhone','شماره تماس ضروری باید ۱۱ رقم و با ۰۹ شروع شود.');return;}
+      if(data.address.length<8){markFieldError('address','آدرس را کامل‌تر وارد کن.');return;}
       button.disabled=true;button.textContent='در حال ثبت...';
-      try{var res=await window.KanoonApp.api.post(data);show(res.message||'ثبت‌نام در حلقه انجام شد.','success');button.textContent='ذخیره تغییرات ثبت‌نام';}
-      catch(err){show(err.message||'ثبت‌نام انجام نشد؛ دوباره تلاش کن.','error');button.textContent='ثبت‌نام در حلقه';}
-      finally{button.disabled=false;}
+      try{
+        var res=await window.KanoonApp.api.post(data);
+        if(!alreadyRegistered){location.href='welcome.html';return;}
+        alreadyRegistered=true;
+        show(res.message||'اطلاعات عضویت با موفقیت به‌روزرسانی شد.','success');
+        button.textContent='ذخیره تغییرات ثبت‌نام';
+      }catch(err){
+        var mapped=serverErrorField(err.message);
+        if(mapped){markFieldError(mapped[0],mapped[1]);}
+        else show(err.message||'ثبت‌نام انجام نشد؛ دوباره تلاش کن.','error');
+        button.textContent=alreadyRegistered?'ذخیره تغییرات ثبت‌نام':'ثبت‌نام در حلقه';
+      }finally{button.disabled=false;}
     });
+    setupDatePicker();
+    fieldIds.forEach(function(id){var el=$(id);if(el){el.addEventListener('input',function(){clearFieldError(id);});el.addEventListener('change',function(){clearFieldError(id);});}});
     boot();
   })();
   </script>
