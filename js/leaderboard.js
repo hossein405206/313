@@ -37,7 +37,7 @@ function renderList(rows,member){
     return '<div class="ranking-row rank-'+rank+(me?' is-me':'')+'">'+
       '<div class="ranking-position">'+(rank<=3?(rank===1?'🥇':rank===2?'🥈':'🥉'):rank.toLocaleString('fa-IR'))+'</div>'+
       '<div class="ranking-avatar">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
-      '<div class="ranking-name"><strong>'+esc(x.playerName)+'</strong>'+(me?'<small>رکورد شما</small>':'')+'</div>'+
+      '<div class="ranking-name"><strong>'+esc(x.playerName)+'</strong><small class="member-role-badge">عضو حلقه</small>'+(me?'<small>رکورد شما</small>':'')+'</div>'+
       '<div class="ranking-score"><strong>'+Number(x.score||0).toLocaleString('fa-IR')+'</strong><small>رکورد</small></div>'+
       '</div>';
   }).join('');
