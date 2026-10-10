@@ -2840,3 +2840,14 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 .official-card .role { color:#0f766e; background:linear-gradient(135deg,#d9fbf3,#b9f2e8); border-color:#99f6e4; }
 .official-card { border-color:rgba(13,148,136,.16); }
 .official-card:hover { border-color:rgba(13,148,136,.34); }
+
+/* Weekly schedule categories are visible on public and management views. */
+.schedule-card-content{min-width:0}
+.schedule-category,.schedule-admin-category{display:inline-flex;align-items:center;width:max-content;padding:3px 9px;margin-bottom:5px;border-radius:999px;font-size:.52rem;font-weight:800;border:1px solid transparent}
+.schedule-cat-ring{background:linear-gradient(135deg,#d9fbf3,#a8eee2);border-color:#8fe4d5;color:#086b64}
+.schedule-cat-game{background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-color:#a5b4fc;color:#3730a3}
+.schedule-card--ring{border-right:3px solid #14b8a6}
+.schedule-card--game{border-right:3px solid #6366f1}
+.schedule-card h3{margin:1px 0}
+.schedule-admin-category{margin:5px 0 0}
+#memberResetPanel .reset-member-warning{margin:0 0 12px;padding:12px;border-radius:12px;background:#fff4e5;color:#815d24;border:1px solid #f2d9a8;font-size:.62rem;line-height:1.9}
