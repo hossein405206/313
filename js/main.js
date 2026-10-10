@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.5.0',
-    BACKEND_VERSION: '4.6.0-ring-welcome-game-schedule-reset'
+    VERSION: '5.6.0',
+    BACKEND_VERSION: '4.7.0-ring-welcome-game-role-badges'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
