@@ -22,7 +22,7 @@ function renderPodium(rows,member){
   var order=[1,0,2];
   document.getElementById('podium').innerHTML=order.filter(function(i){return rows[i]}).map(function(i){
     var x=rows[i],rank=i+1,me=member&&x.memberId===member.id;
-    return '<div class="podium-item rank-'+rank+(me?' is-me':'')+'">'+
+    return '<div class="podium-item rank-'+rank+(x.registered?' is-registered':' is-unregistered')+(me?' is-me':'')+'">'+
       '<div class="podium-medal">'+(rank===1?'🥇':rank===2?'🥈':'🥉')+'</div>'+
       '<div class="podium-avatar">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
       '<strong class="podium-name">'+esc(x.playerName)+(me?'<small>شما</small>':'')+'</strong>'+
@@ -34,10 +34,10 @@ function renderPodium(rows,member){
 function renderList(rows,member){
   document.getElementById('rankingList').innerHTML=rows.map(function(x,i){
     var rank=i+1,me=member&&x.memberId===member.id;
-    return '<div class="ranking-row rank-'+rank+(me?' is-me':'')+'">'+
+    return '<div class="ranking-row rank-'+rank+(x.registered?' is-registered':' is-unregistered')+(me?' is-me':'')+'">'+
       '<div class="ranking-position">'+(rank<=3?(rank===1?'🥇':rank===2?'🥈':'🥉'):rank.toLocaleString('fa-IR'))+'</div>'+
       '<div class="ranking-avatar">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
-      '<div class="ranking-name"><strong>'+esc(x.playerName)+'</strong><small class="member-role-badge">عضو حلقه</small>'+(me?'<small>رکورد شما</small>':'')+'</div>'+
+      '<div class="ranking-name"><strong>'+esc(x.playerName)+'</strong>'+(x.registered?'<small class="member-role-badge">عضو حلقه</small>':'<small class="member-role-badge member-role-badge--neutral">عضو نشده</small>')+(me?'<small>رکورد شما</small>':'')+'</div>'+
       '<div class="ranking-score"><strong>'+Number(x.score||0).toLocaleString('fa-IR')+'</strong><small>رکورد</small></div>'+
       '</div>';
   }).join('');
