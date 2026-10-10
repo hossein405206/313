@@ -16,7 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.4.0'
+    VERSION: '5.5.0',
+    BACKEND_VERSION: '4.6.0-ring-welcome-game-schedule-reset'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -156,6 +157,15 @@
       }
       if (!res.ok) throw new Error('خطای سرور: ' + res.status);
       return Api._parse(res);
+    },
+
+    checkBackendVersion: async function () {
+      var result = await Api.get({ action: 'ping' });
+      if (!result || result.version !== CONFIG.BACKEND_VERSION) {
+        var actual = result && result.version ? 'نسخه فعلی: ' + result.version : 'نسخه سرور مشخص نیست';
+        throw new Error('بک‌اند سایت به‌روز نشده است (' + actual + '). فایل apps-script/Code.gs را با نسخه جدید جایگزین و Deploy را با New version منتشر کن.');
+      }
+      return result;
     },
 
     _parse: async function (res) {
@@ -533,6 +543,7 @@
       btn.textContent = 'در حال بررسی...';
 
       try {
+        await Api.checkBackendVersion();
         var res = await Api.post({ action: 'verifyOfficialCode', code: code });
         if (!res.official) throw new Error('کد نامعتبر است');
 
