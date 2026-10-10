@@ -23,3 +23,15 @@
 .leader-avatar{position:relative;display:inline-grid;place-items:center;flex:0 0 34px;width:34px;height:34px;overflow:hidden;border-radius:50%;background:linear-gradient(145deg,#405d78,#192e47);color:#fff;font-weight:800;font-size:.75rem;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 6px rgba(0,0,0,.08)}
 .leader-avatar__fallback{position:relative;z-index:0}
 .leader-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;z-index:1}
+
+/* New game flow: keep controls below the playfield, never over the bird. */
+.game-shell{display:flex;flex-direction:column;align-items:stretch}
+.game-shell #gameCanvas{flex:0 0 auto;width:100%;aspect-ratio:3/4;height:auto;max-height:none;order:1;touch-action:none;cursor:pointer}
+.game-shell .game-top{position:absolute;top:17px;left:19px;right:19px;z-index:2}
+.game-shell #startGame{position:static;inset:auto;left:auto;top:auto;transform:none;align-self:center;display:block;width:min(100%,300px);min-height:47px;margin:13px auto 0;order:2;opacity:1}
+.game-shell #startGame:disabled{cursor:wait;opacity:.68;transform:none}
+.game-shell #startGame.playing{opacity:.82;pointer-events:none}
+.game-message{order:3;margin:12px 4px 0;padding:10px 12px;border-radius:13px;background:rgba(224,242,254,.9);border:1px solid rgba(147,197,253,.48);color:#234f78;font-size:.67rem;font-weight:750;line-height:1.9;text-align:center}
+.game-hint{order:4;text-align:center;font-size:.56rem;color:#8996a6;line-height:1.8;margin:8px 0 1px}
+.member-role-badge{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1px solid #bfdbfe;color:#1d4ed8;font-size:.48rem;font-weight:800}
+@media(max-width:390px){.game-shell #startGame{width:100%;min-height:45px}.game-message{font-size:.62rem;padding:9px 10px}}
