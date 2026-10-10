@@ -379,7 +379,7 @@
       renderList();
     } catch (err) {
       console.error(err);
-      if (list) list.innerHTML = '<div class="empty"><p>خطا در بارگذاری اعضا</p></div>';
+      if (list) list.innerHTML = '<div class="empty"><p>بارگذاری اعضا ناموفق بود</p><small>'+escapeHtml(err.message||'خطای نامشخص')+'</small></div>';
     }
   }
 
