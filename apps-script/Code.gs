@@ -51,7 +51,7 @@ var HEADERS = {
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
-  'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt'],
+  'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt','category'],
   'بازخوردها': ['id','name','phone','category','message','status','createdAt'],
   'ثبت‌نام حلقه': ['id','memberId','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt']
 };
@@ -99,6 +99,7 @@ function scheduleDayIndex(day){
 }
 function listSchedulePublic(){
   var rows=getSheetObjects('برنامه').filter(function(x){return String(x.active).toLowerCase()!=='false';});
+  rows=rows.map(function(x){x.category=(String(x.category||'بازی')==='حلقه')?'حلقه':'بازی';return x;});
   rows.sort(function(a,b){
     var ai=scheduleDayIndex(a.day),bi=scheduleDayIndex(b.day);
     if(ai<0)ai=99;if(bi<0)bi=99;
@@ -113,7 +114,9 @@ function saveSchedule(p){
   requireCoachPermission(p.token,'schedule');
   var sheet=getSheet('برنامه'), id=String(p.id||Utilities.getUuid()), rows=getSheetObjects('برنامه'), pos=findRowById('برنامه',id);
   var day=String(p.day||'').trim(),dayIndex=scheduleDayIndex(day);
-  var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  var category=String(p.category||'حلقه').trim();
+  if(category!=='حلقه'&&category!=='بازی')throw new Error('دسته برنامه را انتخاب کن');
+  var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),category:category};
   if(dayIndex<0||!obj.title)throw new Error('روز معتبر و عنوان برنامه را وارد کن');
   if(pos){var old=rows[pos-2];obj.createdAt=old.createdAt||obj.createdAt;sheet.getRange(pos,1,1,HEADERS['برنامه'].length).setValues([rowToArray('برنامه',obj)]);}else sheet.appendRow(rowToArray('برنامه',obj));
   return {item:obj};
@@ -162,11 +165,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.5.0-jalali-deletes-polish' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.6.0-ring-welcome-game-schedule-reset' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.5.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.6.0', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -367,6 +370,7 @@ function handlePost(p) {
     requireToken(p.token, ['attendance']);
     return deleteMember(String(p.id || ''));
   }
+  if (action === 'resetMemberHistory') return resetMemberHistory(p);
 
   if (action === 'saveAttendanceBatch') {
     requireToken(p.token, ['attendance']);
@@ -1098,6 +1102,69 @@ function uploadProfileImage(p) {
   return { ok: true, profileImage: url, member: member ? publicMember(member) : null };
 }
 
+function deleteRowsForMember_(sheetName, predicate) {
+  var sheet = getSheet(sheetName);
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return 0;
+  var headers = values[0].map(String), removed = 0;
+  for (var i = values.length - 1; i >= 1; i--) {
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) obj[headers[j]] = values[i][j];
+    if (predicate(obj)) {
+      sheet.deleteRow(i + 1);
+      removed++;
+    }
+  }
+  return removed;
+}
+function resetMemberHistory(p) {
+  var auth = requireToken(p.token, ['coach']);
+  if (!auth.isMaster) throw new Error('فقط مالک اصلی می‌تواند سابقه عضویت را پاک کند');
+  var phone = normalizeMemberPhone(p.phone);
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه عضو معتبر نیست');
+  var members = getSheetObjects('اعضا').filter(function(m) {
+    return normalizeMemberPhone(m.phone) === phone;
+  });
+  if (!members.length) throw new Error('حساب عضویت با این شماره پیدا نشد');
+  var ids = {};
+  members.forEach(function(m) { if (m.id) ids[String(m.id)] = true; });
+  var removed = {};
+  removed.ring = deleteRowsForMember_('ثبت‌نام حلقه', function(r) {
+    return normalizeMemberPhone(r.phone) === phone || !!ids[String(r.memberId || '')];
+  });
+  removed.game = deleteRowsForMember_('بازی', function(r) {
+    return !!ids[String(r.memberId || '')];
+  });
+  removed.attendance = deleteRowsForMember_('حضورغیاب', function(r) {
+    return !!ids[String(r.memberId || '')];
+  });
+  removed.warnings = deleteRowsForMember_('اخطارها', function(r) {
+    return !!ids[String(r.memberId || '')];
+  });
+  removed.camps = deleteRowsForMember_('ثبت‌نام‌ها', function(r) {
+    return normalizeMemberPhone(r.phone) === phone;
+  });
+  removed.feedback = deleteRowsForMember_('بازخوردها', function(r) {
+    return normalizeMemberPhone(r.phone) === phone;
+  });
+  var memberSheet = getSheet('اعضا');
+  var values = memberSheet.getDataRange().getValues(), headers = values[0].map(String);
+  var phoneIndex = headers.indexOf('phone'), idIndex = headers.indexOf('id'), memberRows = [];
+  for (var ri = 1; ri < values.length; ri++) {
+    var rowPhone = phoneIndex >= 0 ? normalizeMemberPhone(values[ri][phoneIndex]) : '';
+    var rowId = idIndex >= 0 ? String(values[ri][idIndex] || '') : '';
+    if (rowPhone === phone || !!ids[rowId]) memberRows.push(ri + 1);
+  }
+  for (var mr = memberRows.length - 1; mr >= 0; mr--) memberSheet.deleteRow(memberRows[mr]);
+  return {
+    ok: true,
+    reset: true,
+    removed: removed,
+    membersRemoved: memberRows.length,
+    ownerLoginPreserved: true,
+    message: 'سابقه عضویت پاک شد. حساب ورود مالک بدون تغییر باقی مانده است.'
+  };
+}
 function deleteMember(id) {
   var sheet = getSheet('اعضا');
   var rows = sheet.getDataRange().getValues();
