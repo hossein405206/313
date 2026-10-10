@@ -14,3 +14,5 @@
 .podium-avatar { outline:2px solid #60a5fa; outline-offset:2px; }
 .ranking-avatar { border:2px solid #93c5fd; box-shadow:0 0 0 2px rgba(59,130,246,.08); }
 .ranking-row.is-me .ranking-avatar { border-color:#2563eb; }
+
+.member-role-badge{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1px solid #bfdbfe;color:#1d4ed8;font-size:.48rem;font-weight:800}.leader-row .leader-avatar{border-color:#93c5fd}.leader-row.me{background:linear-gradient(100deg,#eff6ff,#fff);border-color:#93c5fd}.podium-item .podium-name .member-role-badge{display:none}
