@@ -2851,3 +2851,7 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 .schedule-card h3{margin:1px 0}
 .schedule-admin-category{margin:5px 0 0}
 #memberResetPanel .reset-member-warning{margin:0 0 12px;padding:12px;border-radius:12px;background:#fff4e5;color:#815d24;border:1px solid #f2d9a8;font-size:.62rem;line-height:1.9}
+
+/* Neutral game-record identity for accounts not registered in the ring. */
+.leader-row.is-registered .leader-avatar{border-color:#93c5fd}
+.leader-row.is-unregistered .leader-avatar{border-color:#d9e0e7;background:#eef2f5;color:#7b8794;box-shadow:none}
