@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.6.0',
+    VERSION: '5.7.0',
     BACKEND_VERSION: '4.7.0-ring-welcome-game-role-badges'
   };
 
