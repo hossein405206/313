@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.10.0',
-    BACKEND_VERSION: '4.9.0-multi-photo-activity-reports'
+    VERSION: '5.11.0',
+    BACKEND_VERSION: '4.10.0-production-audit'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
