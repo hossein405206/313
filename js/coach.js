@@ -53,7 +53,7 @@ function login(){
  })
 }
 async function load(){
- var r=await api().get({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';}
+ var r=await api().get({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events)loadActivityReports();}
 function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
 function renderRegs(list){var box=$('#registrationsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(r){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small></div><div class="admin-actions">'+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>'}).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}})}
@@ -74,6 +74,80 @@ function editEvent(id){var e=state.events.find(function(x){return x.id===id});if
 function deleteEvent(id){if(!confirm('این رویداد حذف شود؟'))return;api().post({action:'deleteEvent',token:state.token,id:id}).then(function(){toast('رویداد حذف شد');load()}).catch(function(e){toast(e.message,1)})}
 function file64(file){return new Promise(function(resolve,reject){var r=new FileReader();r.onload=function(){resolve(String(r.result).split(',')[1])};r.onerror=reject;r.readAsDataURL(file)})}
 async function saveEvent(){var btn=$('#saveEventBtn');setBusy(btn,'در حال ذخیره...');try{var imageId='',imageUrl='',file=$('#eventImage').files[0];if(file){var up=await api().post({action:'uploadEventImage',token:state.token,base64:await file64(file),mimeType:file.type});imageId=up.fileId;imageUrl=up.url}else{var old=state.events.find(function(x){return x.id===$('#eventId').value});if(old){imageId=old.imageId||'';imageUrl=old.imageUrl||''}}await api().post({action:'saveEvent',token:state.token,id:$('#eventId').value,title:$('#eventTitle').value,description:$('#eventDescription').value,label:$('#eventLabel').value,date:$('#eventDate').value,sort:Number($('#eventSort').value||0),imageId:imageId,imageUrl:imageUrl,active:true});toast('رویداد ذخیره شد ✓');$('#eventEditor').classList.add('hidden');load()}catch(e){toast(e.message||'خطا در ذخیره رویداد',1)}finally{clearBusy(btn)}}
+
+function localTodayInput(){var d=new Date(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return d.getFullYear()+'-'+m+'-'+day}
+function renderActivityReports(items){
+ var box=$('#activityReportsAdmin');if(!box)return;
+ box.innerHTML=items.length?items.map(function(r){
+  var photos=Array.isArray(r.images)?r.images:[];
+  var thumbs=photos.slice(0,4).map(function(p){return '<img src="'+esc(p.url)+'" alt="" loading="lazy">'}).join('');
+  return '<div class="admin-item activity-report-admin-item"><div class="activity-report-admin-thumbs">'+(thumbs||'<span class="activity-report-no-photo">بدون عکس</span>')+'</div><div class="admin-item-main"><strong>'+esc(r.title)+'</strong><small>'+esc(r.date||'بدون تاریخ')+' · '+photos.length.toLocaleString('fa-IR')+' عکس</small><p>'+esc(String(r.description||'').slice(0,150))+'</p></div><div class="admin-actions"><button class="danger" data-activity-report-delete="'+esc(r.id)+'">حذف گزارش</button></div></div>';
+ }).join(''):'<div class="empty"><p>هنوز گزارش مستقلی ثبت نشده است.</p><small>برای نمونه، گزارش اردو را با چند عکس از دکمه «گزارش جدید» بساز.</small></div>';
+ box.querySelectorAll('[data-activity-report-delete]').forEach(function(btn){btn.onclick=function(){var id=btn.getAttribute('data-activity-report-delete');if(!confirm('این گزارش از بخش فعالیت‌ها حذف شود؟'))return;btn.disabled=true;api().post({action:'deleteActivityReport',token:state.token,id:id}).then(function(){toast('گزارش حذف شد ✓');loadActivityReports()}).catch(function(e){toast(e.message||'حذف گزارش ناموفق بود',1);btn.disabled=false})}});
+}
+function loadActivityReports(){
+ var box=$('#activityReportsAdmin');if(!box||!state.token)return;
+ api().get({action:'listActivityReportsManage',token:state.token}).then(function(r){renderActivityReports(r.items||[])}).catch(function(e){box.innerHTML='<div class="empty"><p>'+esc(e.message||'دریافت گزارش‌ها ناموفق بود')+'</p></div>'});
+}
+function compressActivityPhoto(file){
+ return new Promise(function(resolve,reject){
+  var url=URL.createObjectURL(file),img=new Image();
+  img.onload=function(){
+   URL.revokeObjectURL(url);
+   try{
+    var max=1440,w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+    if(!w||!h)throw new Error('ابعاد عکس قابل تشخیص نیست');
+    var scale=Math.min(1,max/Math.max(w,h));w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));
+    var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    canvas.toBlob(function(blob){if(!blob){reject(new Error('فشرده‌سازی عکس ناموفق بود'));return}resolve(blob)},'image/jpeg',0.78);
+   }catch(e){reject(e)}
+  };
+  img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('یکی از عکس‌ها باز نمی‌شود؛ آن را با فرمت JPG یا PNG دوباره انتخاب کن'))};
+  img.src=url;
+ });
+}
+function setupActivityReports(){
+ var newBtn=$('#newActivityReportBtn'),editor=$('#activityReportEditor'),photosInput=$('#activityReportPhotos'),preview=$('#activityPhotoPreview'),saveBtn=$('#saveActivityReportBtn');
+ if(!newBtn||!editor||!photosInput||!preview||!saveBtn)return;
+ function clearPhotos(){photosInput.value='';preview.innerHTML='<span>هنوز عکسی انتخاب نشده</span>'}
+ function resetEditor(){ $('#activityReportTitle').value='';$('#activityReportDescription').value='';$('#activityReportDate').value=localTodayInput();clearPhotos() }
+ newBtn.onclick=function(){resetEditor();editor.classList.remove('hidden');editor.scrollIntoView({behavior:'smooth',block:'start'});$('#activityReportTitle').focus()};
+ $('#cancelActivityReportBtn').onclick=function(){editor.classList.add('hidden');resetEditor()};
+ $('#clearActivityPhotosBtn').onclick=clearPhotos;
+ photosInput.addEventListener('change',function(){
+  var files=Array.prototype.slice.call(photosInput.files||[]);
+  if(files.length>10){clearPhotos();toast('برای هر گزارش حداکثر ۱۰ عکس انتخاب کن',1);return}
+  var invalid=files.find(function(f){return ['image/jpeg','image/png','image/webp'].indexOf(f.type)<0});
+  if(invalid){clearPhotos();toast('فقط عکس‌های JPG، PNG یا WebP پشتیبانی می‌شوند',1);return}
+  if(!files.length){clearPhotos();return}
+  preview.innerHTML=files.map(function(f,i){return '<div class="activity-photo-preview__item"><img src="'+esc(URL.createObjectURL(f))+'" alt=""><span>'+String(i+1).toLocaleString('fa-IR')+'. '+esc(f.name)+'</span><small>'+Math.max(1,Math.round(f.size/1024)).toLocaleString('fa-IR')+' کیلوبایت</small></div>'}).join('');
+ });
+ saveBtn.onclick=async function(){
+  var title=$('#activityReportTitle').value.trim(),description=$('#activityReportDescription').value.trim(),date=$('#activityReportDate').value,files=Array.prototype.slice.call(photosInput.files||[]);
+  if(!title){toast('عنوان گزارش را وارد کن',1);$('#activityReportTitle').focus();return}
+  if(!files.length){toast('برای ثبت گزارش تصویری، دست‌کم یک عکس انتخاب کن',1);photosInput.focus();return}
+  if(files.length>10){toast('حداکثر ۱۰ عکس در هر گزارش مجاز است',1);return}
+  setBusy(saveBtn,'آماده‌سازی گزارش...');
+  var uploaded=[];
+  try{
+   for(var i=0;i<files.length;i++){
+    saveBtn.textContent='فشرده‌سازی عکس '+(i+1)+' از '+files.length+'…';
+    var blob=await compressActivityPhoto(files[i]);
+    saveBtn.textContent='بارگذاری عکس '+(i+1)+' از '+files.length+'…';
+    var up=await api().post({action:'uploadActivityPhoto',token:state.token,base64:await file64(blob),mimeType:blob.type||'image/jpeg'});
+    if(!up.fileId)throw new Error('سرور شناسه عکس شماره '+(i+1)+' را برنگرداند');
+    uploaded.push(up.fileId);
+   }
+   saveBtn.textContent='ذخیره گزارش…';
+   await api().post({action:'saveActivityReport',token:state.token,title:title,description:description,date:date,imageIds:uploaded});
+   toast('گزارش و '+uploaded.length.toLocaleString('fa-IR')+' عکس ذخیره شد ✓');
+   editor.classList.add('hidden');resetEditor();loadActivityReports();
+  }catch(e){toast(e.message||'ذخیره گزارش ناموفق بود؛ دوباره تلاش کن',1)}
+  finally{clearBusy(saveBtn)}
+ };
+}
+
 function loadSchedule(){api().get({action:'listSchedule'}).then(function(r){var list=sortScheduleRows(r.items||[]),box=$('#scheduleAdmin');box.innerHTML=list.length?list.map(function(x){var category=String(x.category||'حلقه')==='بازی'?'بازی':'حلقه',cls=category==='حلقه'?'schedule-cat-ring':'schedule-cat-game';return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(x.day)+' · '+esc(x.title)+'</strong><span class="schedule-admin-category '+cls+'">'+category+'</span></div><div class="admin-actions"><button data-sedit="'+esc(x.id)+'">ویرایش</button><button class="danger" data-sdel="'+esc(x.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>برنامه هفتگی خالی است</p></div>';box.querySelectorAll('[data-sedit]').forEach(function(b){b.onclick=function(){var x=list.find(function(y){return y.id===b.dataset.sedit});if(x){$('#scheduleEditor').classList.remove('hidden');$('#scheduleId').value=x.id;$('#scheduleDay').value=x.day;$('#scheduleTitle').value=x.title;$('#scheduleCategory').value=String(x.category||'حلقه')}}});box.querySelectorAll('[data-sdel]').forEach(function(b){b.onclick=function(){if(confirm('این برنامه حذف شود؟'))api().post({action:'deleteSchedule',token:state.token,id:b.dataset.sdel}).then(function(){toast('برنامه حذف شد');loadSchedule()}).catch(function(e){toast(e.message,1)})}})}).catch(function(e){toast(e.message||'خطا در برنامه هفتگی',1)})}
 function setupSchedule(){var b=$('#newScheduleBtn');if(!b)return;b.onclick=function(){$('#scheduleEditor').classList.remove('hidden');$('#scheduleId').value='';$('#scheduleDay').value='';$('#scheduleTitle').value='';$('#scheduleCategory').value='حلقه'};$('#cancelScheduleBtn').onclick=function(){$('#scheduleEditor').classList.add('hidden')};$('#saveScheduleBtn').onclick=function(){var day=$('#scheduleDay').value,title=$('#scheduleTitle').value.trim(),category=$('#scheduleCategory').value;if(!day||scheduleDayIndex(day)<0||!title||['حلقه','بازی'].indexOf(category)<0){toast('روز، عنوان و دسته برنامه را کامل انتخاب کن',1);return}api().post({action:'saveSchedule',token:state.token,id:$('#scheduleId').value,day:day,title:title,category:category,time:'',location:'',sort:scheduleDayIndex(day)}).then(function(){toast('برنامه ذخیره شد ✓');$('#scheduleEditor').classList.add('hidden');loadSchedule()}).catch(function(e){toast(e.message,1)})};loadSchedule()}
 function loadCoaches(){api().get({action:'listCoaches',token:state.token}).then(function(r){var items=r.items||[],box=$('#coachList');box.innerHTML=items.map(function(x){var owner=x.role==='master',label=owner?'مالک':'مربی',roleClass=owner?'is-owner':'is-coach';return '<div class="admin-item coach-admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.phone)+' · '+esc(x.code)+'</small><div class="staff-role-badge '+roleClass+'">'+label+'</div><div class="permission-summary">'+PERMS.filter(function(p){return x.permissions&&x.permissions[p[0]]}).map(function(p){return '<span>'+p[1]+'</span>'}).join(' · ')+'</div></div><div class="admin-actions">'+(owner?'':'<button data-coach-edit="'+esc(x.code)+'">ویرایش</button><button data-coach-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'غیرفعال‌سازی':'فعال‌سازی')+'</button><button class="danger" data-coach-delete="'+esc(x.code)+'">حذف کامل</button>')+'</div></div>'}).join('');box.querySelectorAll('[data-coach-edit]').forEach(function(b){b.onclick=function(){editCoach(b.dataset.coachEdit,items)}});box.querySelectorAll('[data-coach-status]').forEach(function(b){b.onclick=function(){setCoachStatus(b.dataset.coachStatus,b.dataset.active==='1')}});box.querySelectorAll('[data-coach-delete]').forEach(function(b){b.onclick=function(){var item=items.find(function(x){return x.code===b.dataset.coachDelete});if(!confirm('مربی «'+(item?item.name:'')+'» به‌طور کامل حذف شود؟ این کار قابل بازگشت نیست.'))return;api().post({action:'deleteCoach',token:state.token,code:b.dataset.coachDelete}).then(function(){toast('مربی به‌طور کامل حذف شد ✓');loadCoaches()}).catch(function(e){toast(e.message,1)})}})}).catch(function(e){toast(e.message,1)})}
@@ -141,7 +215,7 @@ function setupStaff(){
   });
 }
 function setup(){
- setupSchedule();setupStaff();setupOwnCredentials();
+ setupSchedule();setupStaff();setupOwnCredentials();setupActivityReports();
  var coachPhoneInput=$('#coachPhone');
  if(coachPhoneInput)coachPhoneInput.addEventListener('input',function(){coachPhoneInput.value=normalizeDigits(coachPhoneInput.value).replace(/\D/g,'').slice(0,11)});
  var resetPhone=$('#resetMemberPhone'),resetBtn=$('#resetMemberHistoryBtn');
