@@ -23,3 +23,11 @@
 .podium-item.is-registered .podium-avatar{outline:2px solid #60a5fa;outline-offset:2px}
 .podium-item.is-unregistered .podium-avatar{outline:none;box-shadow:none}
 .member-role-badge--neutral{color:#8994a1!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;font-weight:600!important}
+.member-role-badge{display:inline-flex;align-items:center;width:max-content;margin:4px 3px 0;padding:2px 7px;border:1px solid transparent;border-radius:999px;font-size:.48rem;font-weight:800;line-height:1.7}
+.member-role-badge--neutral,.member-role-badge--unregistered{background:transparent;color:#8a94a1;border-color:transparent}
+.member-role-badge--member{background:linear-gradient(135deg,#dbeafe,#93c5fd);border-color:#bfdbfe;color:#1d4ed8}
+.member-role-badge--official{background:linear-gradient(135deg,#ccfbf1,#5eead4);border-color:#99f6e4;color:#115e59}
+.member-role-badge--coach{background:linear-gradient(135deg,#fff4c6,#f4dfa0);border-color:#ead184;color:#765710}
+.member-role-badge--owner{background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed);background-size:220% 220%;border-color:#a78bfa;color:#fff;animation:recordOwnerShift 4s ease infinite}
+@keyframes recordOwnerShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce){.member-role-badge--owner{animation:none}}
