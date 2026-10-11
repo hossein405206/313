@@ -199,7 +199,7 @@
   }
   function finishGame(){
     if(state!=='playing')return;
-    state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;accumulator=0;
+    state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;
     setButton('دوباره بازی کن',false);
     if(score>0)say('بازی تمام شد؛ در حال ذخیره رکورد '+faNum(score)+'…');
     else say('هنوز مانعی را رد نکردی؛ این دور رکوردی برای ذخیره ندارد.');
