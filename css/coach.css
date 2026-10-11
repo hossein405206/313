@@ -81,3 +81,24 @@
 @keyframes ownerRoleShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
 @media (prefers-reduced-motion:reduce) { .coach-role-badge.is-owner,.staff-role-badge.is-owner { animation:none; } }
 @media(max-width:420px) { .prize-card { padding:11px; } .prize-heading-icon { width:37px;height:37px; } .admin-actions { flex-wrap:wrap; justify-content:flex-end; } }
+
+
+/* Independent multi-photo activity reports */
+.activity-photo-picker{margin-top:15px;padding:15px;border:1px dashed rgba(201,154,53,.48);border-radius:18px;background:linear-gradient(145deg,#fffaf0,#fff);display:grid;gap:12px}
+.activity-photo-picker__label{display:grid;justify-items:center;text-align:center;gap:6px;padding:15px;border-radius:14px;background:#f8f1df;color:#24364d;cursor:pointer}
+.activity-photo-picker__label>span{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#e5c873,#b88a2a);color:#fff;font-size:1.45rem}
+.activity-photo-picker__label strong{font-size:.78rem}.activity-photo-picker__label small{font-size:.58rem;color:#7b8795;line-height:1.8}
+#activityReportPhotos{width:100%;font:inherit;font-size:.65rem;color:#657184}
+.activity-photo-preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.activity-photo-preview>span{grid-column:1/-1;text-align:center;color:#8b95a2;font-size:.63rem;padding:10px}
+.activity-photo-preview__item{min-width:0;overflow:hidden;border:1px solid rgba(24,43,67,.09);border-radius:12px;background:#fff}
+.activity-photo-preview__item img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#f1eee7}
+.activity-photo-preview__item span,.activity-photo-preview__item small{display:block;padding:4px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.48rem;color:#44546a}
+.activity-photo-preview__item small{color:#8993a1;padding-top:0}
+.activity-clear-photos{justify-self:start;min-height:34px;font-size:.58rem}
+.activity-report-admin-item{align-items:center}
+.activity-report-admin-item .admin-item-main p{font-size:.6rem;color:#7c8795;line-height:1.7;margin-top:4px;white-space:pre-line}
+.activity-report-admin-thumbs{display:flex;align-items:center;gap:3px;flex:0 0 auto}
+.activity-report-admin-thumbs img{width:38px;height:42px;object-fit:cover;border-radius:7px;background:#f0ede5}
+.activity-report-no-photo{font-size:.52rem;color:#8b95a2}
+@media(max-width:420px){.activity-report-admin-thumbs img{width:30px;height:34px}.activity-report-admin-item{gap:8px}.activity-photo-preview{grid-template-columns:repeat(2,minmax(0,1fr))}}
