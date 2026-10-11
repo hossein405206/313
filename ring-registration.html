@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=5.8.0">
+  <link rel="stylesheet" href="css/style.css?v=5.9.0">
   <style>
     .ring-register-intro{background:linear-gradient(135deg,#eaf6f2,#f8f4e9);border:1px solid #d4e9e2;border-radius:18px;padding:16px;margin:12px 0 22px;line-height:1.9}
     .ring-register-intro strong{display:block;color:#0f6b62;margin-bottom:4px}
@@ -24,7 +24,7 @@
     .ring-register-submit{width:100%;margin-top:8px}
       .jalali-date-control{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:8px;align-items:stretch}
     .jalali-date-control input{cursor:pointer;background:#fff}
-    .jalali-calendar-toggle{display:grid;place-items:center;border:1px solid #cfe3dd;border-radius:12px;background:linear-gradient(145deg,#e7f7f2,#eef2ff);color:#0f6b62;font-size:1.25rem;cursor:pointer}
+    .jalali-calendar-toggle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid #b9ddd3;border-radius:12px;background:linear-gradient(145deg,#e7f7f2,#eef2ff);color:#0f6b62;font-size:1.1rem;cursor:pointer}.jalali-calendar-toggle small{font:800 .52rem Vazirmatn}
     .jalali-picker{margin-top:9px;padding:13px;border:1px solid #cfe3dd;border-radius:18px;background:#fff;box-shadow:0 14px 35px rgba(14,73,67,.12)}
     .jalali-picker[hidden]{display:none!important}
     .jalali-picker__head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
@@ -74,7 +74,7 @@
           <label for="birthDate">تاریخ تولد (شمسی) <span class="req">*</span></label>
           <div class="jalali-date-control">
             <input id="birthDate" class="form-control" type="text" dir="ltr" maxlength="10" autocomplete="bday" placeholder="برای انتخاب تاریخ تقویم را باز کن" aria-describedby="birthDateHint birthDateError" aria-haspopup="dialog" aria-expanded="false" readonly required>
-            <button type="button" id="openBirthDatePicker" class="jalali-calendar-toggle" aria-label="باز کردن تقویم شمسی" aria-controls="birthDatePicker">▦</button>
+            <button type="button" id="openBirthDatePicker" class="jalali-calendar-toggle" aria-label="باز کردن تقویم شمسی" aria-controls="birthDatePicker"><span aria-hidden="true">📅</span><small>تقویم</small></button>
           </div>
           <small id="birthDateHint" class="field-hint">تاریخ را از تقویم شمسی انتخاب کن.</small>
           <div id="birthDatePicker" class="jalali-picker" role="dialog" aria-label="انتخاب تاریخ تولد شمسی" hidden>
@@ -100,7 +100,7 @@
     </main>
     <nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
   </div>
-  <script src="js/main.js?v=5.7.0" defer></script>
+  <script src="js/main.js?v=5.9.0" defer></script>
   <script>
   (function(){
     'use strict';
@@ -210,6 +210,7 @@
       $('birthDatePicker').hidden=false;
       $('birthDate').setAttribute('aria-expanded','true');
       renderDatePicker();
+      window.requestAnimationFrame(function(){ $('birthDatePicker').scrollIntoView({behavior:'smooth',block:'nearest'}); });
     }
     function renderDatePicker(){
       var grid=$('jalaliPickerDays'),title=$('jalaliPickerTitle'),prev=$('jalaliPrevMonth'),next=$('jalaliNextMonth'),today=todayJalali();
