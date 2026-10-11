@@ -5,14 +5,14 @@
 <meta name="theme-color" content="#14243b"><title>پنل مربیان | حلقه شهید هادی ذوالفقاری</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=5.9.0"><link rel="stylesheet" href="css/coach.css?v=5.10.0">
+<link rel="stylesheet" href="css/style.css?v=5.9.0"><link rel="stylesheet" href="css/coach.css?v=5.11.0">
 </head>
 <body><div class="app-container">
 <header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><h1>پنل مربیان</h1></header>
 <main class="page coach-page">
 <section id="coachLogin" class="coach-login">
 <div class="coach-lock">♙</div><h2>ورود مربیان</h2><p>با شماره و کد مربی وارد داشبورد مدیریت حلقه شو</p>
-<form id="coachLoginForm"><input id="coachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="شماره همراه مربی" required><input id="coachCode" class="form-control" dir="ltr" placeholder="کد مربی" autocomplete="off" required><button class="btn-submit">ورود به پنل</button></form>
+<form id="coachLoginForm"><input id="coachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="16" placeholder="شماره همراه مربی" required><input id="coachCode" class="form-control" dir="ltr" placeholder="کد مربی" autocomplete="off" required><button class="btn-submit">ورود به پنل</button></form>
 </section>
 <section id="coachDashboard" class="hidden">
 <div class="coach-top"><div><h2>داشبورد حلقه</h2><p id="coachName">—</p></div><span id="coachRoleBadge" class="coach-role-badge">—</span><button id="coachLogout" class="btn-secondary">خروج</button></div>
@@ -21,7 +21,7 @@
 <section class="coach-panel coach-account-panel" id="coachAccountPanel">
 <div class="panel-head"><div><h3>حساب کاربری من</h3><small class="panel-subtitle">شماره همراه یا کد ورود خودت را تغییر بده؛ لازم نیست هر دو را عوض کنی.</small></div></div>
 <div class="form-grid">
-<label>شماره همراه جدید (اختیاری)<input id="ownCoachNewPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx"></label>
+<label>شماره همراه جدید (اختیاری)<input id="ownCoachNewPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="16" placeholder="09xxxxxxxxx"></label>
 <label>رمز ورود جدید (اختیاری)<input id="ownCoachNewCode" class="form-control" dir="ltr" minlength="8" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label>
 </div>
 <div class="editor-actions"><button type="button" id="saveOwnCoachCredentials" class="btn-submit">ذخیره اطلاعات ورود</button></div>
@@ -59,7 +59,7 @@
 </section>
 
 <section class="coach-panel hidden" id="coachStaffPanel"><div class="panel-head"><div><h3>مدیریت مربیان</h3><small class="panel-subtitle">مربی ارشد مالک اصلی است؛ مربیان فقط دسترسی‌هایی را دارند که اینجا فعال می‌کنی</small></div></div>
-<div class="event-editor"><div class="form-grid"><label>نام مربی<input id="newCoachName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره همراه مربی<input id="newCoachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx"></label><label>رمز ورود مربی<input id="newCoachCode" class="form-control" dir="ltr" minlength="8" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label></div>
+<div class="event-editor"><div class="form-grid"><label>نام مربی<input id="newCoachName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره همراه مربی<input id="newCoachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="16" placeholder="09xxxxxxxxx"></label><label>رمز ورود مربی<input id="newCoachCode" class="form-control" dir="ltr" minlength="8" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label></div>
 <div class="permission-grid" id="newCoachPermissions"></div>
 <div class="editor-actions"><button id="addCoachBtn" class="btn-submit">ثبت مربی</button></div></div>
 <div id="coachList" class="admin-list"></div></section>
@@ -68,13 +68,13 @@
   <div class="panel-head"><div><h3>پاک‌کردن سابقه عضویت</h3><small class="panel-subtitle">ویژه مالک اصلی؛ فقط اطلاعات عضویت این شماره پاک می‌شود.</small></div><span class="prize-heading-icon" aria-hidden="true">♻️</span></div>
   <div class="event-editor">
     <p class="reset-member-warning">این عملیات ثبت‌نام حلقه، رکوردهای بازی، حضور و غیاب، درخواست‌های اردو و پیام‌های ثبت‌شده با این شماره را حذف می‌کند. حساب ورود مالک و تنظیمات مربی ارشد دست‌نخورده می‌ماند.</p>
-    <label>شماره همراه حساب عضویت<input id="resetMemberPhone" class="form-control" inputmode="numeric" dir="ltr" maxlength="11" placeholder="09xxxxxxxxx" autocomplete="off"></label>
+    <label>شماره همراه حساب عضویت<input id="resetMemberPhone" class="form-control" inputmode="numeric" dir="ltr" maxlength="16" placeholder="09xxxxxxxxx" autocomplete="off"></label>
     <div class="editor-actions"><button type="button" id="resetMemberHistoryBtn" class="btn-submit">پاک‌کردن کامل سابقه عضو</button></div>
   </div>
 </section>
 
 <section class="coach-panel hidden coach-permission-section" data-permission="officials" id="officialStaffPanel"><div class="panel-head"><div><h3>مدیریت مسئولین</h3><small class="panel-subtitle">دو مسئول حضور و غیاب: راهنمایی و دبستان + مسئول نظارت</small></div></div>
-<div class="event-editor"><div class="form-grid"><label>نام مسئول<input id="newOfficialName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره همراه مسئول (برای نمایش رنگ نقش در رکوردها، اختیاری)<input id="newOfficialPhone" class="form-control" inputmode="numeric" dir="ltr" maxlength="11" placeholder="09xxxxxxxxx"></label><label>کد مسئول<input id="newOfficialCode" class="form-control" dir="ltr" placeholder="مثلاً ATT-GUIDE"></label><label class="full">نوع مسئولیت<select id="newOfficialRole" class="form-control"><option value="حضور و غیاب - راهنمایی">حضور و غیاب — راهنمایی</option><option value="حضور و غیاب - دبستان">حضور و غیاب — دبستان</option><option value="نظارت">نظارت</option></select></label></div>
+<div class="event-editor"><div class="form-grid"><label>نام مسئول<input id="newOfficialName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره همراه مسئول (برای نمایش رنگ نقش در رکوردها، اختیاری)<input id="newOfficialPhone" class="form-control" inputmode="numeric" dir="ltr" maxlength="16" placeholder="09xxxxxxxxx"></label><label>کد مسئول<input id="newOfficialCode" class="form-control" dir="ltr" placeholder="مثلاً ATT-GUIDE"></label><label class="full">نوع مسئولیت<select id="newOfficialRole" class="form-control"><option value="حضور و غیاب - راهنمایی">حضور و غیاب — راهنمایی</option><option value="حضور و غیاب - دبستان">حضور و غیاب — دبستان</option><option value="نظارت">نظارت</option></select></label></div>
 <div class="editor-actions"><button id="addOfficialBtn" class="btn-submit">ثبت مسئول</button></div></div>
 <div id="officialList" class="admin-list"></div></section>
 
