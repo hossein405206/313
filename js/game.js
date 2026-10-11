@@ -5,7 +5,7 @@
   var start=document.getElementById('startGame'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
   var board=document.getElementById('leaderboardList'),allTimeBoard=document.getElementById('allTimeLeaderboardList');
   var playerNameEl=document.getElementById('playerName'),prize=document.getElementById('prizeText'),message=document.getElementById('gameMessage');
-  var W=420,H=560,FLOOR=H-48,STEP=1/60,state='idle',raf=0,lastFrame=0,accumulator=0,score=0,member=null,weekKey='';
+  var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
   var best=0,submitting=false;
@@ -17,7 +17,11 @@
   function setButton(label,disabled){start.textContent=label;start.disabled=!!disabled;start.classList.toggle('playing',!!disabled);}
   function esc(value){return String(value==null?'':value).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c];});}
   function memberBadgeMarkup(item){
-    return item&&item.registered?'<small class="member-role-badge">عضو حلقه</small>':'<small class="member-role-badge member-role-badge--neutral">عضو نشده</small>';
+    var key=item&&item.registered?String(item.roleKey||'member'):'unregistered';
+    if(['member','official','coach','owner','unregistered'].indexOf(key)<0)key='member';
+    var labels={member:'عضو حلقه',official:'مسئول',coach:'مربی',owner:'مالک',unregistered:'عضو نشده'};
+    var label=item&&item.registered&&item.roleLabel?item.roleLabel:labels[key];
+    return '<small class="member-role-badge member-role-badge--'+key+'">'+esc(label)+'</small>';
   }
   function avatarMarkup(url,name){
     var initial=esc((name||'ع').charAt(0));
@@ -70,7 +74,7 @@
   function startReady(){
     if(state==='playing'||submitting)return;
     if(raf)cancelAnimationFrame(raf);
-    raf=0;lastFrame=0;accumulator=0;
+    raf=0;lastFrame=0;
     state='ready';score=0;worldTime=0;pipes=[];particles=[];
     bird={x:88,y:H*.48,vy:0,r:13,wing:0};
     scoreEl.textContent=faNum(0);
@@ -80,7 +84,7 @@
   }
   function beginPlaying(){
     if(state!=='ready')return;
-    state='playing';lastFrame=0;accumulator=0;
+    state='playing';lastFrame=0;
     spawnPipe(W+26);
     bird.vy=-390;bird.wing=1;
     emitFeathers();
@@ -129,9 +133,9 @@
   function loop(timestamp){
     if(state!=='playing')return;
     if(!lastFrame)lastFrame=timestamp;
-    var elapsed=Math.min(.05,Math.max(0,(timestamp-lastFrame)/1000));
-    lastFrame=timestamp;accumulator+=elapsed;
-    while(accumulator>=STEP&&state==='playing'){update(STEP);accumulator-=STEP;}
+    var elapsed=Math.min(1/30,Math.max(0,(timestamp-lastFrame)/1000));
+    lastFrame=timestamp;
+    if(elapsed>0)update(elapsed);
     draw();
     if(state==='playing')raf=requestAnimationFrame(loop);
   }
