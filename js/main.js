@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.11.0',
-    BACKEND_VERSION: '4.10.0-production-audit'
+    VERSION: '5.12.0',
+    BACKEND_VERSION: '4.11.0-upload-validation-audit'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -719,8 +719,21 @@
     var selectedFile = null;
 
     function handleFile(file) {
-      if (!Validate.isImage(file)) { Toast.error('فقط فایل تصویری مجاز است'); return; }
-      if (!Validate.fileSize(file, CONFIG.MAX_FILE_SIZE)) { Toast.error('حجم فایل بیشتر از ۵ مگابایت'); return; }
+      var allowedTypes = ['image/jpeg','image/png','image/webp'];
+      if (!file || allowedTypes.indexOf(String(file.type || '').toLowerCase()) < 0) {
+        selectedFile = null;
+        if (fileInput) fileInput.value = '';
+        if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
+        Toast.error('فرمت عکس باید JPG، PNG یا WebP باشد');
+        return;
+      }
+      if (!Validate.fileSize(file, CONFIG.MAX_FILE_SIZE)) {
+        selectedFile = null;
+        if (fileInput) fileInput.value = '';
+        if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
+        Toast.error('حجم فایل بیشتر از ۵ مگابایت');
+        return;
+      }
       selectedFile = file;
       var reader = new FileReader();
       reader.onload = function (e) {
@@ -807,6 +820,7 @@
           fatherName: data.fatherName,
           fatherPhone: data.fatherPhone,
           photoBase64: photoBase64,
+          photoMimeType: selectedFile ? selectedFile.type : '',
           extraData: {}
         });
 
