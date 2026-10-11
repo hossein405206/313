@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.9.0',
-    BACKEND_VERSION: '4.8.0-role-records-coach-diagnostics'
+    VERSION: '5.10.0',
+    BACKEND_VERSION: '4.9.0-multi-photo-activity-reports'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
