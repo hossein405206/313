@@ -46,6 +46,7 @@ var HEADERS = {
   'مسئولین': ['code','name','role','active','createdAt','phone'],
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
+  'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
   'اردوها': ['id','title','status','createdAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
@@ -165,7 +166,7 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.8.0-role-records-coach-diagnostics' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.9.0-multi-photo-activity-reports' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
@@ -179,6 +180,15 @@ function handleGet(p) {
 
   if (action === 'listEvents' || action === 'listActivities') {
     return { ok: true, items: listEventsPublic() };
+  }
+
+  if (action === 'listActivityReports') {
+    return { ok: true, items: listActivityReportsPublic() };
+  }
+
+  if (action === 'listActivityReportsManage') {
+    requireCoachPermission(p.token, 'events');
+    return { ok: true, items: listActivityReportsManage() };
   }
 
   if (action === 'listSchedule') { return listSchedulePublic(); }
@@ -341,6 +351,21 @@ function handlePost(p) {
   if (action === 'uploadEventImage') {
     requireCoachPermission(p.token, 'events');
     return uploadEventImage(p);
+  }
+
+  if (action === 'uploadActivityPhoto') {
+    requireCoachPermission(p.token, 'events');
+    return uploadActivityPhoto(p);
+  }
+
+  if (action === 'saveActivityReport') {
+    requireCoachPermission(p.token, 'events');
+    return saveActivityReport(p);
+  }
+
+  if (action === 'deleteActivityReport') {
+    requireCoachPermission(p.token, 'events');
+    return deleteActivityReport(String(p.id || ''));
   }
 
   if (action === 'saveEvent') {
@@ -1453,6 +1478,119 @@ function deleteEvent(id) {
   row[10] = nowIso();
   sheet.getRange(pos, 1, 1, 11).setValues([row]);
   return { ok: true };
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Activity reports / multi-photo galleries                                   */
+/* -------------------------------------------------------------------------- */
+
+function parseActivityImageIds(value) {
+  if (Array.isArray(value)) return value.map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+  try {
+    var parsed = JSON.parse(String(value || '[]'));
+    return Array.isArray(parsed) ? parsed.map(function(x){ return String(x || '').trim(); }).filter(Boolean) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function activityReportObject(row) {
+  var ids = parseActivityImageIds(row.imageIds).slice(0, 10);
+  return {
+    id: String(row.id || ''),
+    title: String(row.title || ''),
+    description: String(row.description || ''),
+    date: String(row.date || ''),
+    images: ids.map(function(id){
+      return {
+        fileId: id,
+        url: 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1200'
+      };
+    }),
+    active: truthy(row.active),
+    createdAt: String(row.createdAt || ''),
+    updatedAt: String(row.updatedAt || '')
+  };
+}
+
+function listActivityReportsPublic() {
+  return getSheetObjects('گزارش فعالیت‌ها')
+    .filter(function(row){ return truthy(row.active); })
+    .sort(function(a,b){
+      var ad = String(a.date || a.createdAt || '');
+      var bd = String(b.date || b.createdAt || '');
+      return bd.localeCompare(ad);
+    })
+    .map(activityReportObject);
+}
+
+function listActivityReportsManage() {
+  return getSheetObjects('گزارش فعالیت‌ها')
+    .filter(function(row){ return truthy(row.active); })
+    .sort(function(a,b){
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    })
+    .map(activityReportObject);
+}
+
+function uploadActivityPhoto(p) {
+  var data = String(p.base64 || '').replace(/^data:image\\/[a-zA-Z0-9.+-]+;base64,/, '');
+  if (!data) throw new Error('عکس انتخاب‌شده خالی است');
+  var mime = String(p.mimeType || 'image/jpeg').toLowerCase();
+  if (['image/jpeg','image/png','image/webp'].indexOf(mime) < 0) {
+    throw new Error('فرمت عکس پشتیبانی نمی‌شود؛ عکس را با فرمت JPG، PNG یا WebP انتخاب کن');
+  }
+  var bytes;
+  try { bytes = Utilities.base64Decode(data); }
+  catch (e) { throw new Error('اطلاعات عکس قابل خواندن نیست'); }
+  if (!bytes.length) throw new Error('عکس انتخاب‌شده خالی است');
+  if (bytes.length > 2 * 1024 * 1024) throw new Error('حجم عکس پس از فشرده‌سازی هنوز زیاد است؛ عکس کوچک‌تری انتخاب کن');
+  var ext = mime === 'image/png' ? 'png' : (mime === 'image/webp' ? 'webp' : 'jpg');
+  var blob = Utilities.newBlob(bytes, mime, 'activity-' + Date.now() + '-' + Math.floor(Math.random() * 100000) + '.' + ext);
+  var file = getDriveFolder().createFile(blob);
+  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  return { ok:true, fileId:file.getId() };
+}
+
+function saveActivityReport(p) {
+  var title = String(p.title || '').trim();
+  var description = String(p.description || '').trim();
+  var date = String(p.date || '').trim();
+  if (!title) throw new Error('عنوان گزارش اردو یا فعالیت را وارد کن');
+  if (title.length > 160) throw new Error('عنوان گزارش نباید بیشتر از ۱۶۰ نویسه باشد');
+  if (description.length > 6000) throw new Error('توضیحات گزارش بیش از حد طولانی است');
+  var ids = parseActivityImageIds(p.imageIds);
+  ids = ids.filter(function(id, index){ return ids.indexOf(id) === index; });
+  if (ids.length > 10) throw new Error('هر گزارش حداکثر می‌تواند ۱۰ عکس داشته باشد');
+  ids.forEach(function(id){
+    if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) throw new Error('شناسه یکی از عکس‌ها معتبر نیست');
+  });
+  var auth = requireToken(p.token, ['coach']);
+  if (!auth.isMaster) requireCoachPermission(p.token, 'events');
+  var now = nowIso();
+  var obj = {
+    id: uid('ACT'),
+    title: title,
+    description: description,
+    date: date,
+    imageIds: JSON.stringify(ids),
+    active: true,
+    createdAt: now,
+    updatedAt: now,
+    createdBy: String(auth.subject || '')
+  };
+  getSheet('گزارش فعالیت‌ها').appendRow(rowToArray('گزارش فعالیت‌ها', obj));
+  return { ok:true, id:obj.id, photoCount:ids.length };
+}
+
+function deleteActivityReport(id) {
+  if (!id) throw new Error('شناسه گزارش مشخص نیست');
+  var sheet = getSheet('گزارش فعالیت‌ها');
+  var pos = findRow(sheet, 'id', id);
+  if (!pos) throw new Error('گزارش فعالیت پیدا نشد یا قبلاً حذف شده است');
+  sheet.deleteRow(pos);
+  return { ok:true };
 }
 
 /* -------------------------------------------------------------------------- */
