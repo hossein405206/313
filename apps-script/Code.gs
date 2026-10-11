@@ -1629,6 +1629,24 @@ function cleanupUnusedActivityPhotos_(imageIds) {
   return trashed;
 }
 
+function validateActivityPhotoFiles_(ids) {
+  ids.forEach(function(id) {
+    try {
+      var file = DriveApp.getFileById(id);
+      if (file.isTrashed() || !/^activity-/.test(String(file.getName() || ''))) {
+        throw new Error('invalid');
+      }
+      var parents = file.getParents(), insideTargetFolder = false;
+      while (parents.hasNext()) {
+        if (parents.next().getId() === CFG.DRIVE_FOLDER_ID) { insideTargetFolder = true; break; }
+      }
+      if (!insideTargetFolder) throw new Error('invalid');
+    } catch (e) {
+      throw new Error('یکی از عکس‌ها در پوشهٔ گزارش‌های فعالیت ثبت نشده است؛ عکس‌ها را دوباره انتخاب و بارگذاری کن');
+    }
+  });
+}
+
 function saveActivityReport(p) {
   var title = String(p.title || '').trim();
   var description = String(p.description || '').trim();
@@ -1646,6 +1664,7 @@ function saveActivityReport(p) {
   });
   var auth = requireToken(p.token, ['coach']);
   if (!auth.isMaster) requireCoachPermission(p.token, 'events');
+  validateActivityPhotoFiles_(ids);
   var now = nowIso();
   var obj = {
     id: uid('ACT'),
