@@ -57,7 +57,31 @@ async function load(){
  var r=await api().get({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events)loadActivityReports();}
 function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
-function renderRegs(list){var box=$('#registrationsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(r){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small></div><div class="admin-actions">'+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>'}).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}})}
+async function viewRegistrationPhoto(id,button){
+ var modal=$('#registrationPhotoModal'),img=$('#registrationPhotoImage'),status=$('#registrationPhotoStatus');
+ if(!modal||!img||!status){toast('نمایشگر رضایت‌نامه آماده نیست',1);return}
+ modal.hidden=false;document.body.style.overflow='hidden';img.hidden=true;img.removeAttribute('src');status.textContent='در حال دریافت امن عکس رضایت‌نامه…';
+ if(button)setBusy(button,'در حال دریافت…');
+ try{
+  var result=await api().post({action:'getRegistrationPhoto',token:state.token,id:id});
+  if(!result.base64)throw new Error('عکس رضایت‌نامه در پاسخ سرور موجود نبود');
+  img.onload=function(){img.hidden=false;status.textContent='این تصویر فقط در پنل مجاز نمایش داده می‌شود.'};
+  img.onerror=function(){img.hidden=true;status.textContent='تصویر دریافت شد اما مرورگر نتوانست آن را نمایش دهد.'};
+  img.src='data:'+(result.mimeType||'image/jpeg')+';base64,'+result.base64;
+ }catch(e){status.textContent=e.message||'نمایش عکس رضایت‌نامه ناموفق بود'}
+ finally{if(button)clearBusy(button)}
+}
+function closeRegistrationPhotoModal(){
+ var modal=$('#registrationPhotoModal'),img=$('#registrationPhotoImage'),status=$('#registrationPhotoStatus');
+ if(modal)modal.hidden=true;if(img){img.hidden=true;img.removeAttribute('src')}if(status)status.textContent='';document.body.style.overflow='';
+}
+function setupRegistrationPhotoModal(){
+ var modal=$('#registrationPhotoModal'),close=$('#registrationPhotoClose');
+ if(close)close.addEventListener('click',closeRegistrationPhotoModal);
+ if(modal)modal.addEventListener('click',function(e){if(e.target===modal)closeRegistrationPhotoModal()});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modal&&!modal.hidden)closeRegistrationPhotoModal()});
+}
+function renderRegs(list){var box=$('#registrationsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(r){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(r.firstName+' '+r.lastName)+'</strong><small>'+esc(r.phone)+' · '+esc(r.status)+'</small></div><div class="admin-actions">'+(r.photoUrl?'<button data-photo="'+esc(r.id)+'">مشاهده رضایت‌نامه</button>':'')+(r.status==='در انتظار تایید'?'<button data-ok="'+esc(r.id)+'">تایید</button><button class="danger" data-no="'+esc(r.id)+'">رد</button>':'')+'</div></div>'}).join(''):'<div class="empty"><p>ثبت‌نامی وجود ندارد</p></div>';box.querySelectorAll('[data-photo]').forEach(function(b){b.onclick=function(){viewRegistrationPhoto(b.dataset.photo,b)}});box.querySelectorAll('[data-ok]').forEach(function(b){b.onclick=function(){setReg(b.dataset.ok,'تایید شد')}});box.querySelectorAll('[data-no]').forEach(function(b){b.onclick=function(){setReg(b.dataset.no,'رد شد')}})}
 function setReg(id,status){api().post({action:'setRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت ثبت شد ✓');load()}).catch(function(e){toast(e.message,1)})}
 function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
 function renderWarnings(rows){
@@ -230,7 +254,7 @@ function setupStaff(){
   });
 }
 function setup(){
- setupSchedule();setupStaff();setupOwnCredentials();setupActivityReports();
+ setupSchedule();setupStaff();setupOwnCredentials();setupActivityReports();setupRegistrationPhotoModal();
  var coachPhoneInput=$('#coachPhone');
  if(coachPhoneInput)coachPhoneInput.addEventListener('input',function(){coachPhoneInput.value=normalizeDigits(coachPhoneInput.value).replace(/[^0-9+]/g,'').slice(0,16)});
  var resetPhone=$('#resetMemberPhone'),resetBtn=$('#resetMemberHistoryBtn');
