@@ -35,7 +35,7 @@
 <script>
 (function(){
 'use strict';
-var allReports=[],currentPhotos=[],currentPhotoIndex=0;
+var allReports=[],currentPhotos=[],currentPhotoIndex=0,eventCount=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function faNum(n){return Number(n||0).toLocaleString('fa-IR')}
 function setCount(id,n,label){var el=document.getElementById(id);if(el)el.textContent=faNum(n)+(label?' '+label:'')}
@@ -57,11 +57,11 @@ function renderEvents(items){
  root.innerHTML=items.map(function(e){return '<article class="activity-event-card"><div class="activity-event-image"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="lazy"><span>'+esc(e.label||'رویداد')+'</span></div><div class="activity-event-body"><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||'')+'</p><time>'+esc(e.date||'')+'</time></div></article>'}).join('');
  updateTotal();
 }
-function updateTotal(){setCount('activityCount',allReports.length+(window._activityEventCount||0),'')}
+function updateTotal(){setCount('activityCount',allReports.length+eventCount,'')}
 function load(){
  var app=window.KanoonApp;if(!app){setTimeout(load,50);return}
  app.api.get({action:'listActivityReports'}).then(function(r){renderReports(r.items||[])}).catch(function(e){var root=document.getElementById('activityArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>گزارش‌ها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
- app.api.get({action:'listEvents'}).then(function(r){var items=r.items||[];window._activityEventCount=items.length;renderEvents(items)}).catch(function(e){var root=document.getElementById('eventArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>رویدادها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
+ app.api.get({action:'listEvents'}).then(function(r){var items=r.items||[];eventCount=items.length;renderEvents(items)}).catch(function(e){var root=document.getElementById('eventArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>رویدادها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
 }
 function openLightbox(reportIndex,photoIndex){
  var r=allReports[reportIndex];if(!r||!Array.isArray(r.images)||!r.images[photoIndex])return;
