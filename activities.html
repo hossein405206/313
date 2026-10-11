@@ -1,6 +1,91 @@
-<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#14243b"><title>فعالیت‌ها | مسجد امام رضا (ع)</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css?v=5.9.0"><link rel="stylesheet" href="css/activities.css"></head><body><div class="app-container activities-app">
-<header class="app-header"><a href="index.html" class="header-back">←</a><div class="header-brand"><div><strong>مسجد امام رضا (ع)</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header>
-<main class="page activities-page"><div class="activities-intro"><div><h1>فعالیت‌ها</h1><p>رویدادها و برنامه‌های ثبت‌شده حلقه</p></div><div class="archive-count" id="activityCount">۰</div></div>
-<div id="activityList" class="activity-grid"><div class="activity-skeleton"></div><div class="activity-skeleton"></div></div></main><nav class="bottom-nav"></nav></div><script src="js/main.js?v=5.9.0" defer></script><script>
-(function(){'use strict';function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}function render(list){var el=document.getElementById('activityList'),count=document.getElementById('activityCount');if(count)count.textContent=Number(list.length).toLocaleString('fa-IR');if(!list.length){el.innerHTML='<div class="activities-empty"><strong>هنوز فعالیتی ثبت نشده</strong><span>وقتی فعالیتی اضافه شود اینجا نمایش داده می‌شود</span></div>';return}el.innerHTML=list.map(function(e){return '<article class="activity-v5"><div class="activity-image"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="lazy"><span>'+esc(e.label||'فعالیت')+'</span></div><div class="activity-body"><h2>'+esc(e.title)+'</h2><p>'+esc(e.description||e.date||'')+'</p><div class="activity-foot"><time>'+esc(e.date||'')+'</time><b>جزئیات ←</b></div></div></article>'}).join('')}function load(){if(!window.KanoonApp)return;window.KanoonApp.api.get({action:'listActivities'}).then(function(r){render(r.items||[])}).catch(function(){render([])})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else load()})();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14243b"><meta name="description" content="گزارش اردوها، گالری عکس‌ها و رویدادهای حلقه شهید هادی ذوالفقاری">
+<title>فعالیت‌ها و گزارش اردوها | مسجد امام رضا (ع)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=5.10.0"><link rel="stylesheet" href="css/activities.css?v=1.2.0">
+</head>
+<body>
+<div class="app-container activities-app">
+<header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت به خانه">←</a><div class="header-brand"><div><strong>مسجد امام رضا (ع)</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header>
+<main class="page activities-page">
+<div class="activities-intro"><div><h1>فعالیت‌ها</h1><p>خاطرات، گزارش اردوها و رویدادهای حلقه</p></div><div class="archive-count" id="activityCount">۰</div></div>
+<section class="activity-section" aria-labelledby="reportsHeading">
+<div class="activity-section-heading"><div><span class="activity-eyebrow">آرشیو تصویری</span><h2 id="reportsHeading">گزارش اردوها و فعالیت‌ها</h2><p>هر گزارش، یک روایت با چند عکس در کنار هم</p></div><span class="activity-section-count" id="reportCount">۰ گزارش</span></div>
+<div id="activityArchiveList" class="activity-report-grid"><div class="activity-skeleton"></div></div>
+</section>
+<section class="activity-section events-section" aria-labelledby="eventsHeading">
+<div class="activity-section-heading"><div><span class="activity-eyebrow">خبرها و اطلاعیه‌ها</span><h2 id="eventsHeading">رویدادهای حلقه</h2><p>رویدادهای ثبت‌شده از پنل مربی</p></div><span class="activity-section-count" id="eventCount">۰ رویداد</span></div>
+<div id="eventArchiveList" class="activity-event-grid"><div class="activity-skeleton"></div></div>
+</section>
+</main>
+<nav class="bottom-nav"></nav>
+</div>
+<div class="activity-lightbox" id="activityLightbox" hidden role="dialog" aria-modal="true" aria-label="نمایش عکس">
+<button type="button" class="activity-lightbox-close" id="activityLightboxClose" aria-label="بستن عکس">×</button>
+<button type="button" class="activity-lightbox-prev" id="activityLightboxPrev" aria-label="عکس قبلی">‹</button>
+<figure><img id="activityLightboxImage" src="" alt=""><figcaption id="activityLightboxCaption"></figcaption></figure>
+<button type="button" class="activity-lightbox-next" id="activityLightboxNext" aria-label="عکس بعدی">›</button>
+<div class="activity-lightbox-count" id="activityLightboxCount"></div>
+</div>
+<script src="js/main.js?v=5.10.0" defer></script>
+<script>
+(function(){
+'use strict';
+var allReports=[],currentPhotos=[],currentPhotoIndex=0;
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function faNum(n){return Number(n||0).toLocaleString('fa-IR')}
+function setCount(id,n,label){var el=document.getElementById(id);if(el)el.textContent=faNum(n)+(label?' '+label:'')}
+function renderReports(items){
+ var root=document.getElementById('activityArchiveList');if(!root)return;allReports=items||[];
+ setCount('reportCount',allReports.length,'گزارش');
+ if(!allReports.length){root.innerHTML='<div class="activities-empty"><strong>هنوز گزارشی از اردوها ثبت نشده</strong><span>گزارش‌های تصویری حلقه پس از ثبت توسط مربی، همراه با همه عکس‌ها اینجا نمایش داده می‌شوند.</span></div>';updateTotal();return}
+ root.innerHTML=allReports.map(function(r,index){
+  var photos=Array.isArray(r.images)?r.images:[];
+  var gallery=photos.map(function(p,pi){return '<button type="button" class="activity-gallery-photo" data-report-index="'+index+'" data-photo-index="'+pi+'" aria-label="نمایش عکس '+faNum(pi+1)+' از '+faNum(photos.length)+'"><img src="'+esc(p.url)+'" alt="'+esc(r.title)+' — عکس '+faNum(pi+1)+'" loading="lazy"><span>'+faNum(pi+1)+'</span></button>'}).join('');
+  return '<article class="activity-report-card"><div class="activity-report-top"><span class="activity-report-mark">گزارش تصویری</span><time>'+esc(r.date||'')+'</time></div><div class="activity-report-content"><h3>'+esc(r.title)+'</h3><p>'+esc(r.description||'')+'</p></div>'+(photos.length?'<div class="activity-gallery">'+gallery+'</div>':'<div class="activity-report-no-images">برای این گزارش عکسی ثبت نشده است.</div>')+'<div class="activity-report-bottom"><span>📷 '+faNum(photos.length)+' عکس</span><span>برای دیدن عکس‌ها روی تصویر بزن</span></div></article>';
+ }).join('');
+ updateTotal();
+}
+function renderEvents(items){
+ var root=document.getElementById('eventArchiveList');if(!root)return;
+ setCount('eventCount',(items||[]).length,'رویداد');
+ if(!items||!items.length){root.innerHTML='<div class="activities-empty"><strong>فعلاً رویدادی ثبت نشده</strong><span>رویدادهای مستقل حلقه در این قسمت نمایش داده می‌شوند.</span></div>';updateTotal();return}
+ root.innerHTML=items.map(function(e){return '<article class="activity-event-card"><div class="activity-event-image"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="lazy"><span>'+esc(e.label||'رویداد')+'</span></div><div class="activity-event-body"><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||'')+'</p><time>'+esc(e.date||'')+'</time></div></article>'}).join('');
+ updateTotal();
+}
+function updateTotal(){setCount('activityCount',allReports.length+(window._activityEventCount||0),'')}
+function load(){
+ var app=window.KanoonApp;if(!app){setTimeout(load,50);return}
+ app.api.get({action:'listActivityReports'}).then(function(r){renderReports(r.items||[])}).catch(function(e){var root=document.getElementById('activityArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>گزارش‌ها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
+ app.api.get({action:'listEvents'}).then(function(r){var items=r.items||[];window._activityEventCount=items.length;renderEvents(items)}).catch(function(e){var root=document.getElementById('eventArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>رویدادها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
+}
+function openLightbox(reportIndex,photoIndex){
+ var r=allReports[reportIndex];if(!r||!Array.isArray(r.images)||!r.images[photoIndex])return;
+ currentPhotos=r.images;currentPhotoIndex=photoIndex;
+ var box=document.getElementById('activityLightbox');box.hidden=false;document.body.style.overflow='hidden';showLightboxPhoto();
+}
+function showLightboxPhoto(){
+ var photo=currentPhotos[currentPhotoIndex];if(!photo)return;
+ document.getElementById('activityLightboxImage').src=photo.url;
+ document.getElementById('activityLightboxImage').alt='عکس '+faNum(currentPhotoIndex+1);
+ document.getElementById('activityLightboxCaption').textContent=(currentPhotoIndex+1).toLocaleString('fa-IR')+' از '+currentPhotos.length.toLocaleString('fa-IR');
+ document.getElementById('activityLightboxCount').textContent=(currentPhotoIndex+1).toLocaleString('fa-IR')+' / '+currentPhotos.length.toLocaleString('fa-IR');
+ document.getElementById('activityLightboxPrev').disabled=currentPhotos.length<2;
+ document.getElementById('activityLightboxNext').disabled=currentPhotos.length<2;
+}
+function closeLightbox(){var box=document.getElementById('activityLightbox');box.hidden=true;document.body.style.overflow='';document.getElementById('activityLightboxImage').src='';currentPhotos=[]}
+function stepPhoto(delta){if(currentPhotos.length<2)return;currentPhotoIndex=(currentPhotoIndex+delta+currentPhotos.length)%currentPhotos.length;showLightboxPhoto()}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-report-index][data-photo-index]');if(b)openLightbox(Number(b.dataset.reportIndex),Number(b.dataset.photoIndex))});
+document.getElementById('activityLightboxClose').addEventListener('click',closeLightbox);
+document.getElementById('activityLightboxPrev').addEventListener('click',function(){stepPhoto(-1)});
+document.getElementById('activityLightboxNext').addEventListener('click',function(){stepPhoto(1)});
+document.getElementById('activityLightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox()});
+document.addEventListener('keydown',function(e){var box=document.getElementById('activityLightbox');if(box.hidden)return;if(e.key==='Escape')closeLightbox();if(e.key==='ArrowRight')stepPhoto(-1);if(e.key==='ArrowLeft')stepPhoto(1)});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else load();
+})();
+</script>
+</body></html>
