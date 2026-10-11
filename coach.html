@@ -29,6 +29,7 @@
 
 <nav class="coach-quick-nav" aria-label="دسترسی سریع پنل">
 <a class="coach-quick-link" data-permission="events" href="#coachEventsSection"><span>۱</span><strong>رویدادها</strong><small>تصویر و خبر</small></a>
+<a class="coach-quick-link" data-permission="events" href="#coachActivityReportsSection"><span>۲</span><strong>گزارش فعالیت</strong><small>گالری چندعکسی اردو</small></a>
 <a class="coach-quick-link" data-permission="schedule" href="#coachScheduleSection"><span>۲</span><strong>برنامه هفتگی</strong><small>مرتب از شنبه تا جمعه</small></a>
 <a class="coach-quick-link" data-permission="registrations" href="#coachRegistrationsSection"><span>۳</span><strong>ثبت‌نام‌ها</strong><small>درخواست‌ها</small></a>
 <a class="coach-quick-link" data-permission="reports" href="#coachAttendanceReportsSection"><span>۴</span><strong>گزارش‌ها</strong><small>حضور و غیاب</small></a>
@@ -42,6 +43,20 @@
 <div class="event-upload"><input id="eventImage" type="file" accept="image/*"><div id="eventPreview">تصویر رویداد را انتخاب کن</div></div>
 <div class="editor-actions"><button id="saveEventBtn" class="btn-submit">ذخیره رویداد</button><button id="cancelEventBtn" class="btn-secondary">انصراف</button></div></div>
 <div id="eventsAdmin" class="admin-list"></div></section>
+
+<section class="coach-panel coach-permission-section" id="coachActivityReportsSection" data-permission="events">
+<div class="panel-head"><div><h3>گزارش اردوها و فعالیت‌ها</h3><small class="panel-subtitle">یک گزارش مستقل با چند عکس بساز؛ تصاویر در یک گالری کنار هم نمایش داده می‌شوند.</small></div><button type="button" id="newActivityReportBtn" class="mini-action">＋ گزارش جدید</button></div>
+<div id="activityReportEditor" class="event-editor hidden">
+<div class="form-grid">
+<label class="full">عنوان گزارش *<input id="activityReportTitle" class="form-control" maxlength="160" placeholder="مثلاً گزارش اردوی فرهنگی روز جمعه" required></label>
+<label class="full">توضیحات گزارش<textarea id="activityReportDescription" class="form-control" rows="4" maxlength="6000" placeholder="شرح برنامه، اتفاقات و نکته‌های مهم اردو..."></textarea></label>
+<label>تاریخ فعالیت<input id="activityReportDate" class="form-control" type="date"></label>
+</div>
+<div class="activity-photo-picker"><label for="activityReportPhotos" class="activity-photo-picker__label"><span>＋</span><strong>انتخاب چند عکس</strong><small>حداکثر ۱۰ عکس؛ عکس‌ها پیش از ارسال به‌صورت خودکار فشرده می‌شوند.</small></label><input id="activityReportPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple><div id="activityPhotoPreview" class="activity-photo-preview"><span>هنوز عکسی انتخاب نشده</span></div><button type="button" id="clearActivityPhotosBtn" class="btn-secondary activity-clear-photos">پاک‌کردن عکس‌های انتخاب‌شده</button></div>
+<div class="editor-actions"><button type="button" id="saveActivityReportBtn" class="btn-submit">ذخیره گزارش و عکس‌ها</button><button type="button" id="cancelActivityReportBtn" class="btn-secondary">انصراف</button></div>
+</div>
+<div id="activityReportsAdmin" class="admin-list"><div class="empty"><p>گزارش‌ها پس از ورود بارگذاری می‌شوند.</p></div></div>
+</section>
 
 <section class="coach-panel hidden" id="coachStaffPanel"><div class="panel-head"><div><h3>مدیریت مربیان</h3><small class="panel-subtitle">مربی ارشد مالک اصلی است؛ مربیان فقط دسترسی‌هایی را دارند که اینجا فعال می‌کنی</small></div></div>
 <div class="event-editor"><div class="form-grid"><label>نام مربی<input id="newCoachName" class="form-control" placeholder="نام و نام خانوادگی"></label><label>شماره همراه مربی<input id="newCoachPhone" class="form-control" dir="ltr" inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx"></label><label>رمز ورود مربی<input id="newCoachCode" class="form-control" dir="ltr" minlength="8" autocomplete="new-password" placeholder="حداقل ۸ نویسه"></label></div>
@@ -81,4 +96,4 @@
 </section>
 </section></main>
 <nav class="bottom-nav"></nav>
-</div><script src="js/main.js?v=5.9.0" defer></script><script src="js/coach.js?v=5.9.0" defer></script></body></html>
+</div><script src="js/main.js?v=5.10.0" defer></script><script src="js/coach.js?v=5.10.0" defer></script></body></html>
