@@ -35,3 +35,12 @@
 .game-hint{order:4;text-align:center;font-size:.56rem;color:#8996a6;line-height:1.8;margin:8px 0 1px}
 .member-role-badge{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1px solid #bfdbfe;color:#1d4ed8;font-size:.48rem;font-weight:800}
 @media(max-width:390px){.game-shell #startGame{width:100%;min-height:45px}.game-message{font-size:.62rem;padding:9px 10px}}
+
+.member-role-badge--neutral,.member-role-badge--unregistered{background:transparent!important;border-color:transparent!important;color:#8a94a1!important;box-shadow:none!important}
+.member-role-badge--member{background:linear-gradient(135deg,#dbeafe,#93c5fd)!important;border-color:#bfdbfe!important;color:#1d4ed8!important}
+.member-role-badge--official{background:linear-gradient(135deg,#ccfbf1,#5eead4)!important;border-color:#99f6e4!important;color:#115e59!important}
+.member-role-badge--coach{background:linear-gradient(135deg,#fff4c6,#f4dfa0)!important;border-color:#ead184!important;color:#765710!important}
+.member-role-badge--owner{background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed)!important;background-size:220% 220%!important;border-color:#a78bfa!important;color:#fff!important;animation:recordOwnerShift 4s ease infinite}
+@keyframes recordOwnerShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce){.member-role-badge--owner{animation:none!important}}
+.game-shell #startGame{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;z-index:1!important;order:2!important;flex:0 0 auto!important}
