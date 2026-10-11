@@ -95,12 +95,16 @@ function compressActivityPhoto(file){
   img.onload=function(){
    URL.revokeObjectURL(url);
    try{
-    var max=1440,w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
-    if(!w||!h)throw new Error('ابعاد عکس قابل تشخیص نیست');
-    var scale=Math.min(1,max/Math.max(w,h));w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));
-    var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-    var ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
-    canvas.toBlob(function(blob){if(!blob){reject(new Error('فشرده‌سازی عکس ناموفق بود'));return}resolve(blob)},'image/jpeg',0.78);
+    var originalW=img.naturalWidth||img.width,originalH=img.naturalHeight||img.height;
+    if(!originalW||!originalH)throw new Error('ابعاد عکس قابل تشخیص نیست');
+    function renderBlob(maxDimension,quality){
+     var scale=Math.min(1,maxDimension/Math.max(originalW,originalH));
+     var w=Math.max(1,Math.round(originalW*scale)),h=Math.max(1,Math.round(originalH*scale));
+     var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+     var ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+     canvas.toBlob(function(blob){if(!blob){reject(new Error('فشرده‌سازی عکس ناموفق بود'));return}if(blob.size>1450*1024&&maxDimension>1100){renderBlob(1100,0.62);return}resolve(blob)},'image/jpeg',quality);
+    }
+    renderBlob(1440,0.76);
    }catch(e){reject(e)}
   };
   img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('یکی از عکس‌ها باز نمی‌شود؛ آن را با فرمت JPG یا PNG دوباره انتخاب کن'))};
