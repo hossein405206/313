@@ -1426,7 +1426,7 @@ function listEventsPublic() {
 }
 
 function uploadEventImage(p) {
-  var data = String(p.base64 || '').replace(/\\s+/g, '');
+  var data = String(p.base64 || '').replace(/\s+/g, '');
   if (data.indexOf(',') >= 0) data = data.slice(data.lastIndexOf(',') + 1);
   if (!data || data.length > 3000000) throw new Error('حجم عکس رویداد زیاد است؛ عکس کوچک‌تری انتخاب کن');
   var mime = String(p.mimeType || 'image/jpeg').toLowerCase();
@@ -1714,13 +1714,13 @@ function registerCamp(p) {
   var fatherName = String(p.fatherName || '').trim();
   var phone = normalizeIranMobile_(p.phone || '');
   var fatherPhone = normalizeIranMobile_(p.fatherPhone || '');
-  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\\s+/g, '');
+  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\s+/g, '');
   if (!campId) throw new Error('اردو انتخاب نشده');
   if (!listCamps().some(function(camp){ return String(camp.id) === campId; })) throw new Error('این اردو دیگر فعال نیست؛ صفحه را تازه‌سازی کن');
   if (!firstName || !lastName || !fatherName) throw new Error('اطلاعات ناقص است');
-  if (!/^09\\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
-  if (!/^09\\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
-  if (nationalCode && !/^\\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
+  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
+  if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
 
   var photoUrl = '';
   if (p.photoBase64) {
@@ -2116,7 +2116,7 @@ function setSetting(key, value) {
 /* -------------------------------------------------------------------------- */
 
 function uploadPublicFile(base64, mime, name) {
-  var data = String(base64 || '').replace(/\\s+/g, '');
+  var data = String(base64 || '').replace(/\s+/g, '');
   if (data.indexOf(',') >= 0) data = data.slice(data.lastIndexOf(',') + 1);
   if (!data || data.length > 7100000) throw new Error('حجم عکس باید حداکثر ۵ مگابایت باشد');
   var type = String(mime || 'image/jpeg').toLowerCase();
