@@ -234,9 +234,9 @@ function setup(){
  var coachPhoneInput=$('#coachPhone');
  if(coachPhoneInput)coachPhoneInput.addEventListener('input',function(){coachPhoneInput.value=normalizeDigits(coachPhoneInput.value).replace(/[^0-9+]/g,'').slice(0,16)});
  var resetPhone=$('#resetMemberPhone'),resetBtn=$('#resetMemberHistoryBtn');
- if(resetPhone)resetPhone.addEventListener('input',function(){resetPhone.value=normalizeDigits(resetPhone.value).replace(/\D/g,'').slice(0,11)});
+ if(resetPhone)resetPhone.addEventListener('input',function(){resetPhone.value=normalizeDigits(resetPhone.value).replace(/[^0-9+]/g,'').slice(0,16)});
  if(resetBtn)resetBtn.addEventListener('click',async function(){
-   var phone=normalizeDigits(resetPhone.value).replace(/\D/g,'');
+   var phone=normalizeIranMobileInput(resetPhone.value);
    if(!/^09\d{9}$/.test(phone)){toast('شماره همراه معتبر ۱۱ رقمی وارد کن',1);return}
    if(!confirm('تمام سابقه عضویت شماره '+phone+' حذف شود؟ حساب ورود مالک و تنظیمات مربی ارشد حذف نمی‌شود. این عملیات قابل بازگشت نیست.'))return;
    setBusy(resetBtn,'در حال پاک‌کردن...');
