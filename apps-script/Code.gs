@@ -1535,7 +1535,7 @@ function listActivityReportsManage() {
 }
 
 function uploadActivityPhoto(p) {
-  var data = String(p.base64 || '').replace(/^data:image\\/[a-zA-Z0-9.+-]+;base64,/, '');
+  var data = String(p.base64 || '').replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
   if (!data) throw new Error('عکس انتخاب‌شده خالی است');
   var mime = String(p.mimeType || 'image/jpeg').toLowerCase();
   if (['image/jpeg','image/png','image/webp'].indexOf(mime) < 0) {
