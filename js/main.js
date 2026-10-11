@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.7.0',
-    BACKEND_VERSION: '4.7.0-ring-welcome-game-role-badges'
+    VERSION: '5.9.0',
+    BACKEND_VERSION: '4.8.0-role-records-coach-diagnostics'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -138,7 +138,7 @@
         throw new Error('اتصال به سرور برقرار نشد');
       }
       if (!res.ok) throw new Error('خطای سرور: ' + res.status);
-      return Api._parse(res);
+      return Api._parse(res, params && params.action);
     },
 
     post: async function (payload) {
@@ -156,7 +156,7 @@
         throw new Error('اتصال به سرور برقرار نشد. اینترنت رو چک کن');
       }
       if (!res.ok) throw new Error('خطای سرور: ' + res.status);
-      return Api._parse(res);
+      return Api._parse(res, payload && payload.action);
     },
 
     checkBackendVersion: async function () {
@@ -168,7 +168,7 @@
       return result;
     },
 
-    _parse: async function (res) {
+    _parse: async function (res, action) {
       var text = await res.text();
       Logger.info('Response:', text.substring(0, 200));
 
@@ -179,7 +179,7 @@
         Logger.error('Invalid JSON:', text);
         throw new Error('پاسخ سرور نامعتبر بود');
       }
-      if (!json.ok) throw new Error(json.error || 'خطای ناشناخته');
+      if (!json.ok) throw new Error(json.error || ('سرور برای عملیات «' + String(action || 'نامشخص') + '» پاسخ ناموفقِ بدون توضیح برگرداند. نسخهٔ بک‌اند و گزارش اجرای Apps Script را بررسی کن.'));
       return json;
     }
   };
