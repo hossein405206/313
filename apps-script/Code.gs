@@ -34,7 +34,7 @@ var CFG = {
 function getMasterCoachConfig() {
   var props = PropertiesService.getScriptProperties();
   return {
-    phone: normalizeIranDigits(String(props.getProperty('MASTER_COACH_PHONE') || '')).replace(/\s+/g, ''),
+    phone: normalizeIranMobile_(props.getProperty('MASTER_COACH_PHONE') || ''),
     code: String(props.getProperty('MASTER_COACH_CODE') || '').trim(),
     name: String(props.getProperty('MASTER_COACH_NAME') || CFG.MASTER_COACH_NAME).trim() || CFG.MASTER_COACH_NAME
   };
@@ -166,11 +166,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.9.0-multi-photo-activity-reports' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.10.0-production-audit' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.9.0-multi-photo-activity-reports', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.10.0-production-audit', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -358,6 +358,11 @@ function handlePost(p) {
     return uploadActivityPhoto(p);
   }
 
+  if (action === 'cleanupActivityPhotos') {
+    requireCoachPermission(p.token, 'events');
+    return { ok:true, trashed:cleanupUnusedActivityPhotos_(p.imageIds) };
+  }
+
   if (action === 'saveActivityReport') {
     requireCoachPermission(p.token, 'events');
     return saveActivityReport(p);
@@ -461,7 +466,7 @@ function verifyCoachCode(code) {
   return null;
 }
 function loginCoach(p){
-  var phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,'');
+  var phone=normalizeIranMobile_(p.phone||'');
   var code=String(p.code||'').trim();
   if(!/^09\d{9}$/.test(phone)) throw new Error('شماره مربی نامعتبر است');
   if(!code) throw new Error('کد مربی را وارد کن');
@@ -482,7 +487,7 @@ function loginCoach(p){
   migrateSheetHeaders(coachSheet,'مربیان');
   var rows=getSheetObjects('مربیان');
   var coach=rows.filter(function(r){
-    var rowPhone=normalizeIranDigits(String(r.phone||'').trim()).replace(/\s+/g,'');
+    var rowPhone=normalizeIranMobile_(r.phone||'');
     var rowCode=String(r.code||'').trim();
     return truthy(r.active)&&rowPhone===phone&&rowCode===code&&(String(r.role||'')!=='master'||(masterConfig.phone===phone&&masterConfig.code===code));
   })[0];
@@ -499,14 +504,11 @@ function ensureMasterCoach(){
   var config=getMasterCoachConfig();
   if(!config.phone||!config.code)return;
   var rows=getSheetObjects('مربیان');
-  var found=rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\s+/g,'')===config.phone&&String(r.code||'').trim()===config.code&&String(r.role||'')==='master';});
+  var found=rows.some(function(r){return normalizeIranMobile_(r.phone||'')===config.phone&&String(r.code||'').trim()===config.code&&String(r.role||'')==='master';});
   if(!found)getSheet('مربیان').appendRow([config.code,config.name,config.phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);
 }
 function normalizeMemberPhone(value) {
-  var phone = normalizeIranDigits(String(value || '')).replace(/[^0-9]/g, '');
-  // اگر Google Sheets صفر ابتدایی شماره را به‌صورت عددی حذف کرده باشد، آن را برمی‌گردانیم.
-  if (/^9\d{9}$/.test(phone)) phone = '0' + phone;
-  return phone;
+  return normalizeIranMobile_(value);
 }
 
 function normalizeIranDigits(value){
@@ -514,9 +516,18 @@ function normalizeIranDigits(value){
     .replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c));})
     .replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c));});
 }
+
+// شماره‌های ایران را مستقل از ارقام فارسی/عربی، فاصله، خط تیره یا پیش‌شماره بین‌المللی یکسان می‌کند.
+function normalizeIranMobile_(value){
+  var phone=normalizeIranDigits(String(value||'')).replace(/[^0-9]/g,'');
+  if(/^00989\d{9}$/.test(phone)) return '0'+phone.slice(4);
+  if(/^989\d{9}$/.test(phone)) return '0'+phone.slice(2);
+  if(/^9\d{9}$/.test(phone)) return '0'+phone;
+  return phone;
+}
 function updateOwnCoachCredentials(p) {
   var auth = requireToken(p.token, ['coach']);
-  var newPhoneInput = normalizeIranDigits(String(p.newPhone || '').trim()).replace(/\s+/g, '');
+  var newPhoneInput = normalizeIranMobile_(p.newPhone || '');
   var newCodeInput = String(p.newCode || '').trim();
   if (!newPhoneInput && !newCodeInput) throw new Error('شماره یا کد جدید را وارد کن');
   if (newPhoneInput && !/^09\d{9}$/.test(newPhoneInput)) throw new Error('شماره همراه نامعتبر است');
@@ -553,7 +564,7 @@ function updateOwnCoachCredentials(p) {
     rowNumber = findRow(sheet, 'code', oldCode);
   }
 
-  var newPhone = newPhoneInput || String(current.phone || '');
+  var newPhone = newPhoneInput || normalizeIranMobile_(current.phone || '');
   var newCode = newCodeInput || String(current.code || '');
   var newName = String(current.name || (isMaster ? 'مربی ارشد' : '')).trim();
   if (!/^09\d{9}$/.test(newPhone)) throw new Error('شماره همراه فعلی معتبر نیست');
@@ -561,7 +572,7 @@ function updateOwnCoachCredentials(p) {
   rows.forEach(function(r) {
     if (String(r.role || '') === 'master' && isMaster) return;
     if (String(r.code || '') === oldCode && !isMaster) return;
-    if (String(normalizeIranDigits(r.phone || '')).replace(/\s+/g, '') === newPhone) {
+    if (normalizeIranMobile_(r.phone || '') === newPhone) {
       throw new Error('این شماره همراه قبلاً برای مربی دیگری ثبت شده است');
     }
     if (String(r.code || '').trim().toUpperCase() === newCode.toUpperCase()) {
@@ -611,10 +622,10 @@ function updateOwnCoachCredentials(p) {
 
 function addCoach(p){
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مربی اضافه کند');
-  var name=String(p.name||'').trim(),phone=String(p.phone||'').trim(),code=String(p.code||'').trim();
+  var name=String(p.name||'').trim(),phone=normalizeIranMobile_(p.phone||''),code=String(p.code||'').trim();
   if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(code.length<8)throw new Error('رمز ورود مربی باید دست‌کم ۸ نویسه داشته باشد');
   var rows=getSheetObjects('مربیان');
-  if(rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\s+/g,'')===phone;}))throw new Error('این شماره قبلاً ثبت شده');
+  if(rows.some(function(r){return normalizeIranMobile_(r.phone||'')===phone;}))throw new Error('این شماره قبلاً ثبت شده');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده');
   getSheet('مربیان').appendRow([code,name,phone,true,'admin',JSON.stringify(normalizePermissions(p.permissions)),nowIso(),nowIso()]);
   return {ok:true,coach:{name:name,phone:phone,role:'coach',isMaster:false}};
@@ -701,9 +712,9 @@ function updateCoach(p) {
   var sheet=getSheet('مربیان'), rows=sheet.getDataRange().getValues(), headers=rows[0].map(String), row=rows[pos-1], idx={};
   headers.forEach(function(h,i){idx[h]=i;});
   if(String(row[idx.role]||'')==='master')throw new Error('مربی ارشد قابل ویرایش از این بخش نیست');
-  var name=String(p.name||'').trim(), phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,''), code=String(p.code||'').trim();
+  var name=String(p.name||'').trim(), phone=normalizeIranMobile_(p.phone||''), code=String(p.code||'').trim();
   if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(code.length<8)throw new Error('رمز ورود مربی باید دست‌کم ۸ نویسه داشته باشد');
-  for(var i=1;i<rows.length;i++){if(i===pos-1)continue;var rr=rows[i];if(String(normalizeIranDigits(rr[idx.phone]||'')).replace(/\s+/g,'')===phone)throw new Error('این شماره قبلاً ثبت شده');if(String(rr[idx.code]||'').trim().toUpperCase()===code.toUpperCase())throw new Error('این کد قبلاً استفاده شده');}
+  for(var i=1;i<rows.length;i++){if(i===pos-1)continue;var rr=rows[i];if(normalizeIranMobile_(rr[idx.phone]||'')===phone)throw new Error('این شماره قبلاً ثبت شده');if(String(rr[idx.code]||'').trim().toUpperCase()===code.toUpperCase())throw new Error('این کد قبلاً استفاده شده');}
   row[idx.name]=name; row[idx.phone]=phone; row[idx.code]=code; row[idx.permissions]=JSON.stringify(normalizePermissions(p.permissions)); row[idx.updatedAt]=nowIso();
   sheet.getRange(pos,1,1,headers.length).setValues([row]); return {ok:true,item:{name:name,phone:phone,code:code,role:'admin',active:truthy(row[idx.active]),permissions:normalizePermissions(p.permissions)}};
 }
@@ -1426,7 +1437,10 @@ function uploadEventImage(p) {
 
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {}
+  } catch (e) {
+    try { file.setTrashed(true); } catch (trashError) {}
+    throw new Error('گوگل درایو اجازه نمایش عمومی عکس را نداد. تنظیمات اشتراک‌گذاری پوشهٔ تصاویر را بررسی کن.');
+  }
 
   return {
     ok: true,
@@ -1549,8 +1563,46 @@ function uploadActivityPhoto(p) {
   var ext = mime === 'image/png' ? 'png' : (mime === 'image/webp' ? 'webp' : 'jpg');
   var blob = Utilities.newBlob(bytes, mime, 'activity-' + Date.now() + '-' + Math.floor(Math.random() * 100000) + '.' + ext);
   var file = getDriveFolder().createFile(blob);
-  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    try { file.setTrashed(true); } catch (trashError) {}
+    throw new Error('گوگل درایو اجازه نمایش عمومی عکس را نداد. تنظیمات اشتراک‌گذاری پوشهٔ تصاویر را بررسی کن.');
+  }
   return { ok:true, fileId:file.getId() };
+}
+
+
+function cleanupUnusedActivityPhotos_(imageIds) {
+  var ids = parseActivityImageIds(imageIds).filter(function(id, index, list) {
+    return list.indexOf(id) === index && /^[A-Za-z0-9_-]{10,}$/.test(id);
+  }).slice(0, 10);
+  if (!ids.length) return 0;
+
+  // Never trash a photo that any saved report still references.
+  var referenced = {};
+  getSheetObjects('گزارش فعالیت‌ها').forEach(function(row) {
+    parseActivityImageIds(row.imageIds).forEach(function(id) { referenced[id] = true; });
+  });
+
+  var trashed = 0;
+  ids.forEach(function(id) {
+    if (referenced[id]) return;
+    try {
+      var file = DriveApp.getFileById(id);
+      if (!/^activity-/.test(String(file.getName() || ''))) return;
+      var parents = file.getParents(), insideTargetFolder = false;
+      while (parents.hasNext()) {
+        if (parents.next().getId() === CFG.DRIVE_FOLDER_ID) { insideTargetFolder = true; break; }
+      }
+      if (!insideTargetFolder || file.isTrashed()) return;
+      file.setTrashed(true);
+      trashed++;
+    } catch (e) {
+      // One inaccessible item must not stop cleanup of the remaining uploads.
+    }
+  });
+  return trashed;
 }
 
 function saveActivityReport(p) {
@@ -1560,8 +1612,10 @@ function saveActivityReport(p) {
   if (!title) throw new Error('عنوان گزارش اردو یا فعالیت را وارد کن');
   if (title.length > 160) throw new Error('عنوان گزارش نباید بیشتر از ۱۶۰ نویسه باشد');
   if (description.length > 6000) throw new Error('توضیحات گزارش بیش از حد طولانی است');
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('تاریخ گزارش معتبر نیست');
   var ids = parseActivityImageIds(p.imageIds);
   ids = ids.filter(function(id, index){ return ids.indexOf(id) === index; });
+  if (!ids.length) throw new Error('برای ثبت گزارش دست‌کم یک عکس انتخاب کن');
   if (ids.length > 10) throw new Error('هر گزارش حداکثر می‌تواند ۱۰ عکس داشته باشد');
   ids.forEach(function(id){
     if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) throw new Error('شناسه یکی از عکس‌ها معتبر نیست');
@@ -1589,8 +1643,12 @@ function deleteActivityReport(id) {
   var sheet = getSheet('گزارش فعالیت‌ها');
   var pos = findRow(sheet, 'id', id);
   if (!pos) throw new Error('گزارش فعالیت پیدا نشد یا قبلاً حذف شده است');
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+  var imageColumn = headers.indexOf('imageIds');
+  var imageIds = imageColumn >= 0 ? parseActivityImageIds(sheet.getRange(pos, imageColumn + 1).getValue()) : [];
   sheet.deleteRow(pos);
-  return { ok:true };
+  var cleaned = cleanupUnusedActivityPhotos_(imageIds);
+  return { ok:true, photosTrashed:cleaned };
 }
 
 /* -------------------------------------------------------------------------- */
