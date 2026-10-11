@@ -166,11 +166,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.10.0-production-audit' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.11.0-upload-validation-audit' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.10.0-production-audit', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.11.0-upload-validation-audit', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -1137,7 +1137,7 @@ function uploadProfileImage(p) {
   var ext = mime === 'image/png' ? 'png' : (mime === 'image/webp' ? 'webp' : 'jpg');
   var blob = Utilities.newBlob(bytes, mime, 'profile-' + Date.now() + '.' + ext);
   var file = getDriveFolder().createFile(blob);
-  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) { try { file.setTrashed(true); } catch (trashError) {} throw new Error('گوگل درایو اجازه نمایش عمومی عکس پروفایل را نداد. تنظیمات اشتراک‌گذاری پوشه را بررسی کن.'); }
 
   var url = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w400';
   var sheet = getSheet('اعضا');
@@ -1426,27 +1426,24 @@ function listEventsPublic() {
 }
 
 function uploadEventImage(p) {
-  var data = String(p.base64 || '');
-  if (!data) throw new Error('فایلی ارسال نشده');
-
-  var mime = String(p.mimeType || 'image/jpeg');
-  var ext = mime.split('/')[1] || 'jpg';
-  var blob = Utilities.newBlob(Utilities.base64Decode(data), mime, 'event-' + Date.now() + '.' + ext);
-  var folder = getDriveFolder();
-  var file = folder.createFile(blob);
-
+  var data = String(p.base64 || '').replace(/\\s+/g, '');
+  if (data.indexOf(',') >= 0) data = data.slice(data.lastIndexOf(',') + 1);
+  if (!data || data.length > 3000000) throw new Error('حجم عکس رویداد زیاد است؛ عکس کوچک‌تری انتخاب کن');
+  var mime = String(p.mimeType || 'image/jpeg').toLowerCase();
+  if (['image/jpeg','image/png','image/webp'].indexOf(mime) < 0) throw new Error('فرمت عکس رویداد باید JPG، PNG یا WebP باشد');
+  var bytes;
+  try { bytes = Utilities.base64Decode(data); } catch (e) { throw new Error('فایل عکس رویداد معتبر نیست'); }
+  if (!bytes || !bytes.length || bytes.length > 2 * 1024 * 1024) throw new Error('حجم عکس رویداد پس از فشرده‌سازی باید حداکثر ۲ مگابایت باشد');
+  var ext = mime === 'image/png' ? 'png' : (mime === 'image/webp' ? 'webp' : 'jpg');
+  var blob = Utilities.newBlob(bytes, mime, 'event-' + Date.now() + '.' + ext);
+  var file = getDriveFolder().createFile(blob);
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (e) {
     try { file.setTrashed(true); } catch (trashError) {}
     throw new Error('گوگل درایو اجازه نمایش عمومی عکس را نداد. تنظیمات اشتراک‌گذاری پوشهٔ تصاویر را بررسی کن.');
   }
-
-  return {
-    ok: true,
-    fileId: file.getId(),
-    url: 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200'
-  };
+  return { ok:true, fileId:file.getId(), url:'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200' };
 }
 
 function saveEvent(p) {
@@ -1711,10 +1708,19 @@ function listCamps() {
 }
 
 function registerCamp(p) {
-  if (!p.campId) throw new Error('اردو انتخاب نشده');
-  if (!p.firstName || !p.lastName || !p.fatherName) throw new Error('اطلاعات ناقص است');
-  if (!/^09\d{9}$/.test(String(p.phone || ''))) throw new Error('شماره همراه نامعتبر است');
-  if (!/^09\d{9}$/.test(String(p.fatherPhone || ''))) throw new Error('شماره همراه پدر نامعتبر است');
+  var campId = String(p.campId || '').trim();
+  var firstName = String(p.firstName || '').trim();
+  var lastName = String(p.lastName || '').trim();
+  var fatherName = String(p.fatherName || '').trim();
+  var phone = normalizeIranMobile_(p.phone || '');
+  var fatherPhone = normalizeIranMobile_(p.fatherPhone || '');
+  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\\s+/g, '');
+  if (!campId) throw new Error('اردو انتخاب نشده');
+  if (!listCamps().some(function(camp){ return String(camp.id) === campId; })) throw new Error('این اردو دیگر فعال نیست؛ صفحه را تازه‌سازی کن');
+  if (!firstName || !lastName || !fatherName) throw new Error('اطلاعات ناقص است');
+  if (!/^09\\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (!/^09\\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
+  if (nationalCode && !/^\\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
 
   var photoUrl = '';
   if (p.photoBase64) {
@@ -1729,13 +1735,13 @@ function registerCamp(p) {
   var sheet = getSheet('ثبت‌نام‌ها');
   var row = {
     id: uid('REG'),
-    campId: String(p.campId),
-    firstName: String(p.firstName).trim(),
-    lastName: String(p.lastName).trim(),
-    fatherName: String(p.fatherName).trim(),
-    fatherPhone: String(p.fatherPhone || '').trim(),
-    phone: String(p.phone).trim(),
-    nationalCode: String(p.nationalCode || '').trim(),
+    campId: campId,
+    firstName: firstName,
+    lastName: lastName,
+    fatherName: fatherName,
+    fatherPhone: fatherPhone,
+    phone: phone,
+    nationalCode: nationalCode,
     photoUrl: photoUrl,
     status: 'در انتظار تایید',
     createdAt: nowIso(),
@@ -2110,14 +2116,23 @@ function setSetting(key, value) {
 /* -------------------------------------------------------------------------- */
 
 function uploadPublicFile(base64, mime, name) {
-  var blob = Utilities.newBlob(Utilities.base64Decode(base64), mime, name);
+  var data = String(base64 || '').replace(/\\s+/g, '');
+  if (data.indexOf(',') >= 0) data = data.slice(data.lastIndexOf(',') + 1);
+  if (!data || data.length > 7100000) throw new Error('حجم عکس باید حداکثر ۵ مگابایت باشد');
+  var type = String(mime || 'image/jpeg').toLowerCase();
+  if (['image/jpeg','image/png','image/webp'].indexOf(type) < 0) throw new Error('فرمت عکس باید JPG، PNG یا WebP باشد');
+  var bytes;
+  try { bytes = Utilities.base64Decode(data); } catch (e) { throw new Error('فایل تصویر معتبر نیست'); }
+  if (!bytes || !bytes.length || bytes.length > 5 * 1024 * 1024) throw new Error('حجم عکس باید حداکثر ۵ مگابایت باشد');
+  var blob = Utilities.newBlob(bytes, type, String(name || ('registration-' + Date.now())));
   var folder = getDriveFolder();
   var file = folder.createFile(blob);
-
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {}
-
+  } catch (e) {
+    try { file.setTrashed(true); } catch (trashError) {}
+    throw new Error('گوگل درایو اجازه نمایش عکس را نداد. تنظیمات اشتراک‌گذاری پوشه را بررسی کن.');
+  }
   return {
     id:file.getId(),
     url:'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200'
