@@ -363,6 +363,11 @@ function handlePost(p) {
     return { ok:true, trashed:cleanupUnusedActivityPhotos_(p.imageIds) };
   }
 
+  if (action === 'cleanupEventImage') {
+    requireCoachPermission(p.token, 'events');
+    return { ok:true, trashed:cleanupUnusedEventPhoto_(p.imageId) };
+  }
+
   if (action === 'saveActivityReport') {
     requireCoachPermission(p.token, 'events');
     return saveActivityReport(p);
@@ -1569,6 +1574,28 @@ function uploadActivityPhoto(p) {
   return { ok:true, fileId:file.getId() };
 }
 
+
+function cleanupUnusedEventPhoto_(imageId) {
+  var id = String(imageId || '').trim();
+  if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) return false;
+  try {
+    var referenced = getSheetObjects('رویدادها').some(function(row) {
+      return String(row.imageId || '').trim() === id;
+    });
+    if (referenced) return false;
+    var file = DriveApp.getFileById(id);
+    if (!/^event-/i.test(String(file.getName() || ''))) return false;
+    var parents = file.getParents(), insideTargetFolder = false;
+    while (parents.hasNext()) {
+      if (parents.next().getId() === CFG.DRIVE_FOLDER_ID) { insideTargetFolder = true; break; }
+    }
+    if (!insideTargetFolder || file.isTrashed()) return false;
+    file.setTrashed(true);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 function cleanupUnusedActivityPhotos_(imageIds) {
   var ids = parseActivityImageIds(imageIds).filter(function(id, index, list) {
