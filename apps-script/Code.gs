@@ -43,7 +43,7 @@ function getMasterCoachConfig() {
 var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
-  'مسئولین': ['code','name','role','active','createdAt'],
+  'مسئولین': ['code','name','role','active','createdAt','phone'],
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'اردوها': ['id','title','status','createdAt'],
@@ -720,29 +720,42 @@ function ensureOfficialRoles() {
     }
   });
 }
+function ensureOfficialPhoneColumn_(){
+  var sheet=getSheet('مسئولین'),values=sheet.getDataRange().getValues();
+  if(!values.length)return;
+  var headers=values[0].map(String);
+  if(headers.indexOf('phone')<0)sheet.getRange(1,headers.length+1).setValue('phone');
+}
 function listOfficialRecords() {
-  return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),active:truthy(r.active),createdAt:r.createdAt||''};});
+  ensureOfficialPhoneColumn_();
+  return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),active:truthy(r.active),createdAt:r.createdAt||'',phone:String(r.phone||'')};});
 }
 function addOfficial(p) {
   requireCoachPermission(p.token, 'officials');
-  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
+  ensureOfficialPhoneColumn_();
+  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeMemberPhone(p.phone||'');
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  if(phone&&!/^09\d{9}$/.test(phone))throw new Error('شماره همراه مسئول باید ۱۱ رقم و با ۰۹ شروع شود');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
-  getSheet('مسئولین').appendRow([code,name,role,true,nowIso()]); return {ok:true};
+  getSheet('مسئولین').appendRow(rowToArray('مسئولین',{code:code,name:name,role:role,active:true,createdAt:nowIso(),phone:phone})); return {ok:true};
 }
 function updateOfficial(p) {
   requireCoachPermission(p.token, 'officials');
+  ensureOfficialPhoneColumn_();
   var oldCode=String(p.oldCode||'').trim(), pos=findRow(getSheet('مسئولین'),'code',oldCode); if(!pos)throw new Error('مسئول پیدا نشد');
-  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim();
+  var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeMemberPhone(p.phone||'');
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  if(phone&&!/^09\d{9}$/.test(phone))throw new Error('شماره همراه مسئول باید ۱۱ رقم و با ۰۹ شروع شود');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var rows=getSheetObjects('مسئولین');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
   if(rows.some(function(r){return truthy(r.active) && String(r.role||'')===role && String(r.code||'').trim()!==oldCode;}))throw new Error('برای این نوع مسئولیت مسئول فعال دیگری وجود دارد؛ ابتدا او را غیرفعال کن');
-  var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
+  var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0];
+  vals[headers.indexOf('code')]=code;vals[headers.indexOf('name')]=name;vals[headers.indexOf('role')]=role;vals[headers.indexOf('phone')]=phone;
+  sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
 function setOfficialStatus(p) {
   requireCoachPermission(p.token, 'officials');
