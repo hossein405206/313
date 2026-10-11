@@ -109,7 +109,7 @@ function listSchedulePublic(){
     if(ac!==bc)return ac.localeCompare(bc);
     return String(a.title||'').localeCompare(String(b.title||''),'fa');
   });
-  return {items:rows};
+  return {ok:true,items:rows};
 }
 function saveSchedule(p){
   requireCoachPermission(p.token,'schedule');
@@ -120,9 +120,9 @@ function saveSchedule(p){
   var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),category:category};
   if(dayIndex<0||!obj.title)throw new Error('روز معتبر و عنوان برنامه را وارد کن');
   if(pos){var old=rows[pos-2];obj.createdAt=old.createdAt||obj.createdAt;sheet.getRange(pos,1,1,HEADERS['برنامه'].length).setValues([rowToArray('برنامه',obj)]);}else sheet.appendRow(rowToArray('برنامه',obj));
-  return {item:obj};
+  return {ok:true,item:obj};
 }
-function deleteSchedule(p){requireCoachPermission(p.token,'schedule');var pos=findRowById('برنامه',String(p.id||''));if(!pos)throw new Error('برنامه پیدا نشد');getSheet('برنامه').deleteRow(pos);return {deleted:true};}
+function deleteSchedule(p){requireCoachPermission(p.token,'schedule');var pos=findRowById('برنامه',String(p.id||''));if(!pos)throw new Error('برنامه پیدا نشد');getSheet('برنامه').deleteRow(pos);return {ok:true,deleted:true};}
 function setup() {
   var ss = getSS();
   Object.keys(HEADERS).forEach(function(name) {
