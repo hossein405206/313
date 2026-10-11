@@ -166,11 +166,11 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.11.0-upload-validation-audit' };
+  if (action === 'ping') return { ok: true, service: '313', version: '4.12.0-private-consent-photo-access' };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.11.0-upload-validation-audit', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: '4.12.0-private-consent-photo-access', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
   }
 
   if (action === 'listFeedback') {
@@ -390,6 +390,8 @@ function handlePost(p) {
     requireCoachPermission(p.token, 'events');
     return deleteEvent(String(p.id || ''));
   }
+
+  if (action === 'getRegistrationPhoto') return getRegistrationPhoto(p);
 
   if (action === 'setRegistrationStatus') {
     requireCoachPermission(p.token, 'registrations');
@@ -1770,7 +1772,7 @@ function registerCamp(p) {
 
   var photoUrl = '';
   if (p.photoBase64) {
-    var uploaded = uploadPublicFile(
+    var uploaded = uploadConsentPhotoPrivate(
       String(p.photoBase64),
       String(p.photoMimeType || 'image/jpeg'),
       'registration-' + Date.now()
@@ -1795,6 +1797,44 @@ function registerCamp(p) {
   };
   sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
   return { ok: true, id: row.id, status: row.status };
+}
+
+function getRegistrationPhoto(p) {
+  requireCoachPermission(p.token, 'registrations');
+  var registrationId = String(p.id || '').trim();
+  if (!registrationId) throw new Error('شناسهٔ ثبت‌نام مشخص نیست');
+  var registration = getSheetObjects('ثبت‌نام‌ها').filter(function(row) {
+    return String(row.id || '') === registrationId;
+  })[0];
+  if (!registration) throw new Error('ثبت‌نام پیدا نشد');
+  var url = String(registration.photoUrl || '');
+  var match = /[?&]id=([A-Za-z0-9_-]{10,})/.exec(url);
+  if (!match) throw new Error('برای این ثبت‌نام عکس رضایت‌نامه‌ای ثبت نشده است');
+  var file;
+  try { file = DriveApp.getFileById(match[1]); }
+  catch (e) { throw new Error('فایل رضایت‌نامه پیدا نشد یا دسترسی به آن ممکن نیست'); }
+  if (file.isTrashed() || !/^registration-/i.test(String(file.getName() || ''))) {
+    throw new Error('فایل به‌عنوان عکس رضایت‌نامه قابل تأیید نیست');
+  }
+  var parents = file.getParents(), insideTargetFolder = false;
+  while (parents.hasNext()) {
+    if (parents.next().getId() === CFG.DRIVE_FOLDER_ID) { insideTargetFolder = true; break; }
+  }
+  if (!insideTargetFolder) throw new Error('فایل در پوشهٔ خصوصی رضایت‌نامه‌ها نیست');
+  try {
+    file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+    if (file.getSharingAccess() !== DriveApp.Access.PRIVATE) throw new Error('PRIVATE_ACCESS_NOT_CONFIRMED');
+  } catch (e) {
+    throw new Error('نشد دسترسی عمومی این رضایت‌نامه را بست؛ اشتراک‌گذاری فایل را در Google Drive بررسی کن');
+  }
+  var blob = file.getBlob();
+  var bytes = blob.getBytes();
+  if (!bytes || !bytes.length || bytes.length > 5 * 1024 * 1024) throw new Error('حجم فایل رضایت‌نامه برای نمایش بیش از حد مجاز است');
+  return {
+    ok:true,
+    mimeType:String(blob.getContentType() || 'image/jpeg'),
+    base64:Utilities.base64Encode(bytes)
+  };
 }
 
 function setRegistrationStatus(p) {
@@ -2161,23 +2201,23 @@ function setSetting(key, value) {
 /* Drive                                                                      */
 /* -------------------------------------------------------------------------- */
 
-function uploadPublicFile(base64, mime, name) {
-  var data = String(base64 || '').replace(/\s+/g, '');
+function uploadConsentPhotoPrivate(base64, mime, name) {
+  var data = String(base64 || '').replace(/\\s+/g, '');
   if (data.indexOf(',') >= 0) data = data.slice(data.lastIndexOf(',') + 1);
-  if (!data || data.length > 7100000) throw new Error('حجم عکس باید حداکثر ۵ مگابایت باشد');
+  if (!data || data.length > 7100000) throw new Error('حجم عکس رضایت‌نامه باید حداکثر ۵ مگابایت باشد');
   var type = String(mime || 'image/jpeg').toLowerCase();
-  if (['image/jpeg','image/png','image/webp'].indexOf(type) < 0) throw new Error('فرمت عکس باید JPG، PNG یا WebP باشد');
+  if (['image/jpeg','image/png','image/webp'].indexOf(type) < 0) throw new Error('فرمت عکس رضایت‌نامه باید JPG، PNG یا WebP باشد');
   var bytes;
-  try { bytes = Utilities.base64Decode(data); } catch (e) { throw new Error('فایل تصویر معتبر نیست'); }
-  if (!bytes || !bytes.length || bytes.length > 5 * 1024 * 1024) throw new Error('حجم عکس باید حداکثر ۵ مگابایت باشد');
+  try { bytes = Utilities.base64Decode(data); } catch (e) { throw new Error('فایل رضایت‌نامه معتبر نیست'); }
+  if (!bytes || !bytes.length || bytes.length > 5 * 1024 * 1024) throw new Error('حجم عکس رضایت‌نامه باید حداکثر ۵ مگابایت باشد');
   var blob = Utilities.newBlob(bytes, type, String(name || ('registration-' + Date.now())));
-  var folder = getDriveFolder();
-  var file = folder.createFile(blob);
+  var file = getDriveFolder().createFile(blob);
   try {
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+    if (file.getSharingAccess() !== DriveApp.Access.PRIVATE) throw new Error('PRIVATE_ACCESS_NOT_CONFIRMED');
   } catch (e) {
     try { file.setTrashed(true); } catch (trashError) {}
-    throw new Error('گوگل درایو اجازه نمایش عکس را نداد. تنظیمات اشتراک‌گذاری پوشه را بررسی کن.');
+    throw new Error('گوگل درایو اجازهٔ خصوصی‌ماندن عکس رضایت‌نامه را نداد. پوشهٔ تصاویر را بررسی کن.');
   }
   return {
     id:file.getId(),
