@@ -17,7 +17,7 @@
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
     VERSION: '5.12.0',
-    BACKEND_VERSION: '4.12.0-private-consent-photo-access'
+    BACKEND_VERSION: '4.13.0-structured-diagnostics'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
