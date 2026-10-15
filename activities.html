@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#14243b"><meta name="description" content="گزارش اردوها، گالری عکس‌ها و رویدادهای حلقه شهید هادی ذوالفقاری">
+<meta name="theme-color" content="#14243b"><meta name="description" content="گزارش اردوها و گالری عکس‌های حلقه شهید هادی ذوالفقاری">
 <title>فعالیت‌ها و گزارش اردوها | مسجد امام رضا (ع)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,15 +12,12 @@
 <div class="app-container activities-app">
 <header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت به خانه">←</a><div class="header-brand"><div><strong>مسجد امام رضا (ع)</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header>
 <main class="page activities-page">
-<div class="activities-intro"><div><h1>فعالیت‌ها</h1><p>خاطرات، گزارش اردوها و رویدادهای حلقه</p></div><div class="archive-count" id="activityCount">۰</div></div>
+<div class="activities-intro"><div><h1>فعالیت‌ها</h1><p>خاطرات و گزارش‌های ماندگار اردوها و برنامه‌های حلقه</p></div><div class="archive-count" id="activityCount">۰</div></div>
 <section class="activity-section" aria-labelledby="reportsHeading">
 <div class="activity-section-heading"><div><span class="activity-eyebrow">آرشیو تصویری</span><h2 id="reportsHeading">گزارش اردوها و فعالیت‌ها</h2><p>هر گزارش، یک روایت با چند عکس در کنار هم</p></div><span class="activity-section-count" id="reportCount">۰ گزارش</span></div>
 <div id="activityArchiveList" class="activity-report-grid"><div class="activity-skeleton"></div></div>
 </section>
-<section class="activity-section events-section" aria-labelledby="eventsHeading">
-<div class="activity-section-heading"><div><span class="activity-eyebrow">خبرها و اطلاعیه‌ها</span><h2 id="eventsHeading">رویدادهای حلقه</h2><p>رویدادهای ثبت‌شده از پنل مربی</p></div><span class="activity-section-count" id="eventCount">۰ رویداد</span></div>
-<div id="eventArchiveList" class="activity-event-grid"><div class="activity-skeleton"></div></div>
-</section>
+
 </main>
 <nav class="bottom-nav"></nav>
 </div>
@@ -35,7 +32,7 @@
 <script>
 (function(){
 'use strict';
-var allReports=[],currentPhotos=[],currentPhotoIndex=0,eventCount=0;
+var allReports=[],currentPhotos=[],currentPhotoIndex=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function faNum(n){return Number(n||0).toLocaleString('fa-IR')}
 function setCount(id,n,label){var el=document.getElementById(id);if(el)el.textContent=faNum(n)+(label?' '+label:'')}
@@ -50,18 +47,10 @@ function renderReports(items){
  }).join('');
  updateTotal();
 }
-function renderEvents(items){
- var root=document.getElementById('eventArchiveList');if(!root)return;
- setCount('eventCount',(items||[]).length,'رویداد');
- if(!items||!items.length){root.innerHTML='<div class="activities-empty"><strong>فعلاً رویدادی ثبت نشده</strong><span>رویدادهای مستقل حلقه در این قسمت نمایش داده می‌شوند.</span></div>';updateTotal();return}
- root.innerHTML=items.map(function(e){return '<article class="activity-event-card"><div class="activity-event-image"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="lazy"><span>'+esc(e.label||'رویداد')+'</span></div><div class="activity-event-body"><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||'')+'</p><time>'+esc(e.date||'')+'</time></div></article>'}).join('');
- updateTotal();
-}
-function updateTotal(){setCount('activityCount',allReports.length+eventCount,'')}
+function updateTotal(){setCount('activityCount',allReports.length,'')}
 function load(){
  var app=window.KanoonApp;if(!app){setTimeout(load,50);return}
  app.api.get({action:'listActivityReports'}).then(function(r){renderReports(r.items||[])}).catch(function(e){var root=document.getElementById('activityArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>گزارش‌ها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
- app.api.get({action:'listEvents'}).then(function(r){var items=r.items||[];eventCount=items.length;renderEvents(items)}).catch(function(e){var root=document.getElementById('eventArchiveList');if(root)root.innerHTML='<div class="activities-empty"><strong>رویدادها بارگذاری نشدند</strong><span>'+esc(e.message||'اتصال به سرور را بررسی کن')+'</span></div>'});
 }
 function openLightbox(reportIndex,photoIndex){
  var r=allReports[reportIndex];if(!r||!Array.isArray(r.images)||!r.images[photoIndex])return;
