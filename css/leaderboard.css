@@ -31,3 +31,7 @@
 .member-role-badge--owner{background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed);background-size:220% 220%;border-color:#a78bfa;color:#fff;animation:recordOwnerShift 4s ease infinite}
 @keyframes recordOwnerShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 @media(prefers-reduced-motion:reduce){.member-role-badge--owner{animation:none}}
+
+
+/* نقش مالک فقط با قاب مشکی آواتار مشخص می‌شود. */
+.owner-avatar{border:3px solid #111!important;box-sizing:border-box;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
