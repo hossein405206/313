@@ -670,7 +670,7 @@ function updateOwnCoachCredentials(p) {
 
   rows.forEach(function(r) {
     if (String(r.role || '') === 'master' && isMaster) return;
-    if (String(r.code || '') === oldCode && !isMaster) return;
+    if (normalizeCoachCode_(r.code) === oldCode && !isMaster) return;
     if (normalizeIranMobile_(r.phone || '') === newPhone) {
       throw new Error('این شماره همراه قبلاً برای مربی دیگری ثبت شده است');
     }
