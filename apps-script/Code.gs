@@ -1416,8 +1416,13 @@ function publicMember(r) {
 /* -------------------------------------------------------------------------- */
 
 function listEventsPublic() {
+  var today = currentDate();
   return getSheetObjects('رویدادها')
-    .filter(function(r){ return truthy(r.active); })
+    .filter(function(r){
+      if (!truthy(r.active)) return false;
+      var eventDate = String(r.date || '').trim();
+      return !eventDate || eventDate >= today;
+    })
     .sort(function(a,b){ return Number(a.sort || 0) - Number(b.sort || 0); })
     .map(function(r){
       return {
@@ -2099,20 +2104,47 @@ function submitGameScore(p) {
   var week = currentWeekKey(), sheet = getSheet('بازی');
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
-    var rows=getSheetObjects('بازی'), existing=null, existingRow=0;
-    for(var i=0;i<rows.length;i++) if(String(rows[i].weekKey)===week && String(rows[i].memberId)===String(member.id)){existing=rows[i];existingRow=findRow(sheet,'weekKey',week,'memberId',member.id);break;}
-    var playerName=String(member.nickname||member.name||'عضو').trim();
+    var rows = getSheetObjects('بازی'), existing = null, existingRow = 0;
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].weekKey) === week && String(rows[i].memberId) === String(member.id)) {
+        existing = rows[i];
+        existingRow = findRow(sheet, 'weekKey', week, 'memberId', member.id);
+        break;
+      }
+    }
+
+    var playerName = String(member.nickname || member.name || 'عضو').trim();
+    var weeklyBest = existing ? Number(existing.score || 0) : 0;
     var lifetimeBest = Number(member.bestScore || 0);
-    if(score > lifetimeBest){
+
+    // امتیاز مساوی یا پایین‌تر از رکورد همین هفته، هیچ داده‌ای را تغییر نمی‌دهد.
+    if (existing && score <= weeklyBest) {
+      return {ok:true, saved:false, score:weeklyBest, weekKey:week, lifetimeBest:lifetimeBest,
+        leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+    }
+
+    // فقط رکورد هفتگی بهتر می‌شود؛ رکورد تاریخی نیز فقط در صورت عبور از بهترین قبلی تغییر می‌کند.
+    if (score > lifetimeBest) {
       memberSheet.getRange(memberRow, 8).setValue(score);
       lifetimeBest = score;
     }
-    if(existing){
-      if(score<=Number(existing.score||0)) return {ok:true,saved:false,score:Number(existing.score),weekKey:week,lifetimeBest:lifetimeBest,leaderboard:leaderboardForWeek(week),allTimeLeaderboard:allTimeLeaderboard()};
-      var vals=sheet.getRange(existingRow,1,1,5).getValues()[0]; vals[1]=member.id; vals[2]=playerName; vals[3]=score; vals[4]=nowIso(); sheet.getRange(existingRow,1,1,5).setValues([vals]);
-    }else sheet.appendRow([week,member.id,playerName,score,nowIso()]);
-    return {ok:true,saved:true,score:score,weekKey:week,lifetimeBest:lifetimeBest,leaderboard:leaderboardForWeek(week),allTimeLeaderboard:allTimeLeaderboard()};
-  } finally { lock.releaseLock(); }
+
+    if (existing) {
+      var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
+      vals[1] = member.id;
+      vals[2] = playerName;
+      vals[3] = score;
+      vals[4] = nowIso();
+      sheet.getRange(existingRow, 1, 1, 5).setValues([vals]);
+    } else {
+      sheet.appendRow([week, member.id, playerName, score, nowIso()]);
+    }
+
+    return {ok:true, saved:true, score:score, weekKey:week, lifetimeBest:lifetimeBest,
+      leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+  } finally {
+    lock.releaseLock();
+  }
 }
 function registeredRingPhones_(){
   var phones={};
