@@ -2180,8 +2180,10 @@ function gameRoleMap_(members, registeredPhones){
   });
   members.forEach(function(m){
     var id=String(m.id||''),phone=normalizeMemberPhone(m.phone),role;
-    if(!registeredPhones[phone])role={roleKey:'unregistered',roleLabel:'عضو نشده'};
-    else role=byPhone[phone]||{roleKey:'member',roleLabel:'عضو حلقه'};
+    // نقش‌های ویژه مستقل از ثبت‌نام عادی حلقه هستند؛ مالک همیشه قاب ویژه دارد.
+    if(byPhone[phone])role=byPhone[phone];
+    else if(registeredPhones[phone])role={roleKey:'member',roleLabel:'عضو حلقه'};
+    else role={roleKey:'unregistered',roleLabel:'هنوز عضو نشده'};
     byId[id]=role;
   });
   return byId;
