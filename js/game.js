@@ -49,7 +49,7 @@
       if(api().checkBackendVersion)await api().checkBackendVersion();
       var registration=await api().get({action:'getRingRegistration',token:member.token});
       if(!registration.registered){location.replace('ring-registration.html?required=1');return;}
-    }catch(e){say(e.message||'بررسی عضویت ناموفق بود. اتصال به سرور را بررسی کن.');start.disabled=true;return;}
+    }catch(e){say('فعلاً امکان بارگذاری بازی وجود ندارد. لطفاً کمی بعد دوباره تلاش کن.');start.disabled=true;return;}
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
     best=Math.max(0,Number(member.bestScore||0));
     bestEl.textContent=faNum(best);
@@ -68,7 +68,7 @@
       best=Math.max(best,Number(member.bestScore||0));
       bestEl.textContent=faNum(best);
     }catch(e){
-      say(e.message||'دریافت رکوردها ناموفق بود.');
+      say('فعلاً دریافت رکوردها ممکن نیست. لطفاً کمی بعد دوباره تلاش کن.');
     }
   }
   function startReady(){
@@ -225,7 +225,7 @@
         say('رکورد این هفته قبلاً بهتر یا مساوی بوده؛ بهترین رکورد هفتگی شما '+faNum(response.score||score)+' است.');
       }
     }catch(e){
-      say('رکورد ذخیره نشد: '+(e.message||'خطای ارتباط با سرور'));
+      say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
       toast(e.message||'ثبت رکورد ناموفق بود',true);
     }finally{
       submitting=false;
