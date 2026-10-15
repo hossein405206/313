@@ -54,29 +54,40 @@ var HEADERS = {
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
   'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt','category'],
   'بازخوردها': ['id','name','phone','category','message','status','createdAt'],
-  'ثبت‌نام حلقه': ['id','memberId','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt']
+  'ثبت‌نام حلقه': ['id','memberId','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt'],
+  'گزارش خطاها': ['timestamp','requestId','method','action','category','message','stack']
 };
 
 /* -------------------------------------------------------------------------- */
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
+var APP_VERSION = '4.13.0-structured-diagnostics';
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
+  var requestId = Utilities.getUuid();
   try {
-    return json(handleGet(p));
+    var result = handleGet(p);
+    if (result && typeof result === 'object' && !result.requestId) result.requestId = requestId;
+    return json(result);
   } catch (err) {
-    return json({ ok: false, error: safeError(err) });
+    return json(backendErrorResponse_(err, 'GET', String(p.action || 'ping'), requestId));
   }
 }
 
 function doPost(e) {
+  var requestId = Utilities.getUuid();
+  var p = {};
   try {
     var raw = e && e.postData ? e.postData.contents : '{}';
-    var p = JSON.parse(raw || '{}');
-    return json(handlePost(p));
+    p = JSON.parse(raw || '{}');
+    if (!p || typeof p !== 'object' || Array.isArray(p)) throw new Error('بدنهٔ درخواست باید یک شیء معتبر باشد');
+    var result = handlePost(p);
+    if (result && typeof result === 'object' && !result.requestId) result.requestId = requestId;
+    return json(result);
   } catch (err) {
-    return json({ ok: false, error: safeError(err) });
+    return json(backendErrorResponse_(err, 'POST', String(p.action || 'parse'), requestId));
   }
 }
 
@@ -87,7 +98,73 @@ function json(obj) {
 }
 
 function safeError(err) {
-  return err && err.message ? err.message : String(err);
+  var message = err && err.message ? err.message : String(err);
+  return String(message || 'خطای ناشناخته').slice(0, 800);
+}
+
+// این تابع هیچ توکن، گذرواژه، شماره همراه یا بدنهٔ کامل درخواست را ذخیره نمی‌کند.
+function backendErrorResponse_(err, method, action, requestId) {
+  var message = safeError(err);
+  var expected = isExpectedClientError_(message);
+  var category = expected ? 'درخواست/اعتبارسنجی' : 'خطای فنی';
+  recordBackendError_({
+    timestamp: nowIso(),
+    requestId: requestId,
+    method: method,
+    action: String(action || 'unknown').slice(0, 80),
+    category: category,
+    message: message,
+    stack: expected ? '' : String(err && err.stack || '').slice(0, 4000)
+  });
+
+  return {
+    ok: false,
+    error: expected ? message : (message + ' (کد پیگیری: ' + requestId + ')'),
+    errorCode: expected ? 'REQUEST_ERROR' : 'SERVER_ERROR',
+    requestId: requestId,
+    hint: expected ? '' : 'اگر خطا تکرار شد، کد پیگیری را به مدیر سامانه بده تا از بخش گزارش خطاها بررسی شود.',
+    version: APP_VERSION
+  };
+}
+
+function isExpectedClientError_(message) {
+  return /نامعتبر|الزامی|وارد کن|انتخاب کن|پیدا نشد|نشست|دسترسی|غیرفعال|مجاز نیست|قبلاً|تکمیل کن|حداکثر|باید|اشتباه است|نادرست است|معتبر نیست|حجم|فرمت|فقط |ثبت‌نام|تغییر کرده|منقضی|تکراری|کد مربی|گذرواژه|شماره همراه|بدنهٔ درخواست/.test(String(message || ''));
+}
+
+function recordBackendError_(entry) {
+  try {
+    var sheet = getSheet('گزارش خطاها');
+    sheet.appendRow([
+      entry.timestamp || nowIso(),
+      entry.requestId || '',
+      entry.method || '',
+      entry.action || '',
+      entry.category || '',
+      entry.message || '',
+      entry.stack || ''
+    ]);
+    // نگه‌داری آخرین 1000 خطا برای جلوگیری از بزرگ‌شدن بی‌پایان گزارش.
+    var last = sheet.getLastRow();
+    if (last > 1001) sheet.deleteRows(2, last - 1001);
+  } catch (logErr) {
+    console.error('[313][' + String(entry.requestId || '') + '] Failed to write error log: ' + safeError(logErr));
+  }
+}
+
+function listSystemErrors_(limit) {
+  var rows = getSheetObjects('گزارش خطاها');
+  var count = Math.max(1, Math.min(100, Number(limit || 50)));
+  return rows.slice(-count).reverse().map(function(r) {
+    return {
+      timestamp: String(r.timestamp || ''),
+      requestId: String(r.requestId || ''),
+      method: String(r.method || ''),
+      action: String(r.action || ''),
+      category: String(r.category || ''),
+      message: String(r.message || ''),
+      stack: String(r.stack || '')
+    };
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,11 +243,17 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.12.0-private-consent-photo-access' };
+  if (action === 'ping') return { ok: true, service: '313', version: APP_VERSION, serverTime: nowIso() };
 
   if (action === 'coachStatus') {
     var masterConfig = getMasterCoachConfig();
-    return { ok: true, service: '313', version: '4.12.0-private-consent-photo-access', masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+    return { ok: true, service: '313', version: APP_VERSION, masterConfigured: !!(masterConfig.phone && masterConfig.code) };
+  }
+
+  if (action === 'listSystemErrors') {
+    var diagnosticsAuth = requireToken(p.token, ['coach']);
+    if (!diagnosticsAuth.isMaster) throw new Error('گزارش خطاها فقط برای مدیر اصلی سامانه قابل مشاهده است');
+    return { ok: true, version: APP_VERSION, items: listSystemErrors_(p.limit) };
   }
 
   if (action === 'listFeedback') {
@@ -1149,19 +1232,34 @@ function uploadProfileImage(p) {
     throw new Error('حجم عکس باید کمتر از ۲ مگابایت باشد');
   }
 
-  var ext = mime === 'image/png' ? 'png' : (mime === 'image/webp' ? 'webp' : 'jpg');
-  var blob = Utilities.newBlob(bytes, mime, 'profile-' + Date.now() + '.' + ext);
-  var file = getDriveFolder().createFile(blob);
-  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) { try { file.setTrashed(true); } catch (trashError) {} throw new Error('گوگل درایو اجازه نمایش عمومی عکس پروفایل را نداد. تنظیمات اشتراک‌گذاری پوشه را بررسی کن.'); }
-
-  var url = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w400';
+  // حساب و ساختار شیت را قبل از ساخت فایل بررسی می‌کنیم تا فایل یتیم ایجاد نشود.
   var sheet = getSheet('اعضا');
   var rowNumber = findMemberRowByPhone(sheet, String(auth.subject || ''));
   if (!rowNumber) throw new Error('حساب عضو پیدا نشد');
   var headers = sheet.getDataRange().getValues()[0].map(String);
   var imageIndex = headers.indexOf('profileImage');
-  if (imageIndex < 0) throw new Error('ستون عکس پروفایل آماده نیست؛ setup را اجرا کن');
-  sheet.getRange(rowNumber, imageIndex + 1).setValue(url);
+  if (imageIndex < 0) throw new Error('ستون عکس پروفایل آماده نیست؛ تابع setup را اجرا کن');
+
+  var ext = mime === 'image/png' ? 'png' : (mime === 'image/webp' ? 'webp' : 'jpg');
+  var blob = Utilities.newBlob(bytes, mime, 'profile-' + Date.now() + '.' + ext);
+  var file = getDriveFolder().createFile(blob);
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    if (file.getSharingAccess() !== DriveApp.Access.ANYONE_WITH_LINK) {
+      throw new Error('PUBLIC_SHARING_NOT_CONFIRMED');
+    }
+  } catch (shareErr) {
+    try { file.setTrashed(true); } catch (trashError) {}
+    throw new Error('گوگل درایو اجازه نمایش عمومی عکس پروفایل را نداد. تنظیمات اشتراک‌گذاری پوشه و دسترسی برنامه را بررسی کن.');
+  }
+
+  var url = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w400';
+  try {
+    sheet.getRange(rowNumber, imageIndex + 1).setValue(url);
+  } catch (saveErr) {
+    try { file.setTrashed(true); } catch (trashError2) {}
+    throw new Error('عکس آپلود شد اما ذخیرهٔ آن در پروفایل ناموفق بود؛ دوباره تلاش کن. کد پیگیری برای بررسی در گزارش خطاها ثبت می‌شود.');
+  }
   var member = findMemberByPhone(String(auth.subject || ''), true);
   return { ok: true, profileImage: url, member: member ? publicMember(member) : null };
 }
