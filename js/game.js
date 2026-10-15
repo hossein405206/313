@@ -40,7 +40,7 @@
     if(!allTimeBoard)return;
     allTimeBoard.innerHTML=list.length?list.map(function(x,i){
       var me=member&&String(x.memberId)===String(member.id);
-      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
+      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
     }).join(''):'<div class="empty"><p>هنوز رکورد تاریخی ثبت نشده</p></div>';
   }
   async function boot(){
