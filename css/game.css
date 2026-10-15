@@ -1,46 +1,317 @@
-.game-page{padding-bottom:90px}.game-hero{padding:25px 20px;border-radius:25px;background:linear-gradient(145deg,#172b46,#0c1828);color:#fff;box-shadow:0 15px 35px rgba(15,24,40,.16);text-align:center}.game-hero h2{font:700 2rem 'Aref Ruqaa',serif;margin:8px 0}.game-hero p{font-size:.7rem;color:rgba(255,255,255,.62);line-height:1.9}.prize-pill{margin:15px auto 0;padding:9px 12px;max-width:290px;border-radius:999px;background:rgba(213,168,60,.13);border:1px solid rgba(213,168,60,.25);color:#e4c56c;font-size:.62rem;font-weight:700}.game-shell{margin:13px 0;padding:12px;border-radius:25px;background:#fff;box-shadow:0 12px 28px rgba(23,35,56,.09);text-align:center}.game-top{display:flex;justify-content:space-between;padding:7px 5px 10px;font-size:.68rem;color:#33445a}.game-top strong:first-child{color:#a67b22}.game-shell canvas{display:block;width:100%;height:auto;border-radius:18px;background:#a8d8e8;touch-action:manipulation}.game-shell .btn-submit{margin-top:11px}.game-hint{font-size:.55rem;color:#8a94a1;margin:8px 0}.leaderboard{margin-top:25px}.leader-row{display:grid;grid-template-columns:30px 1fr 60px;align-items:center;gap:8px;padding:11px 12px;margin-bottom:6px;border-radius:15px;background:#fff;border:1px solid rgba(23,35,56,.07);box-shadow:0 4px 10px rgba(23,35,56,.04)}.leader-row:first-child{background:linear-gradient(100deg,#fff8dd,#fff)}.rank{font-weight:800;color:#ad8227}.leader-name{font-size:.67rem;font-weight:700;color:#27384e}.leader-score{text-align:left;font-weight:800;color:#182b45}.game-name{margin-top:14px;padding:17px;border-radius:20px;background:#fff;border:1px solid rgba(23,35,56,.08)}.game-name h3{font-size:.9rem}.game-name p{font-size:.6rem;color:#7c8794;margin:5px 0 10px}.name-row{display:flex;gap:7px}.name-row input{flex:1}.name-row button{width:auto;padding-inline:14px}
-.game-shell{position:relative;overflow:hidden;border-radius:22px;background:#70c5ce;padding:10px;box-shadow:0 22px 55px rgba(23,35,56,.18)}#gameCanvas{width:100%;height:auto;display:block;border-radius:16px;image-rendering:auto;touch-action:manipulation}.game-top{position:absolute;z-index:4;top:18px;left:20px;right:20px;display:flex;justify-content:space-between;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25);font-size:.75rem;pointer-events:none}.game-hint{text-align:center;font-size:.58rem;color:#7a8699;margin:9px 0 0}.game-shell .btn-submit{position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);width:150px;box-shadow:0 10px 24px rgba(0,0,0,.18)}.game-shell .btn-submit:not(:focus):not(:active){opacity:.96}.game-hero h2{font-family:var(--font-body)!important;font-weight:800}.leaderboard{margin-top:22px}.leader-row{display:grid;grid-template-columns:35px 1fr auto;align-items:center;padding:11px 12px;margin:7px 0;border-radius:15px;background:#fff;box-shadow:0 5px 15px rgba(23,35,56,.06)}.rank{font-weight:800;color:#b18a37}.leader-name{font-size:.67rem}.leader-score{font-weight:800;color:#203650}.contact-credit{margin-top:18px;padding:20px;border-radius:22px;background:linear-gradient(145deg,#14263f,#0b1726);color:#fff;text-align:center;box-shadow:0 15px 35px rgba(23,35,56,.14)}.contact-credit span,.contact-credit strong,.contact-credit a{display:block}.contact-credit span{font-size:.56rem;color:rgba(255,255,255,.55)}.contact-credit strong{font-size:.8rem;margin:5px 0 10px}.contact-credit a{font-size:.62rem;color:#e1c36d}
-.schedule-list{display:grid;gap:10px;margin-top:16px}.schedule-card{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;padding:15px;border-radius:19px;background:#fff;border:1px solid rgba(23,35,56,.07);box-shadow:0 9px 22px rgba(23,35,56,.06)}.schedule-day{display:grid;place-items:center;min-height:54px;border-radius:14px;background:#f4ead4;color:#8e6b24;font-size:.66rem;font-weight:800}.schedule-card h3{font-size:.76rem}.schedule-card p{font-size:.58rem;color:#7a8699;margin-top:4px}.schedule-empty{padding:50px 20px;text-align:center}.schedule-empty strong{font-size:.78rem}.schedule-empty p{font-size:.6rem;color:#8993a1;margin-top:7px}
-@media(max-width:390px){.schedule-card{grid-template-columns:62px 1fr}}
-.game-player-card{margin-top:12px;padding:13px 15px;border-radius:18px;background:#fff;border:1px solid rgba(23,35,56,.07);display:flex;align-items:center;justify-content:space-between;box-shadow:0 7px 18px rgba(23,35,56,.05)}.game-player-card span{display:block;font-size:.52rem;color:#8993a1}.game-player-card strong{display:block;font-size:.75rem;color:#253952;margin-top:3px}.game-player-card a{font-size:.6rem;font-weight:800;color:#a57d28;padding:8px 11px;border-radius:12px;background:#f8f1df}.records-link{font-size:.56rem;color:#9a7525;font-weight:800}.leader-row.me{border-color:rgba(178,138,55,.35);background:#fffaf0}.leader-name small{font-size:.48rem;color:#a57d28;margin-right:4px}.game-shell .btn-submit.playing{opacity:.45;pointer-events:none}
+/* ============================================================================
+   پروفایل من — استایل اختصاصی
+   ============================================================================ */
 
-/* Visual refinement v6 */
-.game-page{padding-top:18px}.game-hero{border-radius:23px;padding:27px 21px;box-shadow:0 18px 38px rgba(15,24,40,.15)}.game-hero h2{font-size:1.85rem;letter-spacing:-.04em}.game-shell{border-radius:23px;padding:9px;box-shadow:0 16px 34px rgba(23,35,56,.12)}.leaderboard{margin-top:26px}.leader-row{border:1px solid rgba(23,35,56,.075);box-shadow:0 4px 12px rgba(23,35,56,.045);transition:transform .18s,box-shadow .18s}.leader-row:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,35,56,.07)}.leaderboard--alltime{padding-top:2px}.game-player-card{border-radius:17px}
+.profile-page {
+  --font-display: 'Aref Ruqaa', serif;
+  --font-body: 'Vazirmatn', sans-serif;
+}
 
-/* GAME GRAPHICS v7 */
-.game-shell{padding:8px;background:linear-gradient(145deg,#17304a,#0d1b2c);border:1px solid rgba(255,255,255,.09);box-shadow:0 24px 55px rgba(11,25,42,.22)}
-.game-shell canvas{border-radius:17px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 10px 25px rgba(0,0,0,.18)}
-.game-top{top:17px;left:19px;right:19px}
-.game-top strong{padding:7px 11px;border-radius:12px;background:rgba(12,30,46,.28);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);border:1px solid rgba(255,255,255,.14)}
-.game-top strong:first-child{color:#ffe08a}
-.game-shell .btn-submit{border:1px solid rgba(255,255,255,.2);background:linear-gradient(145deg,#d9ae4e,#a97822);color:#fff;font-weight:800;border-radius:15px;box-shadow:0 12px 28px rgba(58,38,8,.3)}
-.game-hint{margin-top:11px;color:#8996a6}
-@media (max-width:390px){.game-shell{padding:6px}.game-top{top:13px;left:14px;right:14px}.game-top strong{padding:6px 8px;font-size:.65rem}}
-/* Member avatars in game leaderboards */
-.leader-name{display:flex;align-items:center;gap:9px;min-width:0}
-.leader-player-name{display:block;min-width:0;overflow-wrap:anywhere}
-.leader-player-name small{display:inline-block;font-size:.48rem;color:#a57d28;margin-inline-start:4px}
-.leader-avatar{position:relative;display:inline-grid;place-items:center;flex:0 0 34px;width:34px;height:34px;overflow:hidden;border-radius:50%;background:linear-gradient(145deg,#405d78,#192e47);color:#fff;font-weight:800;font-size:.75rem;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.leader-avatar__fallback{position:relative;z-index:0}
-.leader-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;z-index:1}
+/* ══════════════════════════════════════════════════════════════════════════
+   کارت هویت
+   ══════════════════════════════════════════════════════════════════════════ */
 
-/* New game flow: keep controls below the playfield, never over the bird. */
-.game-shell{display:flex;flex-direction:column;align-items:stretch}
-.game-shell #gameCanvas{flex:0 0 auto;width:100%;aspect-ratio:3/4;height:auto;max-height:none;order:1;touch-action:none;cursor:pointer}
-.game-shell .game-top{position:absolute;top:17px;left:19px;right:19px;z-index:2}
-.game-shell #startGame{position:static;inset:auto;left:auto;top:auto;transform:none;align-self:center;display:block;width:min(100%,300px);min-height:47px;margin:13px auto 0;order:2;opacity:1}
-.game-shell #startGame:disabled{cursor:wait;opacity:.68;transform:none}
-.game-shell #startGame.playing{opacity:.82;pointer-events:none}
-.game-message{order:3;margin:12px 4px 0;padding:10px 12px;border-radius:13px;background:rgba(224,242,254,.9);border:1px solid rgba(147,197,253,.48);color:#234f78;font-size:.67rem;font-weight:750;line-height:1.9;text-align:center}
-.game-hint{order:4;text-align:center;font-size:.56rem;color:#8996a6;line-height:1.8;margin:8px 0 1px}
-.member-role-badge{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1px solid #bfdbfe;color:#1d4ed8;font-size:.48rem;font-weight:800}
-@media(max-width:390px){.game-shell #startGame{width:100%;min-height:45px}.game-message{font-size:.62rem;padding:9px 10px}}
+.profile-hero {
+  text-align: center;
+  padding: 24px 16px 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(160deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-sm);
+  position: relative;
+  overflow: hidden;
+}
 
-.member-role-badge--neutral,.member-role-badge--unregistered{background:transparent!important;border-color:transparent!important;color:#8a94a1!important;box-shadow:none!important}
-.member-role-badge--member{background:linear-gradient(135deg,#dbeafe,#93c5fd)!important;border-color:#bfdbfe!important;color:#1d4ed8!important}
-.member-role-badge--official{background:linear-gradient(135deg,#ccfbf1,#5eead4)!important;border-color:#99f6e4!important;color:#115e59!important}
-.member-role-badge--coach{background:linear-gradient(135deg,#fff4c6,#f4dfa0)!important;border-color:#ead184!important;color:#765710!important}
-.member-role-badge--owner{background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed)!important;background-size:220% 220%!important;border-color:#a78bfa!important;color:#fff!important;animation:recordOwnerShift 4s ease infinite}
-@keyframes recordOwnerShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-@media(prefers-reduced-motion:reduce){.member-role-badge--owner{animation:none!important}}
-.game-shell #startGame{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;z-index:1!important;order:2!important;flex:0 0 auto!important}
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-soft), transparent 70%);
+  pointer-events: none;
+}
+
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -50px; left: -50px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--teal-soft), transparent 70%);
+  pointer-events: none;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 14px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.1rem;
+  border: 3px solid var(--gold-300);
+  box-shadow: 0 6px 20px rgba(15, 107, 98, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--teal-600);
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-phone {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-role-badge { display:inline-flex; align-items:center; justify-content:center; padding:5px 14px; background:transparent; color:var(--text-muted); border:1px solid transparent; font-size:.75rem; font-weight:700; border-radius:var(--r-pill); box-shadow:none; position:relative; z-index:1; }
+.profile-role-badge.role-badge--unregistered { background:transparent; color:#7b8794; border-color:transparent; }
+.profile-role-badge.role-badge--member { background:linear-gradient(135deg,#60a5fa,#2563eb); color:#fff; border-color:#bfdbfe; box-shadow:0 5px 14px rgba(37,99,235,.20); }
+.profile-role-badge.role-badge--official { background:linear-gradient(135deg,#99f6e4,#0d9488); color:#064e4b; border-color:#5eead4; }
+.profile-role-badge.role-badge--coach { background:linear-gradient(135deg,#f8e7a3,#d4a438); color:#694b08; border-color:#e8c65c; }
+.profile-role-badge.role-badge--owner { color:#fff; border:1px solid rgba(167,139,250,.55); background:linear-gradient(115deg,#7c3aed,#4338ca,#7c3aed); background-size:220% 220%; animation:ownerRoleShift 4s ease infinite; }
+.profile-hero.profile-hero--unregistered .profile-avatar { background:linear-gradient(135deg,#e2e8f0,#b8c2cf); border-color:#e2e8f0; box-shadow:0 6px 18px rgba(100,116,139,.12); }
+.profile-hero.profile-hero--registered .profile-avatar { background:linear-gradient(135deg,#60a5fa,#2563eb); border-color:#bfdbfe; box-shadow:0 6px 18px rgba(37,99,235,.22); }
+@keyframes ownerRoleShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@media (prefers-reduced-motion:reduce) { .profile-role-badge.role-badge--owner { animation:none; } }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   آمار
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pstat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 6px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-md);
+  transition: transform var(--t-fast) var(--ease-smooth);
+}
+
+.pstat:hover {
+  transform: translateY(-2px);
+}
+
+.pstat__num {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--gold-600);
+  line-height: 1;
+}
+
+.pstat__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   اطلاعات
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-info {
+  margin-bottom: 20px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream-soft) 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+  transition: border-color var(--t-fast) var(--ease-smooth),
+              transform var(--t-fast) var(--ease-smooth);
+}
+
+.info-row:hover {
+  border-color: var(--border-gold);
+  transform: translateX(-2px);
+}
+
+.info-row__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-circle);
+  background: linear-gradient(135deg, var(--teal-soft), var(--gold-soft));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-teal);
+}
+
+.info-row__icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--teal-500);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.info-row__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-row__content small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.info-row__content strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   دکمه‌های پایین
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+.profile-actions .btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-text {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease-smooth);
+  text-align: center;
+}
+
+.btn-text:hover {
+  color: var(--burgundy-500);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   دکمه‌ی خروج در هدر
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.header-logout {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-circle);
+  background: rgba(255, 255, 255, 0.14);
+  border: none;
+  color: var(--text-invert);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease-smooth);
+}
+
+.header-logout:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.header-logout svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   موبایل کوچک
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 360px) {
+  .profile-avatar {
+    width: 78px;
+    height: 78px;
+    font-size: 1.8rem;
+  }
+  .profile-name {
+    font-size: 1.2rem;
+  }
+  .pstat__num {
+    font-size: 1.35rem;
+  }
+  .info-row {
+    padding: 10px 12px;
+  }
+  .info-row__icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+
+/* Profile photo upload */
+.profile-avatar.has-image{overflow:hidden;padding:0;background:#e9eef1}
+.profile-avatar__img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.profile-photo-change{position:relative;z-index:2;display:inline-flex;align-items:center;justify-content:center;gap:7px;margin:0 auto 12px;padding:8px 13px;border:1px solid rgba(15,107,98,.18);border-radius:999px;background:#edf7f5;color:#14665f;font:700 .7rem 'Vazirmatn',sans-serif;cursor:pointer;transition:background .18s,transform .18s}
+.profile-photo-change:hover{background:#e1f0ed;transform:translateY(-1px)}
+.profile-photo-change:disabled{opacity:.6;cursor:wait}
+
+
+/* مالک اصلی فقط با قاب مشکی آواتار مشخص می‌شود؛ رتبه‌بندی متنی نقش‌ها نمایش داده نمی‌شود. */
+.leader-avatar--owner{border:2px solid #111!important;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
