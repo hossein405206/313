@@ -315,3 +315,17 @@
 
 /* مالک اصلی فقط با قاب مشکی آواتار مشخص می‌شود؛ رتبه‌بندی متنی نقش‌ها نمایش داده نمی‌شود. */
 .leader-avatar--owner{border:2px solid #111!important;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+
+
+/* نقش و وضعیت عضویت: قاب دور آواتار */
+.leader-avatar{position:relative;box-sizing:border-box;border:2px solid #cbd5e1;box-shadow:none}
+.leader-avatar.role-ring--unregistered{border-color:#aab3bf;box-shadow:0 0 0 1px rgba(120,130,145,.18)}
+.leader-avatar.role-ring--member{border-color:#22a447;box-shadow:0 0 0 1px rgba(34,164,71,.2)}
+.leader-avatar.role-ring--official{border-color:#2688e8;box-shadow:0 0 0 1px rgba(38,136,232,.25)}
+.leader-avatar.role-ring--coach{border-color:#d4a438;box-shadow:0 0 0 1px rgba(212,164,56,.25)}
+.leader-avatar.role-ring--owner{border:3px solid #171717!important;box-shadow:0 0 0 1px #b89436,0 0 0 3px #171717!important}
+.leader-avatar.role-ring--owner:after{content:'';position:absolute;inset:-3px;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 18% 22%,#f3d77c 0 1px,transparent 1.8px),radial-gradient(circle at 82% 25%,#c6a34c 0 1px,transparent 1.8px),radial-gradient(circle at 76% 78%,#f0d17a 0 1px,transparent 1.8px),radial-gradient(circle at 24% 80%,#b58a2c 0 1px,transparent 1.8px)}
+.member-role-badge--unregistered{color:#77818e!important;background:#eef1f4!important;border-color:#d5dbe2!important}
+.member-role-badge--member{color:#176b2e!important;background:#e0f7e7!important;border-color:#8cdaa1!important}
+.member-role-badge--official{color:#155eaa!important;background:#e0f0ff!important;border-color:#8cc5ff!important}
+.member-role-badge--coach{color:#75520b!important;background:#fff4cc!important;border-color:#e4c35c!important}
