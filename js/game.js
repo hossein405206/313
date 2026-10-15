@@ -23,9 +23,10 @@
     var label=item&&item.registered&&item.roleLabel?item.roleLabel:labels[key];
     return '<small class="member-role-badge member-role-badge--'+key+'">'+esc(label)+'</small>';
   }
-  function avatarMarkup(url,name){
+  function avatarMarkup(url,name,roleKey){
     var initial=esc((name||'ع').charAt(0));
-    return '<span class="leader-avatar"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>';
+    var owner=String(roleKey||'')==='owner';
+    return '<span class="leader-avatar'+(owner?' leader-avatar--owner':'')+'"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>';
   }
   function renderBoard(list){
     if(!board)return;
@@ -45,12 +46,13 @@
     if(!app()||!app().session||!api())return setTimeout(boot,80);
     member=app().session.getMember();
     if(!member||!member.token){location.replace('login.html?return=game.html');return;}
+    setButton('در حال بارگذاری بازی…',true);
     try{
-      if(api().checkBackendVersion)await api().checkBackendVersion();
       var registration=await api().get({action:'getRingRegistration',token:member.token});
       if(!registration.registered){location.replace('ring-registration.html?required=1');return;}
     }catch(e){say('فعلاً امکان بارگذاری بازی وجود ندارد. لطفاً کمی بعد دوباره تلاش کن.');start.disabled=true;return;}
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
+    setButton('شروع بازی',false);
     best=Math.max(0,Number(member.bestScore||0));
     bestEl.textContent=faNum(best);
     await load();
@@ -201,16 +203,16 @@
     if(state!=='playing')return;
     state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;
     setButton('دوباره بازی کن',false);
-    if(score>0)say('بازی تمام شد؛ در حال ذخیره رکورد '+faNum(score)+'…');
-    else say('هنوز مانعی را رد نکردی؛ این دور رکوردی برای ذخیره ندارد.');
+    if(score>best)say('رکورد جدید! در حال ذخیره '+faNum(score)+'…');
+    else say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
     draw();
-    if(score>0)submitScore();
+    if(score>best)submitScore();
   }
   async function submitScore(){
     if(submitting||!member||!member.token)return;
+    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
     submitting=true;setButton('در حال ذخیره رکورد…',true);
     try{
-      if(api().checkBackendVersion)await api().checkBackendVersion();
       var response=await api().post({action:'submitGameScore',token:member.token,score:score});
       renderBoard(response.leaderboard||[]);
       renderAllTimeBoard(response.allTimeLeaderboard||[]);
@@ -220,9 +222,11 @@
       app().session.setMember(member);
       bestEl.textContent=faNum(best);
       if(response.saved){
-        say('رکورد '+faNum(score)+' ثبت شد و در جدول این هفته قرار گرفت. آفرین! 💙');
+        best=Math.max(best,score);
+        bestEl.textContent=faNum(best);
+        say('رکورد جدید '+faNum(score)+' ثبت شد و در جدول این هفته قرار گرفت. آفرین! 💙');
       }else{
-        say('رکورد این هفته قبلاً بهتر یا مساوی بوده؛ بهترین رکورد هفتگی شما '+faNum(response.score||score)+' است.');
+        say('رکورد جدیدتری ثبت نشد؛ بهترین رکورد هفتگی شما '+faNum(response.score||score)+' است.');
       }
     }catch(e){
       say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
