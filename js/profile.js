@@ -100,6 +100,18 @@
     }).catch(function () { setState(false); });
   }
 
+  function loadProfileRole(member) {
+    var avatar = $('#profileAvatar');
+    if (!avatar || !member || !member.token) return;
+    var api = getAPI();
+    if (!api) return;
+    api.get({ action: 'getMyGameRole', token: member.token }).then(function (res) {
+      avatar.classList.toggle('profile-avatar--owner', !!res && res.roleKey === 'owner');
+    }).catch(function () {
+      avatar.classList.remove('profile-avatar--owner');
+    });
+  }
+
   function renderProfile(member) {
     if (!member) return;
 
@@ -125,11 +137,13 @@
     if (nm) nm.textContent = fullName;
     if (ph) ph.textContent = member.phone || '—';
     updateMembershipBadge(member);
+    loadProfileRole(member);
 
     // اطلاعات
     var map = {
       infoFullName: fullName,
-      infoNickname: member.nickname || 'ثبت نشده'
+      infoNickname: member.nickname || 'ثبت نشده',
+      infoJoinDate: member.createdAt ? new Date(member.createdAt).toLocaleDateString('fa-IR') : 'ثبت نشده'
     };
 
     var keys = Object.keys(map);
