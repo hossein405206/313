@@ -315,3 +315,17 @@
 
 /* قاب مشکی تنها نشانهٔ بصری مالک اصلی در پروفایل است. */
 .profile-avatar.profile-avatar--owner{border:3px solid #111!important;box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+
+
+/* Avatar ring follows the member's current ring status */
+.profile-avatar.profile-avatar--unregistered{border:3px solid #aab3bf!important;box-shadow:0 0 0 1px rgba(120,130,145,.18)!important}
+.profile-avatar.profile-avatar--member{border:3px solid #22a447!important;box-shadow:0 0 0 1px rgba(34,164,71,.2)!important}
+.profile-avatar.profile-avatar--official{border:3px solid #2688e8!important;box-shadow:0 0 0 1px rgba(38,136,232,.25)!important}
+.profile-avatar.profile-avatar--coach{border:3px solid #d4a438!important;box-shadow:0 0 0 1px rgba(212,164,56,.25)!important}
+.profile-avatar.profile-avatar--owner{border:3px solid #171717!important;box-shadow:0 0 0 1px #b89436,0 0 0 3px #171717!important}
+.profile-avatar.profile-avatar--owner:after{content:'';position:absolute;inset:-3px;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at 18% 22%,#f3d77c 0 1px,transparent 1.8px),radial-gradient(circle at 82% 25%,#c6a34c 0 1px,transparent 1.8px),radial-gradient(circle at 76% 78%,#f0d17a 0 1px,transparent 1.8px),radial-gradient(circle at 24% 80%,#b58a2c 0 1px,transparent 1.8px)}
+.profile-role-badge.role-badge--unregistered{color:#77818e;background:#eef1f4;border-color:#d5dbe2}
+.profile-role-badge.role-badge--member{color:#176b2e;background:#e0f7e7;border-color:#8cdaa1;box-shadow:none}
+.profile-role-badge.role-badge--official{color:#155eaa;background:#e0f0ff;border-color:#8cc5ff}
+.profile-role-badge.role-badge--coach{color:#75520b;background:#fff4cc;border-color:#e4c35c}
+.profile-role-badge[hidden]{display:none!important}
