@@ -17,22 +17,23 @@
   function setButton(label,disabled){start.textContent=label;start.disabled=!!disabled;start.classList.toggle('playing',!!disabled);}
   function esc(value){return String(value==null?'':value).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c];});}
   function memberBadgeMarkup(item){
-    var key=item&&item.registered?String(item.roleKey||'member'):'unregistered';
-    if(['member','official','coach','owner','unregistered'].indexOf(key)<0)key='member';
-    var labels={member:'عضو حلقه',official:'مسئول',coach:'مربی',owner:'مالک',unregistered:'عضو نشده'};
-    var label=item&&item.registered&&item.roleLabel?item.roleLabel:labels[key];
+    var key=String(item&&item.roleKey||'unregistered');
+    if(['member','official','coach','owner','unregistered'].indexOf(key)<0)key='unregistered';
+    if(key==='owner')return '';
+    var labels={member:'عضو حلقه',official:'مسئول',coach:'مربی',unregistered:'هنوز عضو نشده'};
+    var label=labels[key];
     return '<small class="member-role-badge member-role-badge--'+key+'">'+esc(label)+'</small>';
   }
   function avatarMarkup(url,name,roleKey){
     var initial=esc((name||'ع').charAt(0));
-    var owner=String(roleKey||'')==='owner';
-    return '<span class="leader-avatar'+(owner?' leader-avatar--owner':'')+'"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>';
+    var key=['member','official','coach','owner','unregistered'].indexOf(String(roleKey||''))>=0?String(roleKey):'unregistered';
+    return '<span class="leader-avatar role-ring--'+key+'"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>';
   }
   function renderBoard(list){
     if(!board)return;
     board.innerHTML=list.length?list.map(function(x,i){
       var me=member&&String(x.memberId)===String(member.id);
-      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
+      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
     }).join(''):'<div class="empty"><p>هنوز رکوردی برای این هفته ثبت نشده</p></div>';
   }
   function renderAllTimeBoard(list){
