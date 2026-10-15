@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.15.0',
+    VERSION: '5.15.1',
     BACKEND_VERSION: '4.13.0-structured-diagnostics'
   };
 
@@ -94,7 +94,9 @@
         .replace(/[٠-٩]/g, function (c) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)); });
     },
     iranMobile: function (phone) {
-      var p = this.normalizeDigits(String(phone || '').trim());
+      var p = String(phone || '').trim()
+        .replace(/[۰-۹]/g, function (d) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); })
+        .replace(/[٠-٩]/g, function (d) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)); });
       if (p.length !== 11) return false;
       if (p.charAt(0) !== '0' || p.charAt(1) !== '9') return false;
       for (var i = 0; i < 11; i++) {
