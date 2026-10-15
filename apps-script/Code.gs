@@ -565,14 +565,15 @@ function verifyCoachCode(code) {
 }
 function loginCoach(p){
   var phone=normalizeIranMobile_(p.phone||'');
-  var code=String(p.code||'').trim();
+  var code=normalizeIranDigits(String(p.code||'').trim()).toUpperCase();
   if(!/^09\d{9}$/.test(phone)) throw new Error('شماره مربی نامعتبر است');
   if(!code) throw new Error('کد مربی را وارد کن');
 
   // مربی ارشد مستقیماً از تنظیمات اصلی احراز می‌شود؛
   // بنابراین ورود به وجود ردیف شیت مربیان وابسته نیست.
   var masterConfig = getMasterCoachConfig();
-  if(masterConfig.phone && masterConfig.code && phone===masterConfig.phone && code===masterConfig.code){
+  var masterCode = normalizeIranDigits(String(masterConfig.code||'').trim()).toUpperCase();
+  if(masterConfig.phone && masterCode && phone===masterConfig.phone && code===masterCode){
     ensureMasterCoach();
     return {
       ok:true,
@@ -586,8 +587,8 @@ function loginCoach(p){
   var rows=getSheetObjects('مربیان');
   var coach=rows.filter(function(r){
     var rowPhone=normalizeIranMobile_(r.phone||'');
-    var rowCode=String(r.code||'').trim();
-    return truthy(r.active)&&rowPhone===phone&&rowCode===code&&(String(r.role||'')!=='master'||(masterConfig.phone===phone&&masterConfig.code===code));
+    var rowCode=normalizeIranDigits(String(r.code||'').trim()).toUpperCase();
+    return truthy(r.active)&&rowPhone===phone&&rowCode===code&&(String(r.role||'')!=='master'||(masterConfig.phone===phone&&masterCode===code));
   })[0];
 
   if(!coach) throw new Error('شماره یا کد مربی نادرست است');
