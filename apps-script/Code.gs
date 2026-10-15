@@ -206,6 +206,14 @@ function handleGet(p) {
 
   if (action === 'getRingRegistration') return getRingRegistration(p);
 
+  if (action === 'getMyGameRole') {
+    var roleAuth = requireToken(p.token, ['member']);
+    var roleMember = findMemberByPhone(roleAuth.subject, true);
+    if (!roleMember) throw new Error('حساب عضو پیدا نشد');
+    var roleMap = gameRoleMap_([roleMember], registeredRingPhones_());
+    return {ok:true, roleKey:(roleMap[String(roleMember.id)] || {}).roleKey || 'member'};
+  }
+
   if (action === 'listCamps') {
     return { ok: true, items: listCamps() };
   }
@@ -2117,9 +2125,9 @@ function submitGameScore(p) {
     var weeklyBest = existing ? Number(existing.score || 0) : 0;
     var lifetimeBest = Number(member.bestScore || 0);
 
-    // امتیاز مساوی یا پایین‌تر از رکورد همین هفته، هیچ داده‌ای را تغییر نمی‌دهد.
-    if (existing && score <= weeklyBest) {
-      return {ok:true, saved:false, score:weeklyBest, weekKey:week, lifetimeBest:lifetimeBest,
+    // هیچ رکوردی ذخیره نمی‌شود مگر اینکه رکورد تاریخی خود عضو شکسته شود.
+    if (score <= lifetimeBest || (existing && score <= weeklyBest)) {
+      return {ok:true, saved:false, score:Math.max(weeklyBest, lifetimeBest), weekKey:week, lifetimeBest:lifetimeBest,
         leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
     }
 
