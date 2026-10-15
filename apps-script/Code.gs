@@ -806,9 +806,13 @@ function requireCoachPermission(token, permission) {
 }
 function findCoachRowByCode(code) {
   var target = normalizeCoachCode_(code);
-  var rows = getSheetObjects('مربیان');
-  for (var i = 0; i < rows.length; i++) {
-    if (normalizeCoachCode_(rows[i].code) === target) return i + 2;
+  var sheet = getSheet('مربیان');
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return 0;
+  var codeIndex = values[0].map(String).indexOf('code');
+  if (codeIndex < 0) return 0;
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeCoachCode_(values[i][codeIndex]) === target) return i + 1;
   }
   return 0;
 }
@@ -837,11 +841,13 @@ function deleteCoach(p){
   if(!auth.isMaster)throw new Error('فقط مالک می‌تواند مربی را حذف کند');
   var target=normalizeCoachCode_(p.code);
   if(!target)throw new Error('مربی انتخاب نشده است');
-  var rows=getSheetObjects('مربیان'),pos=0;
-  for(var i=0;i<rows.length;i++){if(normalizeCoachCode_(rows[i].code)===target){pos=i+2;break;}}
+  var pos=findCoachRowByCode(target);
   if(!pos)throw new Error('مربی پیدا نشد');
-  if(String(rows[pos-2].role||'')==='master')throw new Error('حساب مالک قابل حذف نیست');
-  getSheet('مربیان').deleteRow(pos);
+  var sheet=getSheet('مربیان');
+  var headers=sheet.getDataRange().getValues()[0].map(String);
+  var row=sheet.getRange(pos,1,1,headers.length).getValues()[0];
+  if(String(row[headers.indexOf('role')]||'')==='master')throw new Error('حساب مالک قابل حذف نیست');
+  sheet.deleteRow(pos);
   return {ok:true,deleted:true};
 }
 function updateCoachCode(p) {
