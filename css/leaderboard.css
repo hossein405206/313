@@ -35,3 +35,15 @@
 
 /* نقش مالک فقط با قاب مشکی آواتار مشخص می‌شود. */
 .owner-avatar{border:3px solid #111!important;box-sizing:border-box;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+
+
+/* Status ring palette shared with profile and game */
+.podium-avatar.role-ring--unregistered,.ranking-avatar.role-ring--unregistered{outline:2px solid #aab3bf;outline-offset:2px;border-color:#aab3bf;background:#eef1f4;color:#66717f;box-shadow:none}
+.podium-avatar.role-ring--member,.ranking-avatar.role-ring--member{outline:2px solid #22a447;outline-offset:2px;border-color:#22a447;box-shadow:0 0 0 1px rgba(34,164,71,.16)}
+.podium-avatar.role-ring--official,.ranking-avatar.role-ring--official{outline:2px solid #2688e8;outline-offset:2px;border-color:#2688e8;box-shadow:0 0 0 1px rgba(38,136,232,.18)}
+.podium-avatar.role-ring--coach,.ranking-avatar.role-ring--coach{outline:2px solid #d4a438;outline-offset:2px;border-color:#d4a438;box-shadow:0 0 0 1px rgba(212,164,56,.2)}
+.podium-avatar.role-ring--owner,.ranking-avatar.role-ring--owner{outline:2px solid #171717;outline-offset:2px;border:3px solid #171717!important;box-shadow:0 0 0 1px #b89436,0 0 0 3px #171717!important}
+.member-role-badge--unregistered{color:#77818e!important;background:#eef1f4!important;border-color:#d5dbe2!important}
+.member-role-badge--member{color:#176b2e!important;background:#e0f7e7!important;border-color:#8cdaa1!important}
+.member-role-badge--official{color:#155eaa!important;background:#e0f0ff!important;border-color:#8cc5ff!important}
+.member-role-badge--coach{color:#75520b!important;background:#fff4cc!important;border-color:#e4c35c!important}
