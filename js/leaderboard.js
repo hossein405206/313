@@ -24,8 +24,8 @@ function renderPodium(rows,member){
     var x=rows[i],rank=i+1,me=member&&x.memberId===member.id;
     return '<div class="podium-item rank-'+rank+(x.registered?' is-registered':' is-unregistered')+(me?' is-me':'')+'">'+
       '<div class="podium-medal">'+(rank===1?'🥇':rank===2?'🥈':'🥉')+'</div>'+
-      '<div class="podium-avatar">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
-      '<strong class="podium-name">'+esc(x.playerName)+(me?'<small>شما</small>':'')+'</strong>'+roleBadgeMarkup(x)+
+      '<div class="podium-avatar'+(x.roleKey==='owner'?' owner-avatar':'')+'">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
+      '<strong class="podium-name">'+esc(x.playerName)+(me?'<small>شما</small>':'')+'</strong>'+
       '<b class="podium-score">'+Number(x.score||0).toLocaleString('fa-IR')+'</b>'+
       '<span class="podium-rank">رتبه '+rank.toLocaleString('fa-IR')+'</span>'+
       '</div>';
@@ -36,18 +36,11 @@ function renderList(rows,member){
     var rank=i+1,me=member&&x.memberId===member.id;
     return '<div class="ranking-row rank-'+rank+(x.registered?' is-registered':' is-unregistered')+(me?' is-me':'')+'">'+
       '<div class="ranking-position">'+(rank<=3?(rank===1?'🥇':rank===2?'🥈':'🥉'):rank.toLocaleString('fa-IR'))+'</div>'+
-      '<div class="ranking-avatar">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
-      '<div class="ranking-name"><strong>'+esc(x.playerName)+'</strong>'+roleBadgeMarkup(x)+(me?'<small>رکورد شما</small>':'')+'</div>'+
+      '<div class="ranking-avatar'+(x.roleKey==='owner'?' owner-avatar':'')+'">'+avatarMarkup(x.profileImage,x.playerName)+'</div>'+
+      '<div class="ranking-name"><strong>'+esc(x.playerName)+'</strong>'+(me?'<small>رکورد شما</small>':'')+'</div>'+
       '<div class="ranking-score"><strong>'+Number(x.score||0).toLocaleString('fa-IR')+'</strong><small>رکورد</small></div>'+
       '</div>';
   }).join('');
-}
-function roleBadgeMarkup(item){
-  var key=item&&item.registered?String(item.roleKey||'member'):'unregistered';
-  if(['member','official','coach','owner','unregistered'].indexOf(key)<0)key='member';
-  var labels={member:'عضو حلقه',official:'مسئول',coach:'مربی',owner:'مالک',unregistered:'عضو نشده'};
-  var label=item&&item.registered&&item.roleLabel?item.roleLabel:labels[key];
-  return '<small class="member-role-badge member-role-badge--'+key+'">'+esc(label)+'</small>';
 }
 function avatarMarkup(url,name){
   var initial=esc((name||'ع').charAt(0));
