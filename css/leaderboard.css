@@ -47,3 +47,5 @@
 .member-role-badge--member{color:#176b2e!important;background:#e0f7e7!important;border-color:#8cdaa1!important}
 .member-role-badge--official{color:#155eaa!important;background:#e0f0ff!important;border-color:#8cc5ff!important}
 .member-role-badge--coach{color:#75520b!important;background:#fff4cc!important;border-color:#e4c35c!important}
+
+.podium-avatar.role-ring--owner:after,.ranking-avatar.role-ring--owner:after{content:'';position:absolute;inset:-2px;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 18% 22%,#f3d77c 0 1px,transparent 1.8px),radial-gradient(circle at 82% 25%,#c6a34c 0 1px,transparent 1.8px),radial-gradient(circle at 76% 78%,#f0d17a 0 1px,transparent 1.8px),radial-gradient(circle at 24% 80%,#b58a2c 0 1px,transparent 1.8px)}
