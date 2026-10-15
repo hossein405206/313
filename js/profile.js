@@ -82,34 +82,28 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   function updateMembershipBadge(member) {
-    var badge = $('#profileRoleBadge'), hero = $('.profile-hero');
-    if (!badge) return;
-    function setState(registered) {
-      badge.className = 'profile-role-badge ' + (registered ? 'role-badge--member' : 'role-badge--unregistered');
-      badge.textContent = registered ? 'عضو حلقه' : 'عضویت تکمیل نشده';
+    var badge = $('#profileRoleBadge'), hero = $('.profile-hero'), avatar = $('#profileAvatar');
+    if (!badge || !avatar) return;
+    var roles = ['unregistered','member','official','coach','owner'];
+    function setRole(roleKey) {
+      var key = roles.indexOf(roleKey) >= 0 ? roleKey : 'unregistered';
+      avatar.classList.remove('profile-avatar--unregistered','profile-avatar--member','profile-avatar--official','profile-avatar--coach','profile-avatar--owner');
+      avatar.classList.add('profile-avatar--' + key);
       if (hero) {
-        hero.classList.toggle('profile-hero--registered', !!registered);
-        hero.classList.toggle('profile-hero--unregistered', !registered);
+        hero.classList.toggle('profile-hero--registered', key !== 'unregistered');
+        hero.classList.toggle('profile-hero--unregistered', key === 'unregistered');
       }
+      var labels = {unregistered:'هنوز عضو نشده',member:'عضو حلقه',official:'مسئول',coach:'مربی',owner:''};
+      badge.className = 'profile-role-badge role-badge--' + key;
+      badge.textContent = labels[key];
+      badge.hidden = key === 'owner';
     }
-    setState(false);
+    setRole('unregistered');
     var api = getAPI();
     if (!member || !member.token || !api) return;
-    api.get({ action: 'getRingRegistration', token: member.token }).then(function (res) {
-      setState(!!(res && res.registered));
-    }).catch(function () { setState(false); });
-  }
-
-  function loadProfileRole(member) {
-    var avatar = $('#profileAvatar');
-    if (!avatar || !member || !member.token) return;
-    var api = getAPI();
-    if (!api) return;
     api.get({ action: 'getMyGameRole', token: member.token }).then(function (res) {
-      avatar.classList.toggle('profile-avatar--owner', !!res && res.roleKey === 'owner');
-    }).catch(function () {
-      avatar.classList.remove('profile-avatar--owner');
-    });
+      setRole(res && res.roleKey || 'unregistered');
+    }).catch(function () { setRole('unregistered'); });
   }
 
   function renderProfile(member) {
@@ -137,7 +131,6 @@
     if (nm) nm.textContent = fullName;
     if (ph) ph.textContent = member.phone || '—';
     updateMembershipBadge(member);
-    loadProfileRole(member);
 
     // اطلاعات
     var map = {
