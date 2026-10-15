@@ -136,7 +136,6 @@
     var map = {
       infoFullName: fullName,
       infoNickname: member.nickname || 'ثبت نشده',
-      infoJoinDate: member.createdAt ? new Date(member.createdAt).toLocaleDateString('fa-IR') : 'ثبت نشده',
       infoJoinDate: member.createdAt ? new Date(member.createdAt).toLocaleDateString('fa-IR') : 'ثبت نشده'
     };
 
