@@ -41,7 +41,12 @@ function login(){
   var btn=f.querySelector('button');setBusy(btn,'در حال ورود...');
   try{
    var r=await api().post({action:'loginCoach',phone:phone,code:code});
-   state.token=r.token;state.name=r.coach.name;state.isMaster=!!r.coach.isMaster;state.permissions=r.coach.permissions||{};
+   var coach=r&&r.coach;
+    if(!r||!r.ok||!coach||!r.token){
+      console.error('[CoachLogin] پاسخ ناقص یا ناسازگار از سرور', {hasResponse:!!r,keys:r&&Object.keys(r),version:r&&r.version,requestId:r&&r.requestId});
+      throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ احتمالاً نسخهٔ منتشرشدهٔ Google Apps Script با سایت هماهنگ نیست. نسخهٔ وب‌اپ را بررسی و دوباره منتشر کن.');
+    }
+    state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.permissions=coach.permissions||{};
    sessionStorage.setItem('coach_token',state.token);sessionStorage.setItem('coach_name',state.name);sessionStorage.setItem('coach_master',state.isMaster?'1':'0');sessionStorage.setItem('coach_permissions',JSON.stringify(state.permissions));
    $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');$('#coachName').textContent=state.name;renderCoachRoleBadge();
    applyPermissions();await load();
