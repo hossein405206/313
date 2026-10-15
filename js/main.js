@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.12.0',
+    VERSION: '5.15.0',
     BACKEND_VERSION: '4.13.0-structured-diagnostics'
   };
 
@@ -88,8 +88,13 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   var Validate = {
+    normalizeDigits: function (value) {
+      return String(value || '')
+        .replace(/[۰-۹]/g, function (c) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)); })
+        .replace(/[٠-٩]/g, function (c) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)); });
+    },
     iranMobile: function (phone) {
-      var p = String(phone || '').trim();
+      var p = this.normalizeDigits(String(phone || '').trim());
       if (p.length !== 11) return false;
       if (p.charAt(0) !== '0' || p.charAt(1) !== '9') return false;
       for (var i = 0; i < 11; i++) {
