@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.15.0-post-auth-reads';
+var APP_VERSION = '4.16.0-game-session-validation';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -522,6 +522,8 @@ function handlePost(p) {
     requireCoachPermission(p.token, 'game');
     return saveGamePrize(String(p.prize || '').trim());
   }
+
+  if (action === 'startGameSession') return startGameSession(p);
 
   if (action === 'submitGameScore') {
     return submitGameScore(p);
@@ -2264,6 +2266,27 @@ function ensureLifetimeGameRecords() {
   }
 }
 
+function startGameSession(p) {
+  var auth = requireToken(p.token, ['member']);
+  var member = findMemberByPhone(auth.subject, true);
+  if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+  if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
+
+  // جلسه سمت سرور ساخته می‌شود تا فرانت‌اند نتواند بدون شروع بازی امتیاز دلخواه ثبت کند.
+  var sessionId = Utilities.getUuid();
+  var session = {
+    memberId: String(member.id),
+    phone: normalizeMemberPhone(auth.subject),
+    startedAt: Date.now()
+  };
+  CacheService.getScriptCache().put(
+    '313_game_session_' + sessionId,
+    JSON.stringify(session),
+    1800
+  );
+  return { ok: true, sessionId: sessionId };
+}
+
 function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
@@ -2277,6 +2300,42 @@ function submitGameScore(p) {
   var week = currentWeekKey(), sheet = getSheet('بازی');
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
+    // جلسهٔ بازی یک‌بارمصرف است؛ خواندن و حذف آن زیر قفل انجام می‌شود تا درخواست تکراری هم‌زمان پذیرفته نشود.
+    var sessionId = String(p.sessionId || '').trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId)) {
+      throw new Error('جلسهٔ بازی معتبر نیست؛ بازی را از ابتدا شروع کن');
+    }
+    var cache = CacheService.getScriptCache();
+    var cacheKey = '313_game_session_' + sessionId;
+    var sessionJson = cache.get(cacheKey);
+    if (!sessionJson) throw new Error('جلسهٔ بازی منقضی شده؛ بازی را دوباره شروع کن');
+
+    var gameSession;
+    try { gameSession = JSON.parse(sessionJson); }
+    catch (sessionError) { throw new Error('جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
+
+    if (String(gameSession.memberId || '') !== String(member.id) ||
+        normalizeMemberPhone(gameSession.phone || '') !== normalizeMemberPhone(auth.subject)) {
+      throw new Error('این جلسهٔ بازی متعلق به حساب شما نیست');
+    }
+
+    cache.remove(cacheKey);
+    var startedAt = Number(gameSession.startedAt);
+    var elapsedSeconds = (Date.now() - startedAt) / 1000;
+    if (!isFinite(startedAt) || elapsedSeconds < 0 || elapsedSeconds > 1800) {
+      throw new Error('مدت جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن');
+    }
+
+    // عبور اول حدود ۲٫۴۴ ثانیه و عبورهای بعدی حدود ۱٫۴۲ ثانیه فاصله دارند.
+    // ۱٫۲۵ ثانیه حاشیه برای تأخیر شبکه در نظر گرفته شده است.
+    var effectiveElapsed = elapsedSeconds + 1.25;
+    var maxPlausibleScore = effectiveElapsed < 2.44
+      ? 0
+      : 1 + Math.floor((effectiveElapsed - 2.44) / 1.4167);
+    if (score > maxPlausibleScore) {
+      throw new Error('امتیاز با مدت زمان بازی سازگار نیست؛ یک دور تازه بازی کن');
+    }
+
     var rows = getSheetObjects('بازی'), existing = null, existingRow = 0;
     for (var i = 0; i < rows.length; i++) {
       if (String(rows[i].weekKey) === week && String(rows[i].memberId) === String(member.id)) {
