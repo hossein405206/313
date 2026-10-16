@@ -440,37 +440,56 @@ function coachPermissions(row) {
 }
 function listCoachRecords() {
   normalizeCoachRecords();
-  return getSheetObjects('مربیان').map(function(r){
-    return {
+  var rows=getSheetObjects('مربیان').slice().sort(function(a,b){
+    var activeDiff=(truthy(b.active)?1:0)-(truthy(a.active)?1:0);
+    if(activeDiff)return activeDiff;
+    var masterDiff=(String(b.role||'')==='master'?1:0)-(String(a.role||'')==='master'?1:0);
+    if(masterDiff)return masterDiff;
+    return String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||''));
+  });
+  var seen={}, result=[];
+  rows.forEach(function(r){
+    var phone=normalizePhone(r.phone), code=String(r.code||'').trim().toUpperCase();
+    var key=phone?'phone:'+phone:(code?'code:'+code:'row:'+result.length);
+    if(seen[key])return;
+    seen[key]=true;
+    result.push({
       name:String(r.name||''), phone:String(r.phone||''), code:String(r.code||''),
       role:String(r.role||'admin'), active:truthy(r.active),
       permissions:coachPermissions(r), createdAt:r.createdAt||'', updatedAt:r.updatedAt||''
-    };
+    });
   });
+  return result;
 }
 function normalizeCoachRecords() {
   var sheet=getSheet('مربیان'), rows=sheet.getDataRange().getValues();
   if(rows.length<2)return;
   var headers=rows[0].map(String), idx={};
   headers.forEach(function(h,i){idx[h]=i;});
-  var seenPhone={}, seenCode={}, masterKept=false, changed=false;
-  for(var i=1;i<rows.length;i++){
-    var phone=String(rows[i][idx.phone]||'').replace(/\s+/g,'');
-    var code=String(rows[i][idx.code]||'').trim().toUpperCase();
-    var isMaster=String(rows[i][idx.role]||'')==='master';
-    var duplicate=(phone && seenPhone[phone]) || (code && seenCode[code]);
-    if(isMaster && masterKept) duplicate=true;
-    if(duplicate && truthy(rows[i][idx.active])) { rows[i][idx.active]=false; changed=true; continue; }
-    if(phone)seenPhone[phone]=true;
-    if(code)seenCode[code]=true;
-    if(isMaster)masterKept=true;
+  var order=[];
+  for(var i=1;i<rows.length;i++)order.push(i);
+  order.sort(function(a,b){
+    var ar=rows[a],br=rows[b];
+    var activeDiff=(truthy(br[idx.active])?1:0)-(truthy(ar[idx.active])?1:0);
+    if(activeDiff)return activeDiff;
+    var masterDiff=(String(br[idx.role]||'')==='master'?1:0)-(String(ar[idx.role]||'')==='master'?1:0);
+    if(masterDiff)return masterDiff;
+    return String(br[idx.updatedAt]||br[idx.createdAt]||'').localeCompare(String(ar[idx.updatedAt]||ar[idx.createdAt]||''));
+  });
+  var seenPhone={},seenCode={},changed=false;
+  order.forEach(function(i){
+    var row=rows[i], phone=normalizePhone(row[idx.phone]), code=String(row[idx.code]||'').trim().toUpperCase();
+    var active=truthy(row[idx.active]);
+    var duplicate=active&&((phone&&seenPhone[phone])||(code&&seenCode[code]));
+    if(duplicate){row[idx.active]=false;changed=true;active=false;}
+    if(active){if(phone)seenPhone[phone]=true;if(code)seenCode[code]=true;}
     if(idx.permissions!==undefined){
-      if(!String(rows[i][idx.permissions]||'').trim() && String(rows[i][idx.role]||'')!=='master') rows[i][idx.permissions]=JSON.stringify({events:true,schedule:true,registrations:true,reports:true,game:true,coaches:false,officials:false});
-      var normalized=JSON.stringify(coachPermissions(rowToObject('مربیان',rows[i])));
-      if(String(rows[i][idx.permissions]||'')!==normalized){rows[i][idx.permissions]=normalized;changed=true;}
+      if(!String(row[idx.permissions]||'').trim()&&String(row[idx.role]||'')!=='master')row[idx.permissions]=JSON.stringify({events:true,schedule:true,registrations:true,reports:true,game:true,coaches:false,officials:false});
+      var normalized=JSON.stringify(coachPermissions(rowToObject('مربیان',row)));
+      if(String(row[idx.permissions]||'')!==normalized){row[idx.permissions]=normalized;changed=true;}
     }
-  }
-  if(changed) sheet.getRange(1,1,rows.length,headers.length).setValues(rows);
+  });
+  if(changed)sheet.getRange(1,1,rows.length,headers.length).setValues(rows);
 }
 function requireCoachPermission(token, permission) {
   var auth=requireToken(token,['coach']);
