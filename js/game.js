@@ -2,19 +2,19 @@
   'use strict';
   var canvas=document.getElementById('gameCanvas'),ctx=canvas&&canvas.getContext('2d');
   if(!canvas||!ctx)return;
-  var start=document.getElementById('startGame'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
+  var start=document.getElementById('startGame'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best'),weekBestEl=document.getElementById('weekBest');
   var board=document.getElementById('leaderboardList'),allTimeBoard=document.getElementById('allTimeLeaderboardList');
   var playerNameEl=document.getElementById('playerName'),prize=document.getElementById('prizeText'),message=document.getElementById('gameMessage');
   var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
-  var best=0,submitting=false,startingGame=false,gameSessionId='';
+  var best=0,weekBest=0,submitting=false,startingGame=false,gameSessionId='';
   function app(){return window.KanoonApp;}
   function api(){return app()&&app().api;}
   function toast(text,error){var t=app()&&app().toast;if(t)(error?t.error:t.success)(text);}
   function faNum(n){return Number(n||0).toLocaleString('fa-IR');}
   function say(text){if(message)message.textContent=text;}
-  function setButton(label,disabled){start.textContent=label;start.disabled=!!disabled;start.classList.toggle('playing',!!disabled);}
+  function setButton(label,disabled){start.textContent=label;start.disabled=!!disabled;start.classList.toggle('playing',state==='playing');}
   function esc(value){return String(value==null?'':value).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c];});}
   function memberBadgeMarkup(item){
     var key=String(item&&item.roleKey||'unregistered');
@@ -49,7 +49,7 @@
     if(!member||!member.token){location.replace('login.html?return=game.html');return;}
     setButton('در حال بارگذاری بازی…',true);
     try{
-      var registration=await api().get({action:'getRingRegistration',token:member.token});
+      var registration=await api().post({action:'getRingRegistration',token:member.token});
       if(!registration.registered){location.replace('ring-registration.html?required=1');return;}
     }catch(e){say('فعلاً امکان بارگذاری بازی وجود ندارد. لطفاً کمی بعد دوباره تلاش کن.');start.disabled=true;return;}
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
@@ -66,6 +66,9 @@
       prize.textContent=r.prize||'به بیشترین رکورد هفته جایزه داده می‌شود';
       renderBoard(r.leaderboard||[]);
       renderAllTimeBoard(r.allTimeLeaderboard||[]);
+      var mineWeek=(r.leaderboard||[]).find(function(x){return member&&String(x.memberId)===String(member.id);});
+      weekBest=Math.max(0,Number(mineWeek&&mineWeek.score||0));
+      if(weekBestEl)weekBestEl.textContent=faNum(weekBest);
       var mine=(r.allTimeLeaderboard||[]).find(function(x){return member&&String(x.memberId)===String(member.id);});
       if(mine)best=Math.max(best,Number(mine.score||0));
       best=Math.max(best,Number(member.bestScore||0));
@@ -206,8 +209,6 @@
     ctx.fillStyle='#b4a466';var offset=state==='playing'?Math.floor(worldTime*95)%24:0;for(var gx=-18;gx<W;gx+=24)ctx.fillRect(gx-offset,FLOOR+14,13,4);
     particles.forEach(function(p){ctx.globalAlpha=Math.min(1,p.life*2.2);ctx.fillStyle='#fff1a5';ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
     drawBird();
-    ctx.fillStyle='rgba(255,255,255,.96)';ctx.font='900 34px Vazirmatn';ctx.textAlign='center';ctx.lineWidth=6;ctx.strokeStyle='rgba(25,49,63,.28)';
-    ctx.strokeText(String(score),W/2,54);ctx.fillText(String(score),W/2,54);ctx.textAlign='start';
     if(state==='idle'||state==='ready'){
       ctx.save();ctx.fillStyle='rgba(19,46,62,.43)';rr(50,231,320,86,21);ctx.fill();
       ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='800 19px Vazirmatn';ctx.fillText(state==='idle'?'آماده‌ای؟':'برای پرواز لمس کن',W/2,266);
@@ -221,39 +222,49 @@
     if(state!=='playing')return;
     state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;
     setButton('دوباره بازی کن',false);
-    if(score>best)say('رکورد جدید! در حال ذخیره '+faNum(score)+'…');
-    else say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
+    if(score>weekBest)say('رکورد جدید هفته! در حال ذخیره '+faNum(score)+'…');
+    else say('این دور تمام شد؛ در حال بررسی رکورد هفته…');
     draw();
-    if(score>best)submitScore();
-    else gameSessionId='';
+    // حتی دوری که رکورد را بهتر نمی‌کند ارسال می‌شود تا نشست یک‌بارمصرف سمت سرور بسته شود.
+    submitScore();
   }
   async function submitScore(){
     if(submitting||!member||!member.token)return;
-    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);gameSessionId='';return;}
-    if(!gameSessionId){say('جلسه بازی معتبر نیست؛ برای ثبت رکورد یک دور تازه بازی کن.');setButton('دوباره بازی کن',false);return;}
+    if(!gameSessionId){say('نشست بازی معتبر نیست؛ برای ثبت رکورد یک دور تازه بازی کن.');setButton('دوباره بازی کن',false);return;}
     submitting=true;setButton('در حال ذخیره رکورد…',true);
+    var previousBest=best;
     try{
       var response=await api().post({action:'submitGameScore',token:member.token,sessionId:gameSessionId,score:score});
+      gameSessionId='';
       renderBoard(response.leaderboard||[]);
       renderAllTimeBoard(response.allTimeLeaderboard||[]);
-      var savedLifetime=Number(response.lifetimeBest||member.bestScore||0);
+      var serverWeeklyBest=Number(response.weeklyBest!=null?response.weeklyBest:response.score);
+      if(!isFinite(serverWeeklyBest))serverWeeklyBest=0;
+      weekBest=Math.max(0,serverWeeklyBest);
+      if(weekBestEl)weekBestEl.textContent=faNum(weekBest);
+      var savedLifetime=Number(response.lifetimeBest!=null?response.lifetimeBest:member.bestScore||0);
+      if(!isFinite(savedLifetime))savedLifetime=Number(member.bestScore||0);
       best=Math.max(best,savedLifetime);
       member.bestScore=best;
       app().session.setMember(member);
       bestEl.textContent=faNum(best);
       if(response.saved){
-        best=Math.max(best,score);
-        bestEl.textContent=faNum(best);
-        say('رکورد جدید '+faNum(score)+' ثبت شد و در جدول این هفته قرار گرفت. آفرین! 💙');
+        weekBest=Math.max(weekBest,score);
+        if(weekBestEl)weekBestEl.textContent=faNum(weekBest);
+        if(score>previousBest){
+          say('رکورد تاریخی و هفتگی جدید '+faNum(score)+' ثبت شد. آفرین! 💙');
+        }else{
+          say('رکورد جدید هفته '+faNum(score)+' ثبت شد. آفرین! 💙');
+        }
       }else{
-        say('رکورد جدیدتری ثبت نشد؛ بهترین رکورد هفتگی شما '+faNum(response.score||score)+' است.');
+        say('رکورد هفته تغییر نکرد؛ بهترین رکورد این هفته '+faNum(weekBest)+' است.');
       }
     }catch(e){
-      say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
+      gameSessionId='';
+      say('ثبت نتیجه ناموفق بود؛ اتصال اینترنت را بررسی کن. برای تلاش دوباره یک دور تازه شروع کن.');
       toast(e.message||'ثبت رکورد ناموفق بود',true);
     }finally{
       submitting=false;
-      gameSessionId='';
       if(state==='over')setButton('دوباره بازی کن',false);
     }
   }
