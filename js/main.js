@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.16.0',
-    BACKEND_VERSION: '4.13.0-structured-diagnostics'
+    VERSION: '5.17.0',
+    BACKEND_VERSION: '4.15.0-post-auth-reads'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
