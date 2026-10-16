@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.16.0-game-session-validation';
+var APP_VERSION = '4.17.0';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -2292,13 +2292,18 @@ function submitGameScore(p) {
   var member = findMemberByPhone(auth.subject, true);
   if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
   if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
-  var score = Math.floor(Number(p.score || 0));
-  if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
+
+  var score = Number(p.score);
+  if (!isFinite(score) || score < 0 || score > 100000 || Math.floor(score) !== score) {
+    throw new Error('امتیاز نامعتبر است');
+  }
+
   var memberSheet = getSheet('اعضا');
   var memberRow = findRow(memberSheet, 'id', member.id);
   if (!memberRow) throw new Error('رکورد عضو پیدا نشد');
-  var week = currentWeekKey(), sheet = getSheet('بازی');
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  var week = currentWeekKey();
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
   try {
     // جلسهٔ بازی یک‌بارمصرف است؛ خواندن و حذف آن زیر قفل انجام می‌شود تا درخواست تکراری هم‌زمان پذیرفته نشود.
     var sessionId = String(p.sessionId || '').trim();
@@ -2312,7 +2317,7 @@ function submitGameScore(p) {
 
     var gameSession;
     try { gameSession = JSON.parse(sessionJson); }
-    catch (sessionError) { throw new Error('جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
+    catch (sessionError) { cache.remove(cacheKey); throw new Error('جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
 
     if (String(gameSession.memberId || '') !== String(member.id) ||
         normalizeMemberPhone(gameSession.phone || '') !== normalizeMemberPhone(auth.subject)) {
@@ -2326,8 +2331,7 @@ function submitGameScore(p) {
       throw new Error('مدت جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن');
     }
 
-    // عبور اول حدود ۲٫۴۴ ثانیه و عبورهای بعدی حدود ۱٫۴۲ ثانیه فاصله دارند.
-    // ۱٫۲۵ ثانیه حاشیه برای تأخیر شبکه در نظر گرفته شده است.
+    // برآورد محافظه‌کارانه بر اساس سرعت عبور موانع؛ ضدتقلب کامل فقط با اجرای بازی در سرور ممکن است.
     var effectiveElapsed = elapsedSeconds + 1.25;
     var maxPlausibleScore = effectiveElapsed < 2.44
       ? 0
@@ -2336,7 +2340,10 @@ function submitGameScore(p) {
       throw new Error('امتیاز با مدت زمان بازی سازگار نیست؛ یک دور تازه بازی کن');
     }
 
-    var rows = getSheetObjects('بازی'), existing = null, existingRow = 0;
+    var sheet = getSheet('بازی');
+    var rows = getSheetObjects('بازی');
+    var existing = null;
+    var existingRow = 0;
     for (var i = 0; i < rows.length; i++) {
       if (String(rows[i].weekKey) === week && String(rows[i].memberId) === String(member.id)) {
         existing = rows[i];
@@ -2347,291 +2354,46 @@ function submitGameScore(p) {
 
     var playerName = String(member.nickname || member.name || 'عضو').trim();
     var weeklyBest = existing ? Number(existing.score || 0) : 0;
+    if (!isFinite(weeklyBest) || weeklyBest < 0) weeklyBest = 0;
     var lifetimeBest = Number(member.bestScore || 0);
+    if (!isFinite(lifetimeBest) || lifetimeBest < 0) lifetimeBest = 0;
+    var saved = false;
 
-    // هیچ رکوردی ذخیره نمی‌شود مگر اینکه رکورد تاریخی خود عضو شکسته شود.
-    if (score <= lifetimeBest || (existing && score <= weeklyBest)) {
-      return {ok:true, saved:false, score:Math.max(weeklyBest, lifetimeBest), weekKey:week, lifetimeBest:lifetimeBest,
-        leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+    // بهترین امتیاز هفته مستقل از رکورد تاریخی است؛ پیشرفت هفتگی نباید به شکستن رکورد کل عمر وابسته باشد.
+    if (score > weeklyBest) {
+      if (score > lifetimeBest) {
+        var memberHeaders = memberSheet.getDataRange().getValues()[0].map(String);
+        var bestScoreIndex = memberHeaders.indexOf('bestScore');
+        if (bestScoreIndex < 0) throw new Error('ستون رکورد تاریخی عضو پیدا نشد؛ setup را بررسی کن');
+        memberSheet.getRange(memberRow, bestScoreIndex + 1).setValue(score);
+        lifetimeBest = score;
+      }
+
+      if (existing) {
+        var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
+        vals[1] = member.id;
+        vals[2] = playerName;
+        vals[3] = score;
+        vals[4] = nowIso();
+        sheet.getRange(existingRow, 1, 1, 5).setValues([vals]);
+      } else {
+        sheet.appendRow([week, member.id, playerName, score, nowIso()]);
+      }
+      weeklyBest = score;
+      saved = true;
     }
 
-    // فقط رکورد هفتگی بهتر می‌شود؛ رکورد تاریخی نیز فقط در صورت عبور از بهترین قبلی تغییر می‌کند.
-    if (score > lifetimeBest) {
-      memberSheet.getRange(memberRow, 8).setValue(score);
-      lifetimeBest = score;
-    }
-
-    if (existing) {
-      var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
-      vals[1] = member.id;
-      vals[2] = playerName;
-      vals[3] = score;
-      vals[4] = nowIso();
-      sheet.getRange(existingRow, 1, 1, 5).setValues([vals]);
-    } else {
-      sheet.appendRow([week, member.id, playerName, score, nowIso()]);
-    }
-
-    return {ok:true, saved:true, score:score, weekKey:week, lifetimeBest:lifetimeBest,
-      leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+    return {
+      ok: true,
+      saved: saved,
+      score: weeklyBest,
+      weeklyBest: weeklyBest,
+      weekKey: week,
+      lifetimeBest: lifetimeBest,
+      leaderboard: leaderboardForWeek(week),
+      allTimeLeaderboard: allTimeLeaderboard()
+    };
   } finally {
     lock.releaseLock();
   }
-}
-function registeredRingPhones_(){
-  var phones={};
-  getSheetObjects('ثبت‌نام حلقه').forEach(function(r){
-    var phone=normalizeMemberPhone(r.phone);
-    if(phone)phones[phone]=true;
-  });
-  return phones;
-}
-function gameRoleMap_(members, registeredPhones){
-  var byPhone={}, byId={}, master=getMasterCoachConfig();
-  var masterPhone=normalizeMemberPhone(master.phone);
-  if(masterPhone)byPhone[masterPhone]={roleKey:'owner',roleLabel:'مالک'};
-  getSheetObjects('مربیان').forEach(function(r){
-    if(!truthy(r.active))return;
-    var phone=normalizeMemberPhone(r.phone);
-    if(!phone)return;
-    if(String(r.role||'')==='master'||(masterPhone&&phone===masterPhone))byPhone[phone]={roleKey:'owner',roleLabel:'مالک'};
-    else if(!byPhone[phone])byPhone[phone]={roleKey:'coach',roleLabel:'مربی'};
-  });
-  getSheetObjects('مسئولین').forEach(function(r){
-    if(!truthy(r.active))return;
-    var phone=normalizeMemberPhone(r.phone);
-    if(phone&&!byPhone[phone])byPhone[phone]={roleKey:'official',roleLabel:'مسئول'};
-  });
-  members.forEach(function(m){
-    var id=String(m.id||''),phone=normalizeMemberPhone(m.phone),role;
-    // نقش‌های ویژه مستقل از ثبت‌نام عادی حلقه هستند؛ مالک همیشه قاب ویژه دارد.
-    if(byPhone[phone])role=byPhone[phone];
-    else if(registeredPhones[phone])role={roleKey:'member',roleLabel:'عضو حلقه'};
-    else role={roleKey:'unregistered',roleLabel:'هنوز عضو نشده'};
-    byId[id]=role;
-  });
-  return byId;
-}
-function leaderboardForWeek(week) {
-  var members=getSheetObjects('اعضا'),memberById={};
-  members.forEach(function(m){memberById[String(m.id||'')]=m;});
-  var registeredPhones=registeredRingPhones_(),roles=gameRoleMap_(members,registeredPhones);
-  return getSheetObjects('بازی')
-    .filter(function(r){return String(r.weekKey)===String(week);})
-    .map(function(r){
-      var id=String(r.memberId||''),member=memberById[id]||{},role=roles[id]||{roleKey:'unregistered',roleLabel:'عضو نشده'};
-      return {memberId:id,playerName:r.playerName,score:Number(r.score||0),profileImage:String(member.profileImage||''),registered:!!registeredPhones[normalizeMemberPhone(member.phone)],roleKey:role.roleKey,roleLabel:role.roleLabel};
-    })
-    .sort(function(a,b){return b.score-a.score;})
-    .slice(0,10);
-}
-function allTimeLeaderboard() {
-  var members=getSheetObjects('اعضا'),registeredPhones=registeredRingPhones_(),roles=gameRoleMap_(members,registeredPhones);
-  return members.filter(function(r){return truthy(r.active)&&Number(r.bestScore||0)>0;})
-    .map(function(r){
-      var id=String(r.id||''),role=roles[id]||{roleKey:'unregistered',roleLabel:'عضو نشده'};
-      return {memberId:id,playerName:String(r.nickname||r.name||'عضو'),score:Number(r.bestScore||0),profileImage:String(r.profileImage||''),registered:!!registeredPhones[normalizeMemberPhone(r.phone)],roleKey:role.roleKey,roleLabel:role.roleLabel};
-    })
-    .sort(function(a,b){return b.score-a.score;})
-    .slice(0,10);
-}
-
-function previousWinner() {
-  var prev = previousWeekKey();
-  var top = leaderboardForWeek(prev);
-  if (!top.length) return null;
-  return { weekKey:prev, playerName:top[0].playerName, score:top[0].score };
-}
-
-/* -------------------------------------------------------------------------- */
-/* Settings                                                                   */
-/* -------------------------------------------------------------------------- */
-
-function getSetting(key) {
-  var row = findRow(getSheet('تنظیمات'), 'key', key);
-  if (!row) return '';
-  return String(getSheet('تنظیمات').getRange(row,2).getValue() || '');
-}
-
-function setSetting(key, value) {
-  var sheet = getSheet('تنظیمات');
-  var row = findRow(sheet, 'key', key);
-  if (row) {
-    sheet.getRange(row,2).setValue(value);
-  } else {
-    sheet.appendRow([key,value]);
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Drive                                                                      */
-/* -------------------------------------------------------------------------- */
-
-function uploadConsentPhotoPrivate(base64, mime, name) {
-  var data = String(base64 || '').replace(/\\s+/g, '');
-  if (data.indexOf(',') >= 0) data = data.slice(data.lastIndexOf(',') + 1);
-  if (!data || data.length > 7100000) throw new Error('حجم عکس رضایت‌نامه باید حداکثر ۵ مگابایت باشد');
-  var type = String(mime || 'image/jpeg').toLowerCase();
-  if (['image/jpeg','image/png','image/webp'].indexOf(type) < 0) throw new Error('فرمت عکس رضایت‌نامه باید JPG، PNG یا WebP باشد');
-  var bytes;
-  try { bytes = Utilities.base64Decode(data); } catch (e) { throw new Error('فایل رضایت‌نامه معتبر نیست'); }
-  if (!bytes || !bytes.length || bytes.length > 5 * 1024 * 1024) throw new Error('حجم عکس رضایت‌نامه باید حداکثر ۵ مگابایت باشد');
-  var blob = Utilities.newBlob(bytes, type, String(name || ('registration-' + Date.now())));
-  var file = getDriveFolder().createFile(blob);
-  try {
-    file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
-    if (file.getSharingAccess() !== DriveApp.Access.PRIVATE) throw new Error('PRIVATE_ACCESS_NOT_CONFIRMED');
-  } catch (e) {
-    try { file.setTrashed(true); } catch (trashError) {}
-    throw new Error('گوگل درایو اجازهٔ خصوصی‌ماندن عکس رضایت‌نامه را نداد. پوشهٔ تصاویر را بررسی کن.');
-  }
-  return {
-    id:file.getId(),
-    url:'https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w1200'
-  };
-}
-
-function getDriveFolder() {
-  if (!CFG.DRIVE_FOLDER_ID || CFG.DRIVE_FOLDER_ID.indexOf('PASTE_') === 0) {
-    throw new Error('DRIVE_FOLDER_ID را در Code.gs تنظیم کن');
-  }
-  return DriveApp.getFolderById(CFG.DRIVE_FOLDER_ID);
-}
-
-/* -------------------------------------------------------------------------- */
-/* Sheets helpers                                                             */
-/* -------------------------------------------------------------------------- */
-
-function migrateSheetHeaders(sheet,name){
-  var desired=HEADERS[name]; if(!desired||!desired.length)return;
-  var last=sheet.getLastRow(); if(last===0){sheet.getRange(1,1,1,desired.length).setValues([desired]);sheet.setFrozenRows(1);return;}
-  var vals=sheet.getDataRange().getValues(), old=vals[0].map(String), same=desired.length===old.length&&desired.every(function(h,i){return h===old[i];});
-  if(same)return;
-  var output=[desired];
-  for(var r=1;r<vals.length;r++){var obj={};for(var j=0;j<old.length;j++)obj[old[j]]=vals[r][j];output.push(desired.map(function(h){return obj[h]!==undefined?obj[h]:'';}));}
-  sheet.clearContents();sheet.getRange(1,1,output.length,desired.length).setValues(output);sheet.setFrozenRows(1);
-}
-function findRowById(name,id){return findRow(getSheet(name),'id',id);}
-function getSS() {
-  if (!CFG.SPREADSHEET_ID || CFG.SPREADSHEET_ID.indexOf('PASTE_') === 0) {
-    throw new Error('SPREADSHEET_ID را در Code.gs تنظیم کن');
-  }
-  return SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
-}
-
-function getSheet(name) {
-  var ss = getSS();
-  var sheet = ss.getSheetByName(name);
-  if (!sheet) {
-    ensureSheet(ss,name,HEADERS[name] || []);
-    sheet = ss.getSheetByName(name);
-  }
-  migrateSheetHeaders(sheet,name);
-  return sheet;
-}
-
-function ensureSheet(ss,name,headers) {
-  var sheet = ss.getSheetByName(name);
-  if (!sheet) sheet = ss.insertSheet(name);
-
-  if (sheet.getLastRow() === 0 && headers.length) {
-    sheet.getRange(1,1,1,headers.length).setValues([headers]);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-function getSheetObjects(name) {
-  var sheet = getSheet(name);
-  var values = sheet.getDataRange().getValues();
-  if (values.length < 2) return [];
-
-  var headers = values[0].map(String);
-  var out = [];
-  for (var i=1;i<values.length;i++){
-    var row = values[i];
-    if (row.every(function(v){ return v === '' || v === null; })) continue;
-    var obj = {};
-    for (var j=0;j<headers.length;j++) obj[headers[j]] = row[j];
-    out.push(obj);
-  }
-  return out;
-}
-
-function rowToArray(name,obj) {
-  return HEADERS[name].map(function(h){ return obj[h] !== undefined ? obj[h] : ''; });
-}
-
-function rowToObject(name,row) {
-  var headers = HEADERS[name];
-  var o = {};
-  for (var i=0;i<headers.length;i++) o[headers[i]] = row[i];
-  return o;
-}
-
-function findRow(sheet, key1, val1, key2, val2) {
-  var range = sheet.getDataRange();
-  var values = range.getValues();
-  if (values.length < 2) return 0;
-  var headers = values[0].map(String);
-  var i1 = headers.indexOf(key1);
-  var i2 = key2 ? headers.indexOf(key2) : -1;
-
-  for (var r=1;r<values.length;r++){
-    if (String(values[r][i1]) === String(val1) &&
-        (!key2 || String(values[r][i2]) === String(val2))) {
-      return r+1;
-    }
-  }
-  return 0;
-}
-
-function truthy(v) {
-  if (v === true) return true;
-  var s = String(v).toLowerCase();
-  return s === 'true' || s === '1' || s === 'بله';
-}
-
-function uid(prefix) {
-  return prefix + '-' + Utilities.getUuid().split('-')[0].toUpperCase();
-}
-
-function nowIso() {
-  return Utilities.formatDate(new Date(), CFG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
-}
-
-function currentDate() {
-  return Utilities.formatDate(new Date(), CFG.TIMEZONE, 'yyyy-MM-dd');
-}
-
-function currentMonth() {
-  return Utilities.formatDate(new Date(), CFG.TIMEZONE, 'yyyy-MM');
-}
-
-function currentWeekKey() {
-  var d = localDateOnly(new Date());
-  var day = d.getDay(); // Sunday=0
-  // هفته‌ی بازی از جمعه شروع می‌شود
-  var delta = (day + 2) % 7;
-  d.setDate(d.getDate() - delta);
-  return Utilities.formatDate(d, CFG.TIMEZONE, 'yyyy-MM-dd');
-}
-
-function previousWeekKey() {
-  var d = localDateOnly(new Date());
-  d.setDate(d.getDate() - 7);
-  var day = d.getDay();
-  var delta = (day + 2) % 7;
-  d.setDate(d.getDate() - delta);
-  return Utilities.formatDate(d, CFG.TIMEZONE, 'yyyy-MM-dd');
-}
-
-function localDateOnly(date) {
-  var text = Utilities.formatDate(date, CFG.TIMEZONE, 'yyyy-MM-dd');
-  var parts = text.split('-').map(Number);
-  return new Date(parts[0], parts[1]-1, parts[2]);
-}
-
-function byNewest(a,b) {
-  return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
 }
