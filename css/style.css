@@ -2858,3 +2858,14 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 /* Member-role badge is shared by the game scoreboards and historical records. */
 .member-role-badge{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1px solid #bfdbfe;color:#1d4ed8;font-size:.48rem;font-weight:800;line-height:1.65}
 .member-role-badge--neutral{color:#8994a1!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;font-weight:600!important}
+
+
+/* v5.19.0 — Local-first font stacks for Persian; no external font server required. */
+:root {
+  --font-fa-ui: "Noto Sans Arabic UI", "Noto Sans Arabic", "IRANSansX", "IRANSans", "Vazirmatn", Tahoma, Arial, sans-serif;
+  --font-fa-reading: "Noto Naskh Arabic UI", "Noto Naskh Arabic", "B Nazanin", "Vazirmatn", Tahoma, serif;
+  --font-fa-display: "Noto Naskh Arabic UI", "Noto Naskh Arabic", "B Nazanin", "Aref Ruqaa", Tahoma, serif;
+}
+body, button, input, textarea, select, .nav-item, .btn-submit { font-family: var(--font-fa-ui); }
+.app-header h1, .section-title, .section-heading h2, .event-head h2, .hero-title, .auth-title, .game-hero h2 { font-family: var(--font-fa-display); }
+p, .section-subtitle, .form-help, .form-hint, .home-event-overlay p { font-family: var(--font-fa-reading); }
