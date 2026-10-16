@@ -573,3 +573,84 @@ label {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* 5.18.0 — responsive and accessibility corrections */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.app-container {
+  min-width: 0;
+}
+
+.app-container :where(main, section, article, form, header, footer, .page-section, .card, .panel) {
+  min-width: 0;
+}
+
+img,
+picture,
+video,
+canvas {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+:where([tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 3px solid rgba(196, 154, 58, .72);
+  outline-offset: 3px;
+}
+
+:where(.btn-submit, .hero-primary, .welcome-primary, .nav-item) {
+  min-height: 44px;
+}
+
+::selection {
+  background: rgba(196, 154, 58, .24);
+  color: var(--text-primary);
+}
+
+@media (max-width: 420px) {
+  .app-container {
+    box-shadow: none;
+  }
+
+  .page {
+    padding-inline: clamp(12px, 4vw, 18px);
+  }
+
+  .section-heading,
+  .event-head,
+  .ranking-heading,
+  .panel-head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .section-heading > a,
+  .event-head > a,
+  .ranking-heading > a {
+    max-width: 100%;
+    margin-inline-start: auto;
+  }
+}
