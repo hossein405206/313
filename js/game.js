@@ -217,14 +217,12 @@
     if(state!=='playing')return;
     state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;
     setButton('دوباره بازی کن',false);
-    if(score>best)say('رکورد جدید! در حال ذخیره '+faNum(score)+'…');
-    else say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
+    say('در حال بررسی و ذخیرهٔ رکورد این هفته و رکورد تاریخی…');
     draw();
-    if(score>best)submitScore();
+    submitScore();
   }
   async function submitScore(){
-    if(submitting||!member||!member.token)return;
-    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
+    if(submitting||!member||!member.token||!gameSessionId)return;
     submitting=true;setButton('در حال ذخیره رکورد…',true);
     try{
       var response=await api().post({action:'submitGameScore',token:member.token,score:score,gameSessionId:gameSessionId});
@@ -236,12 +234,12 @@
       member.bestScore=best;
       app().session.setMember(member);
       bestEl.textContent=faNum(best);
-      if(response.saved){
-        best=Math.max(best,score);
-        bestEl.textContent=faNum(best);
-        say('رکورد جدید '+faNum(score)+' ثبت شد و در جدول این هفته قرار گرفت. آفرین! 💙');
+      if(response.weeklySaved){
+        say('رکورد هفتگی جدید '+faNum(response.weeklyBest||score)+' ثبت شد.'+(response.lifetimeUpdated?' رکورد تاریخی هم بهبود یافت.':'')+' آفرین! 💙');
+      }else if(response.lifetimeUpdated){
+        say('رکورد تاریخی شما به '+faNum(response.lifetimeBest||score)+' بهبود یافت؛ رکورد این هفته تغییر نکرد.');
       }else{
-        say('رکورد جدیدتری ثبت نشد؛ بهترین رکورد هفتگی شما '+faNum(response.score||score)+' است.');
+        say('رکورد جدیدی ثبت نشد؛ بهترین رکورد این هفتهٔ شما '+faNum(response.weeklyBest||0)+' است.');
       }
     }catch(e){
       say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
