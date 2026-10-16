@@ -1,5 +1,5 @@
 (function(){'use strict';
-var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,permissions:{},events:[],data:null};
+var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,permissions:{},events:[],data:null,editingCoachCode:'',editingOfficialCode:''};
 var PERMS=[['events','رویدادها'],['schedule','برنامه هفتگی'],['registrations','ثبت‌نام‌ها'],['reports','گزارش‌ها'],['game','جایزه بازی']];
 function api(){return window.KanoonApp&&window.KanoonApp.api}
 function toast(m,e){var t=window.KanoonApp&&window.KanoonApp.toast;if(t)(e?t.error:t.success)(m)}
@@ -71,14 +71,52 @@ async function saveEvent(){var btn=$('#saveEventBtn');setBusy(btn,'در حال �
 function loadSchedule(){api().get({action:'listSchedule'}).then(function(r){var list=r.items||[],box=$('#scheduleAdmin');box.innerHTML=list.length?list.map(function(x){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(x.day)+' · '+esc(x.title)+'</strong><small>'+esc(x.time)+'</small></div><div class="admin-actions"><button data-sedit="'+esc(x.id)+'">ویرایش</button><button class="danger" data-sdel="'+esc(x.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>برنامه هفتگی خالی است</p></div>';box.querySelectorAll('[data-sedit]').forEach(function(b){b.onclick=function(){var x=list.find(function(y){return y.id===b.dataset.sedit});if(x){$('#scheduleEditor').classList.remove('hidden');$('#scheduleId').value=x.id;$('#scheduleDay').value=x.day;$('#scheduleTitle').value=x.title;$('#scheduleSort').value=x.sort||0}}});box.querySelectorAll('[data-sdel]').forEach(function(b){b.onclick=function(){if(confirm('این برنامه حذف شود؟'))api().post({action:'deleteSchedule',token:state.token,id:b.dataset.sdel}).then(function(){toast('برنامه حذف شد');loadSchedule()}).catch(function(e){toast(e.message,1)})}})}).catch(function(e){toast(e.message||'خطا در برنامه هفتگی',1)})}
 function setupSchedule(){var b=$('#newScheduleBtn');if(!b)return;b.onclick=function(){$('#scheduleEditor').classList.remove('hidden');$('#scheduleId').value='';$('#scheduleDay').value='';$('#scheduleTitle').value='';$('#scheduleSort').value='0'};$('#cancelScheduleBtn').onclick=function(){$('#scheduleEditor').classList.add('hidden')};$('#saveScheduleBtn').onclick=function(){var day=$('#scheduleDay').value,title=$('#scheduleTitle').value;if(!day||!title){toast('روز و عنوان برنامه را وارد کن',1);return}api().post({action:'saveSchedule',token:state.token,id:$('#scheduleId').value,day:day,title:title,time:'',location:'',sort:Number($('#scheduleSort').value||0)}).then(function(){toast('برنامه ذخیره شد ✓');$('#scheduleEditor').classList.add('hidden');loadSchedule()}).catch(function(e){toast(e.message,1)})};loadSchedule()}
 function loadCoaches(){api().get({action:'listCoaches',token:state.token}).then(function(r){var box=$('#coachList');box.innerHTML=r.items.map(function(x){var label=x.role==='master'?'مالک اصلی':'مدیر';return '<div class="admin-item coach-admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.phone)+' · '+label+' · '+esc(x.code)+'</small><div class="permission-summary">'+PERMS.filter(function(p){return x.permissions&&x.permissions[p[0]]}).map(function(p){return '<span>'+p[1]+'</span>'}).join(' · ')+'</div></div><div class="admin-actions">'+(x.role==='master'?'':'<button data-coach-edit="'+esc(x.code)+'">ویرایش</button><button data-coach-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'اخراج':'فعال‌سازی')+'</button>')+'</div></div>'}).join('');box.querySelectorAll('[data-coach-edit]').forEach(function(b){b.onclick=function(){editCoach(b.dataset.coachEdit,r.items)}});box.querySelectorAll('[data-coach-status]').forEach(function(b){b.onclick=function(){setCoachStatus(b.dataset.coachStatus,b.dataset.active==='1')}})}).catch(function(e){toast(e.message,1)})}
-function editCoach(code,list){var x=list.find(function(y){return y.code===code});if(!x)return;var name=prompt('نام مدیر:',x.name);if(name===null)return;var phone=prompt('شماره مدیر:',x.phone);if(phone===null)return;var newCode=prompt('کد جدید:',x.code);if(newCode===null)return;var wrap=document.createElement('div');renderPermissionChecks(wrap,x.permissions);var txt=PERMS.map(function(p,i){return (x.permissions&&x.permissions[p[0]]?'✓ ':'')+p[1]}).join('، ');var perms={};PERMS.forEach(function(p){perms[p[0]]=confirm('دسترسی «'+p[1]+'» فعال باشد؟\nوضعیت فعلی: '+(x.permissions&&x.permissions[p[0]]?'فعال':'خاموش'))});api().post({action:'updateCoach',token:state.token,oldCode:code,name:name,phone:phone,code:newCode,permissions:perms}).then(function(){toast('اطلاعات مدیر ذخیره شد ✓');loadCoaches()}).catch(function(e){toast(e.message,1)})}
+function editCoach(code,list){
+ var x=list.find(function(y){return y.code===code});if(!x)return;
+ state.editingCoachCode=code;
+ $('#newCoachName').value=x.name||'';$('#newCoachPhone').value=x.phone||'';$('#newCoachCode').value=x.code||'';
+ renderPermissionChecks($('#newCoachPermissions'),x.permissions||{});
+ $('#addCoachBtn').textContent='ذخیره تغییرات مربی';$('#cancelCoachEditBtn').classList.remove('hidden');
+ $('#newCoachName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function resetCoachEditor(){
+ state.editingCoachCode='';$('#newCoachName').value='';$('#newCoachPhone').value='';$('#newCoachCode').value='';
+ renderPermissionChecks($('#newCoachPermissions'),{});$('#addCoachBtn').textContent='ثبت مدیر';$('#cancelCoachEditBtn').classList.add('hidden');
+}
 function setCoachStatus(code,active){api().post({action:'setCoachStatus',token:state.token,code:code,active:active}).then(function(){toast(active?'مدیر فعال شد ✓':'دسترسی مدیر بسته شد');loadCoaches()}).catch(function(e){toast(e.message,1)})}
 function loadOfficials(){api().get({action:'listOfficialsManage',token:state.token}).then(function(r){var box=$('#officialList');box.innerHTML=r.items.map(function(x){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.role)+' · '+esc(x.code)+(x.phone?' · '+esc(x.phone):'')+'</small></div><div class="admin-actions"><button data-off-edit="'+esc(x.code)+'">ویرایش</button><button data-off-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'اخراج':'فعال‌سازی')+'</button></div></div>'}).join('')}).catch(function(e){toast(e.message,1)})}
+function editOfficial(code,list){
+ var x=list.find(function(y){return y.code===code});if(!x)return;
+ state.editingOfficialCode=code;$('#newOfficialName').value=x.name||'';$('#newOfficialCode').value=x.code||'';
+ $('#newOfficialPhone').value=x.phone||'';$('#newOfficialRole').value=x.role||'نظارت';
+ $('#addOfficialBtn').textContent='ذخیره تغییرات مسئول';$('#cancelOfficialEditBtn').classList.remove('hidden');
+ $('#newOfficialName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function resetOfficialEditor(){
+ state.editingOfficialCode='';$('#newOfficialName').value='';$('#newOfficialCode').value='';$('#newOfficialPhone').value='';
+ $('#newOfficialRole').value='حضور و غیاب - راهنمایی';$('#addOfficialBtn').textContent='ثبت مسئول';$('#cancelOfficialEditBtn').classList.add('hidden');
+}
 function setupStaff(){
  renderPermissionChecks($('#newCoachPermissions'),{});
- $('#addCoachBtn').onclick=function(){var p=readPermissions($('#newCoachPermissions'));api().post({action:'addCoach',token:state.token,name:$('#newCoachName').value.trim(),phone:$('#newCoachPhone').value.trim(),code:$('#newCoachCode').value.trim(),permissions:p}).then(function(){toast('مدیر ثبت شد ✓');$('#newCoachName').value='';$('#newCoachPhone').value='';$('#newCoachCode').value='';renderPermissionChecks($('#newCoachPermissions'),{});loadCoaches()}).catch(function(e){toast(e.message,1)})};
- $('#addOfficialBtn').onclick=function(){api().post({action:'addOfficial',token:state.token,name:$('#newOfficialName').value.trim(),code:$('#newOfficialCode').value.trim(),phone:$('#newOfficialPhone').value.trim(),role:$('#newOfficialRole').value}).then(function(){toast('مسئول ثبت شد ✓');$('#newOfficialName').value='';$('#newOfficialCode').value='';$('#newOfficialPhone').value='';loadOfficials()}).catch(function(e){toast(e.message,1)})};
- $('#officialList').addEventListener('click',function(e){var edit=e.target.closest('[data-off-edit]'),st=e.target.closest('[data-off-status]');if(st){api().post({action:'setOfficialStatus',token:state.token,code:st.dataset.offStatus,active:st.dataset.active==='1'}).then(function(){toast('وضعیت مسئول تغییر کرد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}else if(edit){var code=edit.dataset.offEdit;var name=prompt('نام مسئول جدید:');if(name===null)return;var newCode=prompt('کد جدید:');if(newCode===null)return;var role=prompt('نوع مسئولیت: حضور و غیاب - راهنمایی / حضور و غیاب - دبستان / نظارت');if(role===null)return;var phone=prompt('شماره همراه مسئول (09xxxxxxxxx):');if(phone===null)return;api().post({action:'updateOfficial',token:state.token,oldCode:code,name:name,code:newCode,phone:phone,role:role}).then(function(){toast('مسئول ویرایش شد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}})}
+ $('#addCoachBtn').onclick=function(){
+  var p=readPermissions($('#newCoachPermissions')),editing=state.editingCoachCode;
+  var payload={action:editing?'updateCoach':'addCoach',token:state.token,name:$('#newCoachName').value.trim(),phone:$('#newCoachPhone').value.trim(),code:$('#newCoachCode').value.trim(),permissions:p};
+  if(editing)payload.oldCode=editing;
+  api().post(payload).then(function(){toast(editing?'اطلاعات مربی ذخیره شد ✓':'مربی ثبت شد ✓');resetCoachEditor();loadCoaches()}).catch(function(e){toast(e.message,1)});
+ };
+ $('#cancelCoachEditBtn').onclick=resetCoachEditor;
+ $('#addOfficialBtn').onclick=function(){
+  var editing=state.editingOfficialCode,payload={action:editing?'updateOfficial':'addOfficial',token:state.token,name:$('#newOfficialName').value.trim(),code:$('#newOfficialCode').value.trim(),phone:$('#newOfficialPhone').value.trim(),role:$('#newOfficialRole').value};
+  if(editing)payload.oldCode=editing;
+  api().post(payload).then(function(){toast(editing?'اطلاعات مسئول ذخیره شد ✓':'مسئول ثبت شد ✓');resetOfficialEditor();loadOfficials()}).catch(function(e){toast(e.message,1)});
+ };
+ $('#cancelOfficialEditBtn').onclick=resetOfficialEditor;
+ $('#officialList').addEventListener('click',function(e){
+  var edit=e.target.closest('[data-off-edit]'),st=e.target.closest('[data-off-status]');
+  if(st){api().post({action:'setOfficialStatus',token:state.token,code:st.dataset.offStatus,active:st.dataset.active==='1'}).then(function(){toast('وضعیت مسئول تغییر کرد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}
+  else if(edit){api().get({action:'listOfficialsManage',token:state.token}).then(function(r){editOfficial(edit.dataset.offEdit,r.items||[])}).catch(function(x){toast(x.message,1)})}
+ });
+}
 function setup(){
  setupSchedule();setupStaff();
  $('#newEventBtn').onclick=function(){openEditor(null)};$('#cancelEventBtn').onclick=function(){$('#eventEditor').classList.add('hidden')};$('#saveEventBtn').onclick=saveEvent;
