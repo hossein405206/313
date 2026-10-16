@@ -728,100 +728,182 @@
     var fileInput = DOM.qs('#fileInput');
     var preview = DOM.qs('#uploadPreview');
     var campSelect = DOM.qs('#campSelect');
+    var statusBox = DOM.qs('#registerStatus');
     var selectedFile = null;
+    var submitting = false;
+
+    function showStatus(message, type) {
+      if (statusBox) {
+        statusBox.textContent = message || '';
+        statusBox.className = 'camp-register-status' + (type ? ' is-' + type : '');
+        statusBox.hidden = !message;
+      } else if (type === 'error') {
+        Toast.error(message);
+      } else if (type === 'success') {
+        Toast.success(message);
+      }
+    }
+
+    function normalizeInputDigits(value) {
+      return String(value || '')
+        .replace(/[۰-۹]/g, function (c) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)); })
+        .replace(/[٠-٩]/g, function (c) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)); });
+    }
+
+    function clearPreview() {
+      if (preview) {
+        preview.textContent = '';
+        preview.classList.remove('active');
+      }
+    }
 
     function handleFile(file) {
-      var allowedTypes = ['image/jpeg','image/png','image/webp'];
+      var allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!file || allowedTypes.indexOf(String(file.type || '').toLowerCase()) < 0) {
         selectedFile = null;
         if (fileInput) fileInput.value = '';
-        if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
-        Toast.error('فرمت عکس باید JPG، PNG یا WebP باشد');
+        clearPreview();
+        showStatus('فرمت عکس باید JPG، PNG یا WebP باشد.', 'error');
         return;
       }
-      if (!Validate.fileSize(file, CONFIG.MAX_FILE_SIZE)) {
+      if (!Validate.fileSize(file, CONFIG.MAX_FILE_SIZE) || file.size <= 0) {
         selectedFile = null;
         if (fileInput) fileInput.value = '';
-        if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
-        Toast.error('حجم فایل بیشتر از ۵ مگابایت');
+        clearPreview();
+        showStatus('حجم عکس باید بیشتر از صفر و حداکثر ۵ مگابایت باشد.', 'error');
         return;
       }
       selectedFile = file;
       var reader = new FileReader();
       reader.onload = function (e) {
         if (preview) {
-          preview.innerHTML = '<img src="' + e.target.result + '" alt="پیش‌نمایش">';
+          var image = document.createElement('img');
+          image.src = e.target.result;
+          image.alt = 'پیش‌نمایش عکس رضایت‌نامه';
+          preview.textContent = '';
+          preview.appendChild(image);
           preview.classList.add('active');
         }
+        showStatus('عکس رضایت‌نامه انتخاب شد. قبل از ارسال، اطلاعات را بررسی کن.', 'info');
+      };
+      reader.onerror = function () {
+        selectedFile = null;
+        showStatus('خواندن عکس ناموفق بود؛ دوباره انتخابش کن.', 'error');
       };
       reader.readAsDataURL(file);
     }
 
     if (zone && fileInput) {
       DOM.on(zone, 'click', function () { fileInput.click(); });
-      DOM.on(zone, 'dragover', function (e) { e.preventDefault(); zone.classList.add('dragover'); });
-      DOM.on(zone, 'dragleave', function (e) { e.preventDefault(); zone.classList.remove('dragover'); });
+      DOM.on(zone, 'keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
+      DOM.on(zone, 'dragenter', function (e) {
+        e.preventDefault();
+        zone.classList.add('is-dragging');
+      });
+      DOM.on(zone, 'dragover', function (e) {
+        e.preventDefault();
+        zone.classList.add('is-dragging');
+      });
+      DOM.on(zone, 'dragleave', function (e) {
+        e.preventDefault();
+        zone.classList.remove('is-dragging');
+      });
       DOM.on(zone, 'drop', function (e) {
         e.preventDefault();
-        zone.classList.remove('dragover');
-        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        zone.classList.remove('is-dragging');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFile(e.dataTransfer.files[0]);
+        }
       });
       DOM.on(fileInput, 'change', function () {
-        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+        if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
       });
     }
 
-    // بارگذاری اردوهای فعال
+    ['phone', 'fatherPhone', 'nationalCode'].forEach(function (id) {
+      var input = DOM.qs('#' + id);
+      if (!input) return;
+      DOM.on(input, 'input', function () {
+        var max = id === 'nationalCode' ? 10 : 11;
+        input.value = normalizeInputDigits(input.value).replace(/\D/g, '').slice(0, max);
+      });
+    });
+
+    // Load active camps using the shared API layer.
     if (campSelect) {
       Api.get({ action: 'listCamps', status: 'active' })
         .then(function (res) {
-          var camps = res.items || [];
-          var html = '<option value="">انتخاب کن...</option>';
-          for (var i = 0; i < camps.length; i++) {
-            html += '<option value="' + DOM.escape(camps[i].id) + '">' + DOM.escape(camps[i].title) + '</option>';
-          }
-          campSelect.innerHTML = html;
-          if (!camps.length) {
-            campSelect.innerHTML = '<option value="">هیچ اردوی فعالی نیست</option>';
-          }
+          var camps = Array.isArray(res.items) ? res.items : [];
+          campSelect.textContent = '';
+          var placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = camps.length ? 'اردو را انتخاب کن' : 'اردوی فعالی برای ثبت‌نام وجود ندارد';
+          campSelect.appendChild(placeholder);
+          camps.forEach(function (camp) {
+            if (!camp || !camp.id || !camp.title) return;
+            var option = document.createElement('option');
+            option.value = String(camp.id);
+            option.textContent = String(camp.title);
+            campSelect.appendChild(option);
+          });
+          campSelect.disabled = camps.length === 0;
+          if (!camps.length) showStatus('در حال حاضر اردوی فعالی برای ثبت‌نام وجود ندارد.', 'info');
         })
         .catch(function (err) {
-          Logger.error('خطا در اردوها:', err);
-          campSelect.innerHTML = '<option value="">خطا در بارگذاری</option>';
+          campSelect.textContent = '';
+          var option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'بارگذاری اردوها ناموفق بود';
+          campSelect.appendChild(option);
+          campSelect.disabled = true;
+          showStatus(err.message || 'فهرست اردوها دریافت نشد. اتصال اینترنت را بررسی کن.', 'error');
         });
     }
 
     DOM.on(form, 'submit', async function (e) {
       e.preventDefault();
+      if (submitting) return;
 
       var data = {
-        campId:       campSelect ? campSelect.value : '',
-        firstName:    (DOM.qs('#firstName')    || {}).value || '',
-        lastName:     (DOM.qs('#lastName')     || {}).value || '',
+        campId: campSelect ? campSelect.value : '',
+        firstName: (DOM.qs('#firstName') || {}).value || '',
+        lastName: (DOM.qs('#lastName') || {}).value || '',
         nationalCode: (DOM.qs('#nationalCode') || {}).value || '',
-        phone:        (DOM.qs('#phone')        || {}).value || '',
-        fatherName:   (DOM.qs('#fatherName')   || {}).value || '',
-        fatherPhone:  (DOM.qs('#fatherPhone')  || {}).value || ''
+        phone: (DOM.qs('#phone') || {}).value || '',
+        fatherName: (DOM.qs('#fatherName') || {}).value || '',
+        fatherPhone: (DOM.qs('#fatherPhone') || {}).value || ''
       };
+      Object.keys(data).forEach(function (key) { data[key] = String(data[key]).trim(); });
+      data.firstName = data.firstName.replace(/\s+/g, ' ');
+      data.lastName = data.lastName.replace(/\s+/g, ' ');
+      data.fatherName = data.fatherName.replace(/\s+/g, ' ');
+      data.nationalCode = normalizeInputDigits(data.nationalCode).replace(/\D/g, '');
+      data.phone = normalizeInputDigits(data.phone).replace(/\D/g, '');
+      data.fatherPhone = normalizeInputDigits(data.fatherPhone).replace(/\D/g, '');
 
-      var keys = Object.keys(data);
-      for (var i = 0; i < keys.length; i++) data[keys[i]] = String(data[keys[i]]).trim();
-
-      if (!data.campId)         { Toast.error('اردو رو انتخاب کن'); return; }
-      if (!data.firstName)      { Toast.error('نام رو وارد کن'); return; }
-      if (!data.lastName)       { Toast.error('نام خانوادگی رو وارد کن'); return; }
-      if (!data.fatherName)     { Toast.error('نام پدر رو وارد کن'); return; }
-      if (!Validate.iranMobile(data.phone))       { Toast.error('شماره همراه خودت نامعتبر'); return; }
-      if (!Validate.iranMobile(data.fatherPhone)) { Toast.error('شماره پدر نامعتبر'); return; }
+      if (!data.campId) return showStatus('ابتدا اردو را انتخاب کن.', 'error');
+      if (!data.firstName || !data.lastName || !data.fatherName) return showStatus('نام، نام خانوادگی و نام پدر الزامی است.', 'error');
+      if (data.firstName.length > 80 || data.lastName.length > 80 || data.fatherName.length > 80) return showStatus('نام‌ها نباید بیشتر از ۸۰ نویسه باشند.', 'error');
+      if (!Validate.iranMobile(data.phone)) return showStatus('شماره همراه باید ۱۱ رقم و با ۰۹ شروع شود.', 'error');
+      if (!Validate.iranMobile(data.fatherPhone)) return showStatus('شماره همراه پدر باید ۱۱ رقم و با ۰۹ شروع شود.', 'error');
+      if (data.nationalCode && !/^\d{10}$/.test(data.nationalCode)) return showStatus('کد ملی باید ۱۰ رقم باشد.', 'error');
+      if (!selectedFile) return showStatus('برای ثبت‌نام، عکس رضایت‌نامه پدر را انتخاب کن.', 'error');
 
       var btn = form.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.textContent = 'در حال ارسال...';
+      submitting = true;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'در حال ثبت درخواست…';
+      }
+      showStatus('در حال آماده‌سازی عکس و ارسال درخواست؛ صفحه را نبند.', 'info');
 
       try {
-        var photoBase64 = '';
-        if (selectedFile) photoBase64 = await RegisterForm._fileToBase64(selectedFile);
-
+        var photoBase64 = await RegisterForm._fileToBase64(selectedFile);
         await Api.post({
           action: 'registerCamp',
           campId: data.campId,
@@ -832,21 +914,23 @@
           fatherName: data.fatherName,
           fatherPhone: data.fatherPhone,
           photoBase64: photoBase64,
-          photoMimeType: selectedFile ? selectedFile.type : '',
+          photoMimeType: selectedFile.type,
           extraData: {}
         });
 
         form.reset();
-        if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
         selectedFile = null;
-        Toast.success('ثبت‌نام ارسال شد و در انتظار تایید ✓');
-
+        clearPreview();
+        showStatus('درخواست ثبت‌نام با موفقیت ارسال شد و در انتظار تأیید مربی است.', 'success');
       } catch (err) {
         Logger.error('ثبت‌نام:', err);
-        Toast.error(err.message || 'خطا در ارسال');
+        showStatus(err.message || 'ثبت درخواست ناموفق بود. اطلاعات و اتصال اینترنت را بررسی کن.', 'error');
       } finally {
-        btn.disabled = false;
-        btn.textContent = 'ثبت‌نام';
+        submitting = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'ثبت‌نام';
+        }
       }
     });
   }
