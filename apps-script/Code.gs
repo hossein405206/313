@@ -1,6 +1,6 @@
 /* ============================================================================
    313 / حلقه شهید هادی ذوالفقاری
-   Google Apps Script Backend v5.6.0
+   Google Apps Script Backend v5.7.0
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
@@ -19,7 +19,7 @@
    ثبت‌نام‌ها، حضورغیاب، اخطارها، بازی
    ============================================================================ */
 
-var APP_VERSION = '5.6.0';
+var APP_VERSION = '5.7.0';
 
 var CFG = {
   SPREADSHEET_ID: '181xhlPLXByFjDRqos0pSi7K-iUsN8MUxTacTtzFTh4U',
@@ -690,6 +690,14 @@ function applyCircleMembership(p) {
   if (!guardianName || !/^09\d{9}$/.test(guardianPhone)) throw new Error('نام و شماره همراه ولی الزامی است');
   if (!school || !grade) throw new Error('نام مدرسه و پایه تحصیلی را وارد کن');
   if (p.guardianConsent !== true && String(p.guardianConsent) !== 'true') throw new Error('تأیید ولی الزامی است');
+  if (birthDate) {
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(birthDate)) throw new Error('تاریخ تولد معتبر نیست');
+    var parsedBirthDate = new Date(birthDate + 'T00:00:00Z');
+    if (isNaN(parsedBirthDate.getTime()) || Utilities.formatDate(parsedBirthDate, 'UTC', 'yyyy-MM-dd') !== birthDate) throw new Error('تاریخ تولد معتبر نیست');
+    var todayParts = Utilities.formatDate(new Date(), CFG.TIMEZONE, 'yyyy-MM-dd').split('-').map(Number);
+    var latestBirthDate = Utilities.formatDate(new Date(Date.UTC(todayParts[0] - 7, todayParts[1] - 1, todayParts[2])), 'UTC', 'yyyy-MM-dd');
+    if (birthDate > latestBirthDate) throw new Error('برای ثبت‌نام، سن فرد باید دست‌کم ۷ سال باشد');
+  }
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
