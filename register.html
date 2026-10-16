@@ -12,6 +12,17 @@
 
   <link rel="stylesheet" href="css/style.css?v=5.18.0">
   <link rel="stylesheet" href="css/islamic-design.css?v=5.18.0">
+  <style>
+    .camp-register-status{margin:12px 0 18px;padding:12px 14px;border:1px solid transparent;border-radius:14px;font-size:.9rem;line-height:1.8}
+    .camp-register-status[hidden]{display:none}
+    .camp-register-status.is-info{background:#eef5ff;border-color:#d5e5ff;color:#234f8b}
+    .camp-register-status.is-success{background:#e7f7ed;border-color:#c8ead4;color:#17633b}
+    .camp-register-status.is-error{background:#fff0ee;border-color:#ffd0ca;color:#9b2c20}
+    .upload-zone{cursor:pointer}
+    .upload-zone:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
+    .upload-zone.is-dragging{border-color:#0f766e;background:#eaf6f2}
+    .upload-preview img{display:block;max-width:100%;max-height:240px;object-fit:contain;margin:10px auto;border-radius:12px}
+  </style>
 </head>
 <body>
 
@@ -47,6 +58,8 @@
         </div>
         <a href="login.html" class="register-login-hint__btn">ورود</a>
       </div>
+
+      <div id="registerStatus" class="camp-register-status" role="status" aria-live="polite" hidden></div>
 
       <form id="registerForm" novalidate>
 
@@ -113,7 +126,7 @@
               </svg>
             </div>
             <p>عکس رو اینجا بکش یا کلیک کن</p>
-            <small>فرمت JPG یا PNG — حداکثر ۵ مگابایت</small>
+            <small>فرمت JPG، PNG یا WebP — حداکثر ۵ مگابایت</small>
           </div>
           <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
           <p class="consent-form-help" style="font-size:0.82rem; margin:8px 0 0; color:var(--text-muted, #64748b);">برای دریافت متن رضایت نامه <a href="https://eitaa.com/shbibian" target="_blank" rel="noopener noreferrer" style="color:#1683e8; text-decoration:none;">اینجا کلیک کنید</a></p>
@@ -148,53 +161,246 @@
 
   <script src="js/main.js?v=5.18.0" defer></script>
   <script>
-    /* ========================================================================
-       Auto-fill از پروفایل کاربر
-       ======================================================================== */
+    /* Camp registration: form validation, consent photo, and API wiring. */
     (function () {
       'use strict';
 
-      function autoFill() {
-        // اگه KanoonApp آماده نیست، صبر کن
-        if (!window.KanoonApp || !window.KanoonApp.session) {
-          setTimeout(autoFill, 100);
+      var form = document.getElementById('registerForm');
+      var campSelect = document.getElementById('campSelect');
+      var statusBox = document.getElementById('registerStatus');
+      var uploadZone = document.getElementById('uploadZone');
+      var fileInput = document.getElementById('fileInput');
+      var uploadPreview = document.getElementById('uploadPreview');
+      var submitButton = form && form.querySelector('button[type="submit"]');
+      var selectedPhoto = null;
+      var previewUrl = '';
+      var submitting = false;
+      var completed = false;
+      var MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+      var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+      function byId(id) { return document.getElementById(id); }
+      function normalizeDigits(value) {
+        return String(value || '')
+          .replace(/[۰-۹]/g, function (c) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)); })
+          .replace(/[٠-٩]/g, function (c) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)); });
+      }
+      function digits(value) { return normalizeDigits(value).replace(/\D/g, ''); }
+      function showStatus(message, type) {
+        statusBox.textContent = message || '';
+        statusBox.className = 'camp-register-status' + (type ? ' is-' + type : '');
+        statusBox.hidden = !message;
+      }
+      function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+          return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        });
+      }
+      function waitForApp() {
+        if (window.KanoonApp && window.KanoonApp.api && window.KanoonApp.session) return Promise.resolve(window.KanoonApp);
+        return new Promise(function (resolve, reject) {
+          var attempts = 0;
+          function check() {
+            if (window.KanoonApp && window.KanoonApp.api && window.KanoonApp.session) return resolve(window.KanoonApp);
+            attempts++;
+            if (attempts > 100) return reject(new Error('ارتباط با سرویس سایت آماده نشد؛ صفحه را تازه‌سازی کن.'));
+            window.setTimeout(check, 100);
+          }
+          check();
+        });
+      }
+      function loadCamps() {
+        waitForApp().then(function (app) {
+          return app.api.get({action: 'listCamps'});
+        }).then(function (response) {
+          var camps = Array.isArray(response.items) ? response.items : [];
+          campSelect.textContent = '';
+          var placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = camps.length ? 'اردو را انتخاب کن' : 'اردوی فعالی برای ثبت‌نام وجود ندارد';
+          campSelect.appendChild(placeholder);
+          camps.forEach(function (camp) {
+            if (!camp || !camp.id || !camp.title) return;
+            var option = document.createElement('option');
+            option.value = String(camp.id);
+            option.textContent = String(camp.title);
+            campSelect.appendChild(option);
+          });
+          campSelect.disabled = camps.length === 0;
+          if (!camps.length) showStatus('در حال حاضر اردوی فعالی برای ثبت‌نام وجود ندارد.', 'info');
+        }).catch(function (error) {
+          campSelect.textContent = '';
+          var option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'بارگذاری اردوها ناموفق بود';
+          campSelect.appendChild(option);
+          campSelect.disabled = true;
+          showStatus(error.message || 'فهرست اردوها دریافت نشد. اتصال اینترنت را بررسی کن.', 'error');
+        });
+      }
+      function setPhotoPreview(file) {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(file);
+        uploadPreview.textContent = '';
+        var image = document.createElement('img');
+        image.src = previewUrl;
+        image.alt = 'پیش‌نمایش عکس رضایت‌نامه';
+        var name = document.createElement('p');
+        name.textContent = file.name + ' (' + Math.round(file.size / 1024).toLocaleString('fa-IR') + ' کیلوبایت)';
+        uploadPreview.appendChild(image);
+        uploadPreview.appendChild(name);
+      }
+      function selectPhoto(file) {
+        if (!file) return;
+        if (ALLOWED_TYPES.indexOf(String(file.type || '').toLowerCase()) < 0) {
+          selectedPhoto = null;
+          fileInput.value = '';
+          uploadPreview.textContent = '';
+          showStatus('فرمت عکس باید JPG، PNG یا WebP باشد.', 'error');
           return;
         }
-
-        var member = window.KanoonApp.session.getMember();
-        var hint = document.getElementById('loginHint');
-
+        if (file.size <= 0 || file.size > MAX_PHOTO_BYTES) {
+          selectedPhoto = null;
+          fileInput.value = '';
+          uploadPreview.textContent = '';
+          showStatus('حجم عکس باید بیشتر از صفر و حداکثر ۵ مگابایت باشد.', 'error');
+          return;
+        }
+        selectedPhoto = file;
+        setPhotoPreview(file);
+        showStatus('عکس رضایت‌نامه انتخاب شد. قبل از ارسال، اطلاعات را بررسی کن.', 'info');
+      }
+      function fileToBase64(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var result = String(reader.result || '');
+            var comma = result.indexOf(',');
+            if (comma < 0) return reject(new Error('خواندن عکس ناموفق بود.'));
+            resolve({base64: result.slice(comma + 1), mimeType: file.type || 'image/jpeg'});
+          };
+          reader.onerror = function () { reject(new Error('خواندن عکس ناموفق بود. دوباره انتخابش کن.')); };
+          reader.readAsDataURL(file);
+        });
+      }
+      function autoFill() {
+        var app = window.KanoonApp;
+        if (!app || !app.session) return;
+        var member = app.session.getMember();
+        var hint = byId('loginHint');
         if (!member) {
-          // کاربر وارد نشده
           if (hint) hint.classList.remove('hidden');
           return;
         }
-
-        // پر کردن خودکار فیلدها
         var fields = {
-          firstName:    member.firstName    || '',
-          lastName:     member.lastName     || '',
+          firstName: member.firstName || '',
+          lastName: member.lastName || '',
           nationalCode: member.nationalCode || '',
-          phone:        member.phone        || '',
-          fatherName:   member.fatherName   || '',
-          fatherPhone:  member.fatherPhone  || ''
+          phone: member.phone || '',
+          fatherName: member.fatherName || '',
+          fatherPhone: member.fatherPhone || ''
         };
+        Object.keys(fields).forEach(function (key) {
+          var element = byId(key);
+          if (element && !element.value) element.value = fields[key];
+        });
+      }
 
-        var keys = Object.keys(fields);
-        for (var i = 0; i < keys.length; i++) {
-          var el = document.getElementById(keys[i]);
-          if (el && !el.value) {
-            el.value = fields[keys[i]];
+      if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', function () { fileInput.click(); });
+        uploadZone.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            fileInput.click();
           }
-        }
+        });
+        ['dragenter', 'dragover'].forEach(function (eventName) {
+          uploadZone.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            uploadZone.classList.add('is-dragging');
+          });
+        });
+        ['dragleave', 'dragend'].forEach(function (eventName) {
+          uploadZone.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            uploadZone.classList.remove('is-dragging');
+          });
+        });
+        uploadZone.addEventListener('drop', function (event) {
+          event.preventDefault();
+          uploadZone.classList.remove('is-dragging');
+          var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+          selectPhoto(file);
+        });
+        fileInput.addEventListener('change', function () { selectPhoto(fileInput.files && fileInput.files[0]); });
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', autoFill);
-      } else {
-        autoFill();
+      ['phone', 'fatherPhone'].forEach(function (id) {
+        var input = byId(id);
+        input.addEventListener('input', function () { input.value = digits(input.value).slice(0, 11); });
+      });
+      byId('nationalCode').addEventListener('input', function () { this.value = digits(this.value).slice(0, 10); });
+
+      if (form) {
+        form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          if (submitting || completed) return;
+
+          var data = {
+            campId: campSelect.value,
+            firstName: byId('firstName').value.trim().replace(/\s+/g, ' '),
+            lastName: byId('lastName').value.trim().replace(/\s+/g, ' '),
+            nationalCode: digits(byId('nationalCode').value),
+            phone: digits(byId('phone').value),
+            fatherName: byId('fatherName').value.trim().replace(/\s+/g, ' '),
+            fatherPhone: digits(byId('fatherPhone').value)
+          };
+          if (!data.campId) return showStatus('ابتدا اردو را انتخاب کن.', 'error');
+          if (!data.firstName || !data.lastName || !data.fatherName) return showStatus('نام، نام خانوادگی و نام پدر الزامی است.', 'error');
+          if (data.firstName.length > 80 || data.lastName.length > 80 || data.fatherName.length > 80) return showStatus('نام‌ها نباید بیشتر از ۸۰ نویسه باشند.', 'error');
+          if (!/^09\d{9}$/.test(data.phone)) return showStatus('شماره همراه باید ۱۱ رقم و با ۰۹ شروع شود.', 'error');
+          if (!/^09\d{9}$/.test(data.fatherPhone)) return showStatus('شماره همراه پدر باید ۱۱ رقم و با ۰۹ شروع شود.', 'error');
+          if (data.nationalCode && !/^\d{10}$/.test(data.nationalCode)) return showStatus('کد ملی باید ۱۰ رقم باشد.', 'error');
+          if (!selectedPhoto) return showStatus('برای ثبت‌نام، عکس رضایت‌نامه پدر را انتخاب کن.', 'error');
+
+          submitting = true;
+          submitButton.disabled = true;
+          submitButton.textContent = 'در حال ثبت درخواست…';
+          showStatus('در حال آماده‌سازی عکس و ارسال درخواست؛ صفحه را نبند.', 'info');
+          try {
+            var photo = await fileToBase64(selectedPhoto);
+            var app = await waitForApp();
+            var response = await app.api.post({
+              action: 'registerCamp',
+              campId: data.campId,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              nationalCode: data.nationalCode,
+              phone: data.phone,
+              fatherName: data.fatherName,
+              fatherPhone: data.fatherPhone,
+              photoBase64: photo.base64,
+              photoMimeType: photo.mimeType
+            });
+            completed = true;
+            form.querySelectorAll('input, select, button[type="submit"]').forEach(function (element) { element.disabled = true; });
+            showStatus('درخواست ثبت‌نام با موفقیت ارسال شد و در انتظار تأیید مربی است.', 'success');
+            submitButton.textContent = 'درخواست ثبت شد ✓';
+          } catch (error) {
+            showStatus(error.message || 'ثبت درخواست ناموفق بود. اطلاعات و اتصال اینترنت را بررسی کن.', 'error');
+            submitButton.disabled = false;
+            submitButton.textContent = 'تلاش دوباره برای ثبت‌نام';
+          } finally {
+            submitting = false;
+          }
+        });
       }
 
+      waitForApp().then(autoFill).catch(function () {
+        var hint = byId('loginHint');
+        if (hint) hint.classList.remove('hidden');
+      });
+      loadCamps();
     })();
   </script>
 </body>
