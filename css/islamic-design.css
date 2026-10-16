@@ -766,3 +766,47 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
   .home-wisdom__arabic,.ali-wisdom__arabic{font-size:1.08rem;line-height:2}
   .home-wisdom__meaning,.ali-wisdom__meaning{font-size:.76rem}
 }
+
+
+/* v5.24.0 — Event spacing, traditional hadith typography, and visible Jalali date field. */
+@font-face {
+  font-family: "Amiri";
+  src: url("../fonts/Amiri-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* Move the events block away from the top edge and bring slide captions lower. */
+.event-hero { margin-top: 24px !important; }
+.home-event-overlay { bottom: 9px !important; }
+
+/* Amiri's classical Naskh form better matches traditional hadith artwork.
+   Persian meaning/source remain in the site's readable UI font. */
+.home-wisdom__arabic,
+.ali-wisdom__arabic {
+  font-family: "Amiri", "Noto Naskh Arabic", serif !important;
+  font-size: 1.04rem !important;
+  font-weight: 400 !important;
+  line-height: 2.12 !important;
+  letter-spacing: 0 !important;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-wrap: pretty;
+}
+@media (max-width: 360px) {
+  .home-wisdom__arabic,
+  .ali-wisdom__arabic {
+    font-size: .96rem !important;
+    line-height: 2.08 !important;
+  }
+}
+
+/* Explicit contrast keeps the selected birth date visible on mobile browsers. */
+.jalali-date-control #birthDate {
+  color: #184b49 !important;
+  -webkit-text-fill-color: #184b49 !important;
+  text-align: center;
+  font-family: "Estedad", "Vazirmatn", Tahoma, sans-serif !important;
+  font-weight: 800;
+  letter-spacing: .025em;
+}
