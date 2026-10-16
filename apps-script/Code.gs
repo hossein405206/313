@@ -441,7 +441,7 @@ function normalizeIranDigits(value){
 }
 function addCoach(p){
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مربی اضافه کند');
-  var name=String(p.name||'').trim(),phone=String(p.phone||'').trim(),code=String(p.code||'').trim();
+  var name=String(p.name||'').trim(),phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\\s+/g,''),code=String(p.code||'').trim();
   if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(!code)throw new Error('کد مربی را وارد کن');
   var rows=getSheetObjects('مربیان');
   if(rows.some(function(r){return String(normalizeIranDigits(r.phone||'')).replace(/\s+/g,'')===phone;}))throw new Error('این شماره قبلاً ثبت شده');
