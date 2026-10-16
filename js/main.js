@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.18.0',
-    BACKEND_VERSION: '4.16.0-game-session-validation'
+    VERSION: '4.17.0',
+    BACKEND_VERSION: '4.17.0'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
