@@ -1,4 +1,4 @@
-# Backend جدید سایت 313
+# Backend سایت 313 — نسخه 5.5.0
 
 فایل `apps-script/Code.gs` بک‌اند Google Apps Script پروژه است.
 
@@ -23,7 +23,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 ```
 
 ### 4) راه‌اندازی اولیه
-تابع `setup()` را یک بار اجرا کن؛ سپس تابع `initializeOwnerAccountPassword()` را اجرا کن و رمز حساب مالک را در پنجرهٔ بازشده وارد کن. رمز در فایل کد ذخیره نمی‌شود و فقط هش آن در شیت اعضا نگه‌داری می‌شود.
+تابع `setup()` را یک بار اجرا کن. حساب سازنده با نام و شماره تنظیم‌شده در `Code.gs` ساخته می‌شود؛ اگر رمز هنوز تنظیم نشده باشد، پنجره‌ای برای ورود رمز اولیه باز می‌شود. رمز خام در کد یا شیت ذخیره نمی‌شود؛ فقط هش نمک‌دار آن در شیت اعضا ثبت می‌شود. اگر پنجره لغو شد، `initializeOwnerAccountPassword()` را جداگانه اجرا کن.
 
 این شیت‌ها ساخته می‌شوند:
 
@@ -42,9 +42,9 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 کدهای اولیه مسئولین را حتماً بعد از setup تغییر بده.
 
 ### 5) Deploy
-از Apps Script:
+نسخه هماهنگ فعلی: `5.5.0`.
 
-**Deploy → New deployment → Web app**
+برای حفظ URL فعلی، از **Deploy → Manage deployments → Edit → New version → Deploy** استفاده کن. فقط اگر قصد تغییر URL داری، از **New deployment → Web app** استفاده کن.
 
 تنظیمات:
 
@@ -92,7 +92,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 `https://script.google.com/macros/s/AKfycbzI6-Csz0Fk8qixHiWTYOHrCGJq8W-7X2lWID6n5qkQOSLYGXC6-Jwixs7Bf38PunC0/exec`
 
-این همان Web App endpoint است که در `js/main.js` تنظیم شده است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
+این همان Web App endpoint است که در `js/main.js` تنظیم شده است. نسخه Apps Script در پاسخ `ping` نیز `5.5.0` است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
 
 ## حساب و رمز عبور
 
