@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.27.0',
+    VERSION: '5.28.0',
     BACKEND_VERSION: '4.18.0-required-consent-photo'
   };
 
@@ -924,8 +924,8 @@
     if (user) {
       var firstName = user.firstName || user.name || 'کاربر';
       var initial = String(firstName).charAt(0);
-      btn.href = member ? 'profile.html' : '#';
-      btn.setAttribute('aria-label', 'پروفایل من');
+      btn.href = member ? 'profile.html' : (official && String(official.role || '').indexOf('حضور') >= 0 ? 'attendance.html' : (official && String(official.role || '').indexOf('نظارت') >= 0 ? 'supervision.html' : 'officials.html'));
+      btn.setAttribute('aria-label', official && !member ? 'پنل مسئولیت' : 'پروفایل من');
       btn.innerHTML = '<span class="header-auth__avatar">' + DOM.escape(initial) + '</span>';
     } else {
       btn.href = 'login.html';
