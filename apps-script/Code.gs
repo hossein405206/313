@@ -1004,7 +1004,7 @@ function officialPublic(o) {
 }
 
 function issueToken(role, subject, isMaster, permissions) {
-  ensureSecret();
+  // کلید فقط در setup() ساخته می‌شود تا حذف ناخواستهٔ آن باعث چرخش خاموش کلید و ازکارافتادن گذرواژه‌های قدیمی نشود.
   var payload = {
     r: role,
     s: subject,
@@ -1092,7 +1092,6 @@ function b64Bytes(bytes) {
 /* -------------------------------------------------------------------------- */
 
 function memberPasswordHash(password, salt) {
-  ensureSecret();
   return b64Bytes(Utilities.computeHmacSha256Signature(String(salt) + ':' + String(password), getSecret()));
 }
 
