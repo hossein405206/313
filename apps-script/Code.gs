@@ -2536,6 +2536,22 @@ function uploadConsentPhotoPrivate(base64, mime, name) {
   var bytes;
   try { bytes = Utilities.base64Decode(data); } catch (e) { throw new Error('فایل رضایت‌نامه معتبر نیست'); }
   if (!bytes || !bytes.length || bytes.length > 5 * 1024 * 1024) throw new Error('حجم عکس رضایت‌نامه باید حداکثر ۵ مگابایت باشد');
+
+  // اعتبارسنجی امضای فایل؛ به MIME ارسالی مرورگر به‌تنهایی اعتماد نکن.
+  function byteAt(index) { return index < bytes.length ? (bytes[index] & 255) : -1; }
+  var validImageSignature = false;
+  if (type === 'image/jpeg') {
+    validImageSignature = byteAt(0) === 0xFF && byteAt(1) === 0xD8 && byteAt(2) === 0xFF;
+  } else if (type === 'image/png') {
+    validImageSignature = bytes.length >= 8 &&
+      byteAt(0) === 0x89 && byteAt(1) === 0x50 && byteAt(2) === 0x4E && byteAt(3) === 0x47 &&
+      byteAt(4) === 0x0D && byteAt(5) === 0x0A && byteAt(6) === 0x1A && byteAt(7) === 0x0A;
+  } else if (type === 'image/webp') {
+    validImageSignature = bytes.length >= 12 &&
+      byteAt(0) === 0x52 && byteAt(1) === 0x49 && byteAt(2) === 0x46 && byteAt(3) === 0x46 &&
+      byteAt(8) === 0x57 && byteAt(9) === 0x45 && byteAt(10) === 0x42 && byteAt(11) === 0x50;
+  }
+  if (!validImageSignature) throw new Error('محتوای فایل با فرمت اعلام‌شدهٔ عکس مطابقت ندارد');
   var blob = Utilities.newBlob(bytes, type, String(name || ('registration-' + Date.now())));
   var file = getDriveFolder().createFile(blob);
   try {
