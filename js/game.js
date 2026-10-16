@@ -49,7 +49,7 @@
     if(!member||!member.token){location.replace('login.html?return=game.html');return;}
     setButton('در حال بارگذاری بازی…',true);
     try{
-      var registration=await api().get({action:'getRingRegistration',token:member.token});
+      var registration=await api().post({action:'getRingRegistration',token:member.token});
       if(!registration.registered){location.replace('ring-registration.html?required=1');return;}
     }catch(e){say('فعلاً امکان بارگذاری بازی وجود ندارد. لطفاً کمی بعد دوباره تلاش کن.');start.disabled=true;return;}
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
