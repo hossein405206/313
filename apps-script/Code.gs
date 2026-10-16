@@ -1,6 +1,6 @@
 /* ============================================================================
    313 / حلقه شهید هادی ذوالفقاری
-   Google Apps Script Backend v5.5.1
+   Google Apps Script Backend v5.6.0
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
@@ -19,7 +19,7 @@
    ثبت‌نام‌ها، حضورغیاب، اخطارها، بازی
    ============================================================================ */
 
-var APP_VERSION = '5.5.1';
+var APP_VERSION = '5.6.0';
 
 var CFG = {
   SPREADSHEET_ID: '181xhlPLXByFjDRqos0pSi7K-iUsN8MUxTacTtzFTh4U',
@@ -736,11 +736,64 @@ function circleMembershipResponse(phone) {
   return { ok: true, isMember: isMember, status: isMember ? 'عضو حلقه' : (latest ? String(latest.status || 'در انتظار بررسی') : 'ثبت‌نام نکرده'), application: latest ? { id: latest.id, status: latest.status, updatedAt: latest.updatedAt } : null };
 }
 
-function registerMember(p){
-var fullName=String(p.name||'').trim().replace(/\s+/g,' '),phone=normalizeIranDigits(String(p.phone||'').trim()),password=String(p.password||'');
-if(!fullName)throw new Error('نام و نام خانوادگی را وارد کن');if(!/^09\d{9}$/.test(phone))throw new Error('شماره همراه نامعتبر است');if(password.length<8||password.length>128)throw new Error('رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد');
-var lock=LockService.getScriptLock();lock.waitLock(5000);try{var existing=findMemberByPhone(phone,true);if(existing){if(String(existing.name||'').trim()!==fullName)throw new Error('این شماره قبلاً با نام دیگری ثبت شده است');if(!truthy(existing.active))throw new Error('این حساب غیرفعال است');if(String(existing.role||'')==='owner'&&!existing.passwordHash)throw new Error('حساب مالک هنوز راه‌اندازی نشده؛ تابع initializeOwnerAccountPassword را اجرا کن');if(existing.passwordHash){if(!verifyMemberPassword(existing,password))throw new Error('شماره همراه یا رمز عبور نادرست است');}else{var salt=Utilities.getUuid()+'-'+Utilities.getUuid(),sheet=getSheet('اعضا'),pos=findMemberRowByPhone(phone),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.passwordSalt]=salt;row[idx.passwordHash]=hashPassword(password,salt);sheet.getRange(pos,1,1,headers.length).setValues([row]);existing=findMemberByPhone(phone,true);}return {ok:true,member:publicMember(existing),token:issueToken('member',phone),existing:true};}
-var parts=fullName.split(' '),last=parts.length>1?parts.pop():'',first=parts.join(' '),saltNew=Utilities.getUuid()+'-'+Utilities.getUuid(),member=addMemberInternal({firstName:first,lastName:last,phone:phone,nickname:'',profileCompleted:false,active:true,passwordSalt:saltNew,passwordHash:hashPassword(password,saltNew),role:''});return {ok:true,member:publicMember(member),token:issueToken('member',phone),existing:false};}finally{lock.releaseLock();}}
+function registerMember(p) {
+  var fullName = String(p.name || '').trim().replace(/\\s+/g, ' ');
+  var phone = normalizeIranDigits(String(p.phone || '').trim()).replace(/\\s+/g, '');
+  var password = String(p.password || '');
+  if (!fullName || fullName.length > 120) throw new Error('نام و نام خانوادگی معتبر وارد کن');
+  if (!/^09\\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (password.length < 8 || password.length > 128) throw new Error('رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد');
+
+  var cache = CacheService.getScriptCache();
+  var attemptKey = 'member-auth-fail:' + phone;
+  var attempts = Number(cache.get(attemptKey) || 0);
+  if (attempts >= 8) throw new Error('تعداد تلاش‌های ورود زیاد است؛ ۱۵ دقیقه دیگر دوباره تلاش کن');
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    var existing = findMemberByPhone(phone, true);
+    if (existing) {
+      if (String(existing.name || '').trim() !== fullName) throw new Error('این شماره قبلاً با نام دیگری ثبت شده است');
+      if (!truthy(existing.active)) throw new Error('این حساب غیرفعال است');
+      if (String(existing.role || '') === 'owner' && !existing.passwordHash) {
+        throw new Error('حساب سازنده هنوز رمز ندارد؛ تابع resetOwnerAccountPassword را از Apps Script اجرا کن');
+      }
+      if (!existing.passwordHash) {
+        // Never allow an unverified visitor to claim a legacy account by setting its first password.
+        throw new Error('این حساب قبلاً ثبت شده اما رمز ندارد. برای حفظ امنیت، مالک باید رمز آن را از پنل Apps Script تنظیم کند');
+      }
+      if (!verifyMemberPassword(existing, password)) {
+        cache.put(attemptKey, String(attempts + 1), 900);
+        throw new Error('شماره همراه یا رمز عبور نادرست است');
+      }
+      cache.remove(attemptKey);
+      return { ok: true, member: publicMember(existing), token: issueToken('member', phone), existing: true };
+    }
+
+    // New accounts can create their password on first use. Phone ownership is not verified
+    // until an SMS/OTP provider is configured; do not treat this as proof of phone ownership.
+    var parts = fullName.split(' ');
+    var last = parts.length > 1 ? parts.pop() : '';
+    var first = parts.join(' ');
+    var salt = Utilities.getUuid() + '-' + Utilities.getUuid();
+    var member = addMemberInternal({
+      firstName: first,
+      lastName: last,
+      phone: phone,
+      nickname: '',
+      profileCompleted: false,
+      active: true,
+      passwordSalt: salt,
+      passwordHash: hashPassword(password, salt),
+      role: ''
+    });
+    return { ok: true, member: publicMember(member), token: issueToken('member', phone), existing: false };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function generateLoginCode(phone) {
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
 
