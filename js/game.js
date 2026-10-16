@@ -220,14 +220,14 @@
     if(score>best)say('رکورد جدید! در حال ذخیره '+faNum(score)+'…');
     else say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
     draw();
-    if(score>best)submitScore();
+    submitScore();
   }
   async function submitScore(){
-    if(submitting||!member||!member.token)return;
-    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
+    if(submitting||!member||!member.token||!runId)return;
     submitting=true;setButton('در حال ذخیره رکورد…',true);
     try{
-      var response=await api().post({action:'submitGameScore',token:member.token,score:score});
+      var response=await api().post({action:'submitGameScore',token:member.token,score:score,runId:runId});
+      runId='';
       renderBoard(response.leaderboard||[]);
       renderAllTimeBoard(response.allTimeLeaderboard||[]);
       var savedLifetime=Number(response.lifetimeBest||member.bestScore||0);
