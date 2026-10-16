@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.17.0-jalali-date-normalization';
+var APP_VERSION = '4.18.0-required-consent-photo';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1983,6 +1983,8 @@ function registerCamp(p) {
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
+
+  if (!p.photoBase64) throw new Error('عکس رضایت‌نامه پدر الزامی است');
 
   var photoUrl = '';
   if (p.photoBase64) {
