@@ -30,7 +30,7 @@
 
       <h2 class="section-title">فرم ثبت‌نام</h2>
       <p class="section-subtitle">
-        پس از ارسال، درخواستت در وضعیت «در انتظار تایید» قرار می‌گیره و توسط مربی بررسی می‌شه.
+        پس از تکمیل فرم زیر منتظر تایید مربی ها باشید
       </p>
 
       <!-- ═══ هشدار ورود ═══ -->
@@ -56,7 +56,6 @@
           <select id="campSelect" class="form-control" required>
             <option value="">در حال بارگذاری...</option>
           </select>
-          <small class="form-hint">اردویی که می‌خوای توش شرکت کنی رو انتخاب کن</small>
         </div>
 
         <!-- ═══ اطلاعات شخصی ═══ -->
@@ -154,37 +153,54 @@
     (function () {
       'use strict';
 
-      function autoFill() {
-        // اگه KanoonApp آماده نیست، صبر کن
-        if (!window.KanoonApp || !window.KanoonApp.session) {
+      async function autoFill() {
+        if (!window.KanoonApp || !window.KanoonApp.session || !window.KanoonApp.api) {
           setTimeout(autoFill, 100);
           return;
         }
 
         var member = window.KanoonApp.session.getMember();
         var hint = document.getElementById('loginHint');
-
         if (!member) {
-          // کاربر وارد نشده
           if (hint) hint.classList.remove('hidden');
           return;
         }
+        if (hint) hint.classList.add('hidden');
 
-        // پر کردن خودکار فیلدها
         var fields = {
-          firstName:    member.firstName    || '',
-          lastName:     member.lastName     || '',
+          firstName: member.firstName || '',
+          lastName: member.lastName || '',
           nationalCode: member.nationalCode || '',
-          phone:        member.phone        || '',
-          fatherName:   member.fatherName   || '',
-          fatherPhone:  member.fatherPhone  || ''
+          phone: member.phone || '',
+          fatherName: member.fatherName || '',
+          fatherPhone: member.fatherPhone || ''
         };
+        Object.keys(fields).forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el && !el.value && fields[id]) el.value = fields[id];
+        });
 
-        var keys = Object.keys(fields);
-        for (var i = 0; i < keys.length; i++) {
-          var el = document.getElementById(keys[i]);
-          if (el && !el.value) {
-            el.value = fields[keys[i]];
+        // Pull the saved ring form once so ring-only fields can be reused here.
+        if (member.token) {
+          try {
+            var result = await window.KanoonApp.api.post({
+              action: 'getRingRegistration',
+              token: member.token
+            });
+            var saved = result && result.registered && result.item ? result.item : null;
+            if (saved) {
+              var savedFields = {
+                nationalCode: saved.nationalCode,
+                fatherName: saved.fatherName,
+                fatherPhone: saved.fatherPhone
+              };
+              Object.keys(savedFields).forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el && !el.value && savedFields[id]) el.value = savedFields[id];
+              });
+            }
+          } catch (err) {
+            // Local profile autofill remains useful even if the optional ring lookup fails.
           }
         }
       }
