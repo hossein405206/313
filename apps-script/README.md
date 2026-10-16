@@ -59,7 +59,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 آدرس `/exec` را بردار و در `js/main.js` قرار بده.
 
-**برای سایت موجود:** یک Deployment جدید نساز. از **Deploy → Manage deployments → Edit → New version → Deploy** استفاده کن تا URL فعلی ثابت بماند. تغییر GitHub به‌تنهایی نسخهٔ منتشرشدهٔ Apps Script را به‌روز نمی‌کند.
+**برای سایت موجود:** یک Deployment جدید نساز. از **Deploy → Manage deployments → Edit → New version → Deploy** استفاده کن تا URL فعلی ثابت بماند. تغییر GitHub به‌تنهایی نسخهٔ منتشرشدهٔ Apps Script را به‌روز نمی‌کند. ابتدا همین بک‌اند را منتشر و با `?action=ping` نسخهٔ `5.18.0` را تأیید کن؛ بعد فرانت‌اند را منتشر کن، چون فرانت‌اند نسخهٔ بک‌اند را کنترل می‌کند.
 
 ### گزارش‌های اردو با چند عکس
 
