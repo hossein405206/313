@@ -786,10 +786,20 @@ function registerMember(p) {
         throw new Error('حساب سازنده هنوز رمز ندارد؛ تابع resetOwnerAccountPassword را از Apps Script اجرا کن');
       }
       if (!existing.passwordHash) {
-        // Never allow an unverified visitor to claim a legacy account by setting its first password.
-        throw new Error('این حساب قبلاً ثبت شده اما رمز ندارد. برای حفظ امنیت، مالک باید رمز آن را از پنل Apps Script تنظیم کند');
-      }
-      if (!verifyMemberPassword(existing, password)) {
+        // First password setup for legacy accounts is supported for compatibility.
+        // Without an SMS provider, the phone number itself is not proof of ownership.
+        var legacySalt = Utilities.getUuid() + '-' + Utilities.getUuid();
+        var memberSheet = getSheet('اعضا');
+        var memberRowNo = findMemberRowByPhone(phone);
+        var memberHeaders = memberSheet.getDataRange().getValues()[0].map(String);
+        var memberRow = memberSheet.getRange(memberRowNo, 1, 1, memberHeaders.length).getValues()[0];
+        var memberIdx = {};
+        memberHeaders.forEach(function(h, i) { memberIdx[h] = i; });
+        memberRow[memberIdx.passwordSalt] = legacySalt;
+        memberRow[memberIdx.passwordHash] = hashPassword(password, legacySalt);
+        memberSheet.getRange(memberRowNo, 1, 1, memberHeaders.length).setValues([memberRow]);
+        existing = findMemberByPhone(phone, true);
+      } else if (!verifyMemberPassword(existing, password)) {
         cache.put(attemptKey, String(attempts + 1), 900);
         throw new Error('شماره همراه یا رمز عبور نادرست است');
       }
