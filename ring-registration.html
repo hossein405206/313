@@ -42,7 +42,39 @@
     .field-error-message[hidden]{display:none!important}
     .ring-register-status.error{border:1px solid #ffd0ca}
     @media(max-width:370px){.jalali-picker{padding:9px}.jalali-picker__days{gap:2px}.jalali-picker__days button,.jalali-picker__days span{font-size:.62rem;border-radius:7px}}
-    .ring-register-submit{background:linear-gradient(135deg,#0f766e,#0f9488)!important;box-shadow:0 8px 20px rgba(15,118,110,.22)!important}\n    .ring-register-submit:hover{box-shadow:0 12px 25px rgba(15,118,110,.29)!important}\n    .jalali-picker__selected{margin:0 0 10px;text-align:center;color:#596b7b;font-size:.72rem;font-weight:800;line-height:1.8}\n    .jalali-picker__years,.jalali-picker__months{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;max-height:250px;overflow:auto;padding:2px;overscroll-behavior:contain}\n    .jalali-picker__years{grid-template-columns:repeat(4,minmax(0,1fr))}\n    .jalali-picker__choice{min-width:0;padding:10px 4px;border:1px solid #dce9e5;border-radius:12px;background:#f6faf8;color:#194d48;font:800 .72rem Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer}\n    .jalali-picker__choice:hover{background:#e4f5ef;border-color:#90d8c3}\n    .jalali-picker__choice.is-selected{background:linear-gradient(135deg,#0f766e,#0f9488);border-color:#0f766e;color:#fff;box-shadow:0 5px 12px rgba(15,118,110,.18)}\n    .jalali-picker__choice:disabled{opacity:.3;cursor:not-allowed}\n    .jalali-picker__foot{margin-top:12px}\n    #jalaliConfirmDate{background:linear-gradient(135deg,#0f766e,#0f9488);color:#fff}\n    #jalaliConfirmDate:disabled{opacity:.4;cursor:not-allowed}\n    @media(max-width:360px){.jalali-picker__years{grid-template-columns:repeat(3,minmax(0,1fr))}.jalali-picker__months{gap:5px}.jalali-picker__choice{font-size:.65rem;padding:9px 3px}}\n  </style>
+    .ring-register-submit{background:linear-gradient(135deg,#0f766e,#0f9488)!important;box-shadow:0 8px 20px rgba(15,118,110,.22)!important}
+    .ring-register-submit:hover{box-shadow:0 12px 25px rgba(15,118,110,.29)!important}
+    .jalali-picker__selected{margin:0 0 10px;text-align:center;color:#596b7b;font-size:.72rem;font-weight:800;line-height:1.8}
+    .jalali-picker__years,.jalali-picker__months{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;max-height:250px;overflow:auto;padding:2px;overscroll-behavior:contain}
+    .jalali-picker__years{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .jalali-picker__choice{min-width:0;padding:10px 4px;border:1px solid #dce9e5;border-radius:12px;background:#f6faf8;color:#194d48;font:800 .72rem Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer}
+    .jalali-picker__choice:hover{background:#e4f5ef;border-color:#90d8c3}
+    .jalali-picker__choice.is-selected{background:linear-gradient(135deg,#0f766e,#0f9488);border-color:#0f766e;color:#fff;box-shadow:0 5px 12px rgba(15,118,110,.18)}
+    .jalali-picker__choice:disabled{opacity:.3;cursor:not-allowed}
+    .jalali-picker__foot{margin-top:12px}
+    #jalaliConfirmDate{background:linear-gradient(135deg,#0f766e,#0f9488);color:#fff}
+    #jalaliConfirmDate:disabled{opacity:.4;cursor:not-allowed}
+    @media(max-width:360px){.jalali-picker__years{grid-template-columns:repeat(3,minmax(0,1fr))}.jalali-picker__months{gap:5px}.jalali-picker__choice{font-size:.65rem;padding:9px 3px}}
+    
+    /* Keep stage switching reliable: display:grid must never override [hidden]. */
+    .jalali-picker [hidden],
+    .jalali-picker__years[hidden],
+    .jalali-picker__months[hidden],
+    #jalaliCalendarStep[hidden]{display:none!important}
+    .jalali-picker__years,.jalali-picker__months{grid-auto-rows:minmax(40px,auto);align-content:start}
+    .jalali-picker__choice{display:flex;align-items:center;justify-content:center;min-height:42px;font-size:.82rem;font-weight:800;line-height:1.35;border-radius:12px}
+    .jalali-picker__years{grid-template-columns:repeat(4,minmax(0,1fr));background:#f8fbfa;border:1px solid #e5efec;border-radius:15px;padding:7px}
+    .jalali-picker__months{grid-template-columns:repeat(3,minmax(0,1fr));background:#f8fbfa;border:1px solid #e5efec;border-radius:15px;padding:7px}
+    .jalali-picker__head{padding-bottom:9px;border-bottom:1px solid #e8f0ed}
+    .jalali-picker__head strong{font-size:.9rem;font-weight:900;text-align:center}
+    .jalali-picker__foot{display:grid;grid-template-columns:1fr 1.35fr;gap:8px}
+    .jalali-picker__foot button{min-height:42px;border-radius:12px;font-size:.78rem}
+    #jalaliConfirmDate{background:linear-gradient(135deg,#0f766e,#0f9488);color:#fff;box-shadow:0 6px 14px rgba(15,118,110,.18)}
+    #jalaliConfirmDate:disabled{opacity:.42;box-shadow:none;cursor:not-allowed}
+    #jalaliBackStep{white-space:nowrap}
+    @media(max-width:360px){.jalali-picker__years{grid-template-columns:repeat(3,minmax(0,1fr))}.jalali-picker__months{grid-template-columns:repeat(2,minmax(0,1fr))}.jalali-picker__choice{min-height:40px;font-size:.76rem}}
+    
+  </style>
   <link rel="stylesheet" href="css/islamic-design.css?v=5.19.0">
 </head>
 <body>
