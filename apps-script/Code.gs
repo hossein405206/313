@@ -286,7 +286,7 @@ function handlePost(p) {
   var action = String(p.action || '');
 
   // Authenticated read operations are also accepted over POST so session tokens stay out of URLs.
-  if (['getCircleMembership','listCircleApplications','listCoaches','listOfficialsManage','listMembers','getAttendanceToday','listMonthlyAttendance','listWarnings','listRegistrations','getDashboard'].indexOf(action) >= 0) {
+  if (['verifyOfficialCode','getCircleMembership','listCircleApplications','listCoaches','listOfficialsManage','listMembers','getAttendanceToday','listMonthlyAttendance','listWarnings','listRegistrations','getDashboard'].indexOf(action) >= 0) {
     return handleGet(p);
   }
 
@@ -585,8 +585,11 @@ function updateOfficial(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مسئولین را ویرایش کند');
   var oldCode=String(p.oldCode||'').trim(), pos=findRow(getSheet('مسئولین'),'code',oldCode); if(!pos)throw new Error('مسئول پیدا نشد');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeIranDigits(String(p.phone||'').trim());
-  if(!code||!name||!role||!/^09\d{9}$/.test(phone))throw new Error('نام، کد، نوع مسئولیت و شماره همراه معتبر الزامی است');
-  var rows=getSheetObjects('مسئولین'); if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
+  if(!code||code.length<8||!name||!role||!/^09\d{9}$/.test(phone))throw new Error('نام، کد حداقل ۸ نویسه‌ای، نوع مسئولیت و شماره همراه معتبر الزامی است');
+  if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
+  var rows=getSheetObjects('مسئولین');
+  if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
+  if(rows.some(function(r){return truthy(r.active)&&String(r.role||'')===role&&String(r.code||'').trim()!==oldCode;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد');
   var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;vals[5]=phone;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
 function setOfficialStatus(p) {
