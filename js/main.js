@@ -134,6 +134,8 @@
     },
 
     get: async function (params) {
+      // توکن نشست نباید در query string قرار بگیرد؛ درخواست‌های دارای توکن را به POST منتقل کن.
+      if (params && params.token) return Api.post(params);
       var url = Api._buildUrl(params);
       Logger.info('GET', url);
 
