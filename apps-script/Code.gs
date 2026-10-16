@@ -576,9 +576,9 @@ function listOfficialRecords() {
 function addOfficial(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مسئول اضافه کند');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeIranDigits(String(p.phone||'').trim());
-  if(!code||!name||!role||!/^09\d{9}$/.test(phone))throw new Error('نام، کد، نوع مسئولیت و شماره همراه معتبر الزامی است');
+  if(!code||code.length<8||!name||!role||!/^09\d{9}$/.test(phone))throw new Error('نام، کد حداقل ۸ نویسه‌ای، نوع مسئولیت و شماره همراه معتبر الزامی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
-  var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
+  var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return normalizePhone(r.phone)===phone;}))throw new Error('این شماره همراه قبلاً برای مسئول دیگری ثبت شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
   getSheet('مسئولین').appendRow([code,name,role,true,nowIso(),phone]); return {ok:true};
 }
 function updateOfficial(p) {
@@ -589,6 +589,7 @@ function updateOfficial(p) {
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var rows=getSheetObjects('مسئولین');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
+  if(rows.some(function(r){return normalizePhone(r.phone)===phone&&String(r.code||'').trim()!==oldCode;}))throw new Error('این شماره همراه قبلاً برای مسئول دیگری ثبت شده');
   if(rows.some(function(r){return truthy(r.active)&&String(r.role||'')===role&&String(r.code||'').trim()!==oldCode;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد');
   var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0]; vals[0]=code;vals[1]=name;vals[2]=role;vals[5]=phone;sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
 }
