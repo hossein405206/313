@@ -724,3 +724,45 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .jalali-picker__years,.jalali-picker__months{scrollbar-width:thin;scrollbar-color:#b7d9ce #f0f7f4}
 .jalali-picker__years .jalali-picker__choice{min-height:42px;aspect-ratio:1.6}
 .jalali-picker__months .jalali-picker__choice{min-height:44px}
+
+
+/* v5.23.0 — Persian-first headline and hadith typography.
+   Hadith designs work best with distinct roles: readable Arabic quotation,
+   clear Persian meaning, and a restrained source line. No decorative Ruqaa
+   face is forced onto the quotation or major page headings. */
+:root{
+  --font-persian-ui:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif;
+  --font-persian-display:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif;
+}
+.app-header h1,.section-title,.hero-title,.contact-hero h2,.feedback-hero h2,
+.game-hero h2,.home-event-overlay h3,.section-heading h2,.event-head h2,
+.auth-title,.form-section-title,.contact-credit .media-credit-logo strong{
+  font-family:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif!important;
+  font-weight:800;
+  letter-spacing:-.018em;
+}
+.home-wisdom__arabic,.ali-wisdom__arabic{
+  font-family:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif!important;
+  font-weight:800;
+  font-size:1.22rem;
+  line-height:2.05;
+  letter-spacing:0;
+  font-feature-settings:"kern" 1,"liga" 1;
+  text-wrap:pretty;
+}
+.home-wisdom__meaning,.ali-wisdom__meaning{
+  font-family:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif!important;
+  font-weight:500;
+  font-size:.83rem;
+  line-height:2;
+}
+.home-wisdom__source,.ali-wisdom__source{
+  font-family:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif!important;
+  font-size:.64rem;
+  font-weight:600;
+  line-height:1.8;
+}
+@media(max-width:360px){
+  .home-wisdom__arabic,.ali-wisdom__arabic{font-size:1.08rem;line-height:2}
+  .home-wisdom__meaning,.ali-wisdom__meaning{font-size:.76rem}
+}
