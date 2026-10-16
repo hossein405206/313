@@ -665,3 +665,19 @@ input[type="submit"] {
   }
 }
 
+
+
+/* v5.19.0 — Local-first Persian typography and focused UI polish */
+:root{--font-persian-ui:"Noto Sans Arabic UI","Noto Sans Arabic","IRANSansX","IRANSans","Vazirmatn",Tahoma,Arial,sans-serif;--font-persian-display:"Noto Naskh Arabic UI","Noto Naskh Arabic","B Nazanin","Aref Ruqaa",Tahoma,serif}
+body,.form-control,.btn-submit,.btn-secondary,.quick-item,.service-card{font-family:var(--font-persian-ui)}
+.app-header h1,.section-title,.hero-title,.contact-hero h2,.feedback-hero h2,.game-hero h2,.form-section-title{font-family:var(--font-persian-display)}
+.ring-register-submit{background:linear-gradient(135deg,#0f766e,#0f9488)!important;box-shadow:0 8px 20px rgba(15,118,110,.22)!important}
+.ring-register-submit:hover{box-shadow:0 12px 25px rgba(15,118,110,.29)!important}
+.official-role-explanation{margin:18px 0 14px;padding:13px 15px;border:1px solid rgba(213,168,60,.21);border-radius:17px;background:rgba(255,255,255,.075);color:rgba(255,255,255,.88);font-size:.73rem;line-height:2;text-align:right}
+.contact-credit .media-credit-logo{width:124px;min-height:124px;margin:0 auto 10px;padding:17px 12px;border:1px solid #ddc57b;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:radial-gradient(circle at 50% 0,rgba(255,255,255,.9),transparent 55%),linear-gradient(145deg,#fff9e7,#ecd58a);color:#5f4510;box-shadow:0 8px 22px rgba(120,89,25,.11),inset 0 0 0 5px rgba(255,255,255,.55)}
+.media-credit-logo__ornament{font-size:1.15rem;color:#a57b24;line-height:1}
+.contact-credit .media-credit-logo strong{font-family:var(--font-persian-display);font-size:1.05rem;color:#5f4510}
+.contact-credit .media-credit-logo small{font-size:.58rem;font-weight:800;color:#8a6b27}
+.home-event-overlay p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-family:var(--font-persian-ui);font-size:.68rem!important;line-height:1.6!important;max-height:3.2em;margin-top:5px!important}
+.home-event-overlay h3{font-family:var(--font-persian-display);line-height:1.5;margin-block:3px 5px}
+.home-event-overlay{padding:15px 16px 14px!important}
