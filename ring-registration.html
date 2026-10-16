@@ -142,7 +142,7 @@
     </main>
     <nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
   </div>
-  <script src="js/main.js?v=5.23.0" defer></script>
+  <script src="js/main.js?v=5.24.0" defer></script>
   <script>
   (function(){
     'use strict';
@@ -308,6 +308,10 @@
             var candidate=y1+'/'+pad2(m1)+'/'+pad2(d1);
             if(!validJalaliDate(candidate)){return;}
             stagedDate=candidate;
+            // Show the selected date in the field immediately; confirmation still closes the picker.
+            var dateField=$('birthDate');
+            dateField.value=toPersianDigits(candidate);
+            clearFieldError('birthDate');
             renderDatePicker();
           };}(y0,m0,d0));
           grid.appendChild(db);
