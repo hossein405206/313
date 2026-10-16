@@ -219,20 +219,7 @@ function setup() {
   ensureOfficialRoles();
 
   var officials = getSheet('مسئولین');
-  var generatedOfficialCodes = [];
-  if (officials.getLastRow() < 2) {
-    var guideCode = generateOfficialAccessCode_('ATT-GUIDE');
-    var elementaryCode = generateOfficialAccessCode_('ATT-ELEMENTARY');
-    var supervisionCode = generateOfficialAccessCode_('SUP');
-    officials.appendRow([guideCode, 'مسئول حضور و غیاب راهنمایی', 'حضور و غیاب - راهنمایی', true, nowIso()]);
-    officials.appendRow([elementaryCode, 'مسئول حضور و غیاب دبستان', 'حضور و غیاب - دبستان', true, nowIso()]);
-    officials.appendRow([supervisionCode, 'مسئول نظارت', 'نظارت', true, nowIso()]);
-    generatedOfficialCodes.push(
-      { name: 'مسئول حضور و غیاب راهنمایی', code: guideCode },
-      { name: 'مسئول حضور و غیاب دبستان', code: elementaryCode },
-      { name: 'مسئول نظارت', code: supervisionCode }
-    );
-  }
+  var generatedOfficialCodes = ensureOfficialRoles();
   generatedOfficialCodes = generatedOfficialCodes.concat(rotateUnsafeDefaultOfficialCodes_());
 
   var camps = getSheet('اردوها');
@@ -900,15 +887,25 @@ function updateCoachCode(p) {
   var sheet=getSheet('مربیان'), headers=sheet.getDataRange().getValues()[0].map(String), ci=headers.indexOf('code'), ui=headers.indexOf('updatedAt'); var row=sheet.getRange(pos,1,1,headers.length).getValues()[0]; if(String(row[headers.indexOf('role')]||'')==='master')throw new Error('کد مربی ارشد قابل تغییر نیست'); row[ci]=newCode; row[ui]=nowIso(); sheet.getRange(pos,1,1,headers.length).setValues([row]); return {ok:true,code:newCode};
 }
 function ensureOfficialRoles() {
-  var sheet=getSheet('مسئولین'), rows=getSheetObjects('مسئولین');
-  var roles=['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'];
-  roles.forEach(function(role){
-    var exists=rows.some(function(r){return truthy(r.active)&&String(r.role||'')===role;});
-    if(!exists){
-      var prefix=role.indexOf('راهنمایی')>=0?'ATT-GUIDE':role.indexOf('دبستان')>=0?'ATT-ELEMENTARY':'SUP';
-      sheet.appendRow([prefix+'-'+Utilities.getUuid().split('-')[0].toUpperCase(),'مسئول '+role,role,true,nowIso()]);
+  var sheet = getSheet('مسئولین');
+  var rows = getSheetObjects('مسئولین');
+  var roles = ['حضور و غیاب - راهنمایی', 'حضور و غیاب - دبستان', 'نظارت'];
+  var generated = [];
+  roles.forEach(function(role) {
+    var exists = rows.some(function(r) {
+      return truthy(r.active) && String(r.role || '') === role;
+    });
+    if (!exists) {
+      var prefix = role.indexOf('راهنمایی') >= 0 ? 'ATT-GUIDE' :
+        (role.indexOf('دبستان') >= 0 ? 'ATT-ELEMENTARY' : 'SUP');
+      var code = generateOfficialAccessCode_(prefix);
+      var name = 'مسئول ' + role;
+      sheet.appendRow([code, name, role, true, nowIso()]);
+      generated.push({ name: name, code: code });
+      rows.push({ code: code, name: name, role: role, active: true });
     }
   });
+  return generated;
 }
 function ensureOfficialPhoneColumn_(){
   var sheet=getSheet('مسئولین'),values=sheet.getDataRange().getValues();
