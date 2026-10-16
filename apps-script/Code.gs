@@ -1072,7 +1072,11 @@ function ensureSecret() {
 }
 
 function getSecret() {
-  return PropertiesService.getScriptProperties().getProperty('AUTH_SECRET') || 'UNINITIALIZED';
+  var secret = PropertiesService.getScriptProperties().getProperty('AUTH_SECRET');
+  if (!secret) {
+    throw new Error('کلید امنیتی سامانه تنظیم نشده است؛ مدیر باید setup() را اجرا کند');
+  }
+  return secret;
 }
 
 function b64(s) {
@@ -1964,6 +1968,7 @@ function registerCamp(p) {
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
+  if (!p.photoBase64) throw new Error('عکس رضایت‌نامه پدر الزامی است');
 
   if (hasActiveCampRegistration_(campId, phone, firstName, lastName, nationalCode)) {
     throw new Error('برای این عضو در همین اردو درخواست فعالی وجود دارد');
@@ -2379,31 +2384,56 @@ function submitGameScore(p) {
     var weeklyBest = existing ? Number(existing.score || 0) : 0;
     var lifetimeBest = Number(member.bestScore || 0);
 
-    // هیچ رکوردی ذخیره نمی‌شود مگر اینکه رکورد تاریخی خود عضو شکسته شود.
-    if (score <= lifetimeBest || (existing && score <= weeklyBest)) {
-      return {ok:true, saved:false, score:Math.max(weeklyBest, lifetimeBest), weekKey:week, lifetimeBest:lifetimeBest,
-        leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+    // رکورد هفتگی و تاریخی مستقل‌اند؛ بهترشدن یکی نباید مانع ثبت دیگری شود.
+    var improvesWeekly = score > 0 && (!existing || score > weeklyBest);
+    var improvesLifetime = score > lifetimeBest;
+
+    if (!improvesWeekly && !improvesLifetime) {
+      return {
+        ok:true,
+        saved:false,
+        weeklySaved:false,
+        lifetimeUpdated:false,
+        score:weeklyBest,
+        weeklyBest:weeklyBest,
+        weekKey:week,
+        lifetimeBest:lifetimeBest,
+        leaderboard:leaderboardForWeek(week),
+        allTimeLeaderboard:allTimeLeaderboard()
+      };
     }
 
-    // فقط رکورد هفتگی بهتر می‌شود؛ رکورد تاریخی نیز فقط در صورت عبور از بهترین قبلی تغییر می‌کند.
-    if (score > lifetimeBest) {
+    if (improvesLifetime) {
       memberSheet.getRange(memberRow, 8).setValue(score);
       lifetimeBest = score;
     }
 
-    if (existing) {
-      var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
-      vals[1] = member.id;
-      vals[2] = playerName;
-      vals[3] = score;
-      vals[4] = nowIso();
-      sheet.getRange(existingRow, 1, 1, 5).setValues([vals]);
-    } else {
-      sheet.appendRow([week, member.id, playerName, score, nowIso()]);
+    if (improvesWeekly) {
+      if (existing) {
+        var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
+        vals[1] = member.id;
+        vals[2] = playerName;
+        vals[3] = score;
+        vals[4] = nowIso();
+        sheet.getRange(existingRow, 1, 1, 5).setValues([vals]);
+      } else {
+        sheet.appendRow([week, member.id, playerName, score, nowIso()]);
+      }
+      weeklyBest = score;
     }
 
-    return {ok:true, saved:true, score:score, weekKey:week, lifetimeBest:lifetimeBest,
-      leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+    return {
+      ok:true,
+      saved:improvesWeekly || improvesLifetime,
+      weeklySaved:improvesWeekly,
+      lifetimeUpdated:improvesLifetime,
+      score:weeklyBest,
+      weeklyBest:weeklyBest,
+      weekKey:week,
+      lifetimeBest:lifetimeBest,
+      leaderboard:leaderboardForWeek(week),
+      allTimeLeaderboard:allTimeLeaderboard()
+    };
   } finally {
     lock.releaseLock();
   }
