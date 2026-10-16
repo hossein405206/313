@@ -1,23 +1,24 @@
 /* ============================================================================
    313 / حلقه شهید هادی ذوالفقاری
-   Google Apps Script Backend v4
+   Google Apps Script Backend v5.5.0
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
    قبل از Deploy:
-   1) SPREADSHEET_ID را وارد کن
-   2) DRIVE_FOLDER_ID را وارد کن
-   3) تابع setup() را یک بار اجرا کن
-   4) کدهای پیش‌فرض ساخته‌شده در شیت «مسئولین» و «مربیان» را عوض کن
-   5) Deploy > Manage deployments > ویرایش Deployment فعلی > انتخاب نسخه جدید > Deploy
+   1) شناسه‌های Sheet و Drive را بررسی کن
+   2) تابع setup() را یک بار اجرا کن؛ حساب مالک با اطلاعات ثابت پروژه ساخته می‌شود و برای رمز اولیه از تو پنجره می‌پرسد
+   3) کدهای پیش‌فرض مسئولین را در پنل مدیریت تغییر بده
+   4) Deploy > Manage deployments > ویرایش Deployment فعلی > انتخاب نسخه جدید > Deploy
       Execute as: Me
       Who has access: Anyone
-   6) برای انتشار نهایی، یک Deployment جدید بساز و URL همان Deployment را در js/main.js قرار بده
+   5) URL فعلی را عوض نکن؛ فقط همان Deployment را به نسخه جدید وصل کن
 
    ساختار داده‌ها در Google Sheets:
    تنظیمات، مربیان، مسئولین، اعضا، رویدادها، اردوها،
    ثبت‌نام‌ها، حضورغیاب، اخطارها، بازی
    ============================================================================ */
+
+var APP_VERSION = '5.5.0';
 
 var CFG = {
   SPREADSHEET_ID: '181xhlPLXByFjDRqos0pSi7K-iUsN8MUxTacTtzFTh4U',
@@ -112,6 +113,7 @@ function setup() {
   migrateSheetHeaders(coaches, 'مربیان');
   ensureOwnerMember();
   ensureMasterCoach();
+  initializeOwnerAccountPassword();
   normalizeCoachRecords();
   ensureOfficialRoles();
 
@@ -140,9 +142,9 @@ function setup() {
 function handleGet(p) {
   var action = String(p.action || 'ping');
 
-  if (action === 'ping') return { ok: true, service: '313', version: '4.0.0-coach-auth', diagnostic: 'COACH_AUTH_DIAGNOSTIC_20261003' };
+  if (action === 'ping') return { ok: true, service: '313', version: APP_VERSION };
 
-  if (action === 'coachStatus') return {ok:true,version:'4.1.0-password-auth',masterConfigured:true,loginCoachPresent:true};
+  if (action === 'coachStatus') return {ok:true,version:APP_VERSION,masterConfigured:!!findMemberByPhone(CFG.MASTER_COACH_PHONE,true),loginCoachPresent:true};
 
   if (action === 'listEvents' || action === 'listActivities') {
     return { ok: true, items: listEventsPublic() };
@@ -399,9 +401,9 @@ if(phone===CFG.MASTER_COACH_PHONE){var owner=findMemberByPhone(phone,true);if(!o
 var rows=getSheetObjects('مربیان'),coach=rows.filter(function(r){return truthy(r.active)&&String(r.role||'')!=='master'&&normalizeIranDigits(String(r.phone||'')).replace(/\s+/g,'')===phone&&String(r.code||'').trim()===password;})[0];
 if(!coach)throw new Error('شماره همراه یا رمز ورود مربی نادرست است');return {ok:true,coach:{name:coach.name,phone:phone,role:coach.role,isMaster:false,permissions:coachPermissions(coach)},token:issueToken('coach',coach.code,false,coachPermissions(coach))};
 }
-function ensureOwnerMember(){var phone=CFG.MASTER_COACH_PHONE,existing=findMemberByPhone(phone,true);if(existing){var sheet=getSheet('اعضا'),headers=sheet.getDataRange().getValues()[0].map(String),pos=findRow(sheet,'phone',phone),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.firstName]='سیدحسین';row[idx.lastName]='موسوی';row[idx.name]='سیدحسین موسوی';row[idx.nickname]='سیدحسین';row[idx.role]='owner';row[idx.active]=true;row[idx.profileCompleted]=true;sheet.getRange(pos,1,1,headers.length).setValues([row]);return;}addMemberInternal({firstName:'سیدحسین',lastName:'موسوی',phone:phone,nickname:'سیدحسین',profileCompleted:true,active:true,role:'owner'});}
+function ensureOwnerMember(){var phone=CFG.MASTER_COACH_PHONE,existing=findMemberByPhone(phone,true);if(existing){var sheet=getSheet('اعضا'),headers=sheet.getDataRange().getValues()[0].map(String),pos=findMemberRowByPhone(phone),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.firstName]='سیدحسین';row[idx.lastName]='موسوی';row[idx.name]='سیدحسین موسوی';row[idx.nickname]='سیدحسین';row[idx.role]='owner';row[idx.active]=true;row[idx.profileCompleted]=true;sheet.getRange(pos,1,1,headers.length).setValues([row]);return;}addMemberInternal({firstName:'سیدحسین',lastName:'موسوی',phone:phone,nickname:'سیدحسین',profileCompleted:true,active:true,role:'owner'});}
 function ensureMasterCoach(){var sheet=getSheet('مربیان'),rows=getSheetObjects('مربیان'),phone=CFG.MASTER_COACH_PHONE,found=rows.filter(function(r){return String(r.phone||'')===phone&&String(r.role||'')==='master';})[0],code='OWNER-MASTER-'+Utilities.getUuid().replace(/-/g,'').slice(0,18).toUpperCase();if(found){var pos=findRow(sheet,'phone',phone,'role','master'),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.name]='سیدحسین موسوی';row[idx.active]=true;row[idx.permissions]=JSON.stringify(allCoachPermissions());row[idx.updatedAt]=nowIso();if(String(row[idx.code]||'').indexOf('OWNER-MASTER-')!==0)row[idx.code]=code;sheet.getRange(pos,1,1,headers.length).setValues([row]);}else sheet.appendRow([code,'سیدحسین موسوی',phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);}
-function initializeOwnerAccountPassword(){ensureOwnerMember();var owner=findMemberByPhone(CFG.MASTER_COACH_PHONE,true);if(owner&&owner.passwordHash)return {ok:true,message:'رمز حساب مالک از قبل تنظیم شده است.'};var ui=SpreadsheetApp.getUi(),response=ui.prompt('راه‌اندازی حساب مالک','رمز اولیه حساب مالک را وارد کن. این رمز در کد پروژه ذخیره نمی‌شود.',ui.ButtonSet.OK_CANCEL);if(response.getSelectedButton()!==ui.Button.OK)return {ok:false,message:'لغو شد'};var password=String(response.getResponseText()||'');if(password.length<8||password.length>128)throw new Error('رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد');var salt=Utilities.getUuid()+'-'+Utilities.getUuid(),hash=hashPassword(password,salt),sheet=getSheet('اعضا'),pos=findRow(sheet,'phone',CFG.MASTER_COACH_PHONE),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.passwordSalt]=salt;row[idx.passwordHash]=hash;row[idx.role]='owner';sheet.getRange(pos,1,1,headers.length).setValues([row]);return {ok:true,message:'رمز حساب مالک با هش ذخیره شد.'};}
+function initializeOwnerAccountPassword(){ensureOwnerMember();var owner=findMemberByPhone(CFG.MASTER_COACH_PHONE,true);if(owner&&owner.passwordHash)return {ok:true,message:'رمز حساب مالک از قبل تنظیم شده است.'};var password='';try{var ui=SpreadsheetApp.getUi(),response=ui.prompt('راه‌اندازی حساب سازنده','رمز اولیه حساب سازنده را وارد کن. رمز در فایل کد ذخیره نمی‌شود.',ui.ButtonSet.OK_CANCEL);if(response.getSelectedButton()!==ui.Button.OK)return {ok:false,message:'راه‌اندازی رمز لغو شد'};password=String(response.getResponseText()||'');}catch(e){throw new Error('برای راه‌اندازی رمز مالک، تابع initializeOwnerAccountPassword را از محیط متصل به Google Sheet اجرا کن یا رمز را با روش امن دستی تنظیم کن.');}if(password.length<8||password.length>128)throw new Error('رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد');var salt=Utilities.getUuid()+'-'+Utilities.getUuid(),hash=hashPassword(password,salt),sheet=getSheet('اعضا'),pos=findMemberRowByPhone(CFG.MASTER_COACH_PHONE),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.passwordSalt]=salt;row[idx.passwordHash]=hash;row[idx.role]='owner';sheet.getRange(pos,1,1,headers.length).setValues([row]);return {ok:true,message:'رمز حساب سازنده به‌صورت هش ذخیره شد.'};}
 function hashPassword(password,salt){return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(salt)+'|'+String(password),Utilities.Charset.UTF_8)).replace(/=+$/,'');}
 function verifyMemberPassword(member,password){return !!(member&&member.passwordSalt&&member.passwordHash&&hashPassword(password,member.passwordSalt)===String(member.passwordHash));}
 function normalizeIranDigits(value){
@@ -848,13 +850,17 @@ function listActiveMembers() {
 }
 
 function findMemberByPhone(phone, includeInactive) {
-  var rows = getSheetObjects('اعضا');
+  var wanted = normalizePhone(phone), rows = getSheetObjects('اعضا');
   for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i].phone) === String(phone) && (includeInactive || truthy(rows[i].active))) {
-      return rows[i];
-    }
+    if (normalizePhone(rows[i].phone) === wanted && wanted && (includeInactive || truthy(rows[i].active))) return rows[i];
   }
   return null;
+}
+function findMemberRowByPhone(phone) {
+  var sheet=getSheet('اعضا'), values=sheet.getDataRange().getValues(), headers=values.length?values[0].map(String):[], phoneIndex=headers.indexOf('phone'), wanted=normalizePhone(phone);
+  if(phoneIndex<0)throw new Error('ستون شماره همراه در شیت اعضا پیدا نشد');
+  for(var i=1;i<values.length;i++)if(normalizePhone(values[i][phoneIndex])===wanted&&wanted)return i+1;
+  return 0;
 }
 
 function publicMember(r) {
