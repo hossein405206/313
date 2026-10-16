@@ -14,7 +14,7 @@
    5) Deploy > Manage deployments > ویرایش Deployment فعلی > انتخاب نسخه جدید > Deploy
       Execute as: Me
       Who has access: Anyone
-   6) برای انتشار نهایی، یک Deployment جدید بساز و URL همان Deployment را در js/main.js قرار بده
+   6) فقط اگر عمداً Deployment جدید ساختی، URL جدید را در js/main.js هم جایگزین کن.
 
    ساختار داده‌ها در Google Sheets:
    تنظیمات، مربیان، مسئولین، اعضا، رویدادها، اردوها،
@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.13.0-structured-diagnostics';
+var APP_VERSION = '4.14.0-credential-hardening';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -219,11 +219,21 @@ function setup() {
   ensureOfficialRoles();
 
   var officials = getSheet('مسئولین');
+  var generatedOfficialCodes = [];
   if (officials.getLastRow() < 2) {
-    officials.appendRow(['ATT-GUIDE-CHANGE-ME', 'مسئول حضور و غیاب راهنمایی', 'حضور و غیاب - راهنمایی', true, nowIso()]);
-    officials.appendRow(['ATT-ELEMENTARY-CHANGE-ME', 'مسئول حضور و غیاب دبستان', 'حضور و غیاب - دبستان', true, nowIso()]);
-    officials.appendRow(['SUP-CHANGE-ME', 'مسئول نظارت', 'نظارت', true, nowIso()]);
+    var guideCode = generateOfficialAccessCode_('ATT-GUIDE');
+    var elementaryCode = generateOfficialAccessCode_('ATT-ELEMENTARY');
+    var supervisionCode = generateOfficialAccessCode_('SUP');
+    officials.appendRow([guideCode, 'مسئول حضور و غیاب راهنمایی', 'حضور و غیاب - راهنمایی', true, nowIso()]);
+    officials.appendRow([elementaryCode, 'مسئول حضور و غیاب دبستان', 'حضور و غیاب - دبستان', true, nowIso()]);
+    officials.appendRow([supervisionCode, 'مسئول نظارت', 'نظارت', true, nowIso()]);
+    generatedOfficialCodes.push(
+      { name: 'مسئول حضور و غیاب راهنمایی', code: guideCode },
+      { name: 'مسئول حضور و غیاب دبستان', code: elementaryCode },
+      { name: 'مسئول نظارت', code: supervisionCode }
+    );
   }
+  generatedOfficialCodes = generatedOfficialCodes.concat(rotateUnsafeDefaultOfficialCodes_());
 
   var camps = getSheet('اردوها');
   if (camps.getLastRow() < 2) {
@@ -233,7 +243,11 @@ function setup() {
   ensureLifetimeGameRecords();
   ensureSecret();
 
-  return { ok: true, message: 'راه‌اندازی اولیه انجام شد' };
+  return {
+    ok: true,
+    message: 'راه‌اندازی اولیه انجام شد',
+    generatedOfficialCodes: generatedOfficialCodes
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -529,9 +543,47 @@ function handlePost(p) {
 /* Auth                                                                       */
 /* -------------------------------------------------------------------------- */
 
+function officialDefaultCodePrefix_(code) {
+  var target = normalizeIranDigits(String(code || '').trim()).toUpperCase();
+  var defaults = {
+    'ATT-GUIDE-CHANGE-ME': 'ATT-GUIDE',
+    'ATT-ELEMENTARY-CHANGE-ME': 'ATT-ELEMENTARY',
+    'SUP-CHANGE-ME': 'SUP'
+  };
+  return defaults[target] || '';
+}
+
+function generateOfficialAccessCode_(prefix) {
+  return String(prefix || 'OFFICIAL') + '-' +
+    Utilities.getUuid().replace(/-/g, '').slice(0, 16).toUpperCase();
+}
+
+function rotateUnsafeDefaultOfficialCodes_() {
+  var sheet = getSheet('مسئولین');
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+  var headers = values[0].map(String);
+  var codeIndex = headers.indexOf('code');
+  var nameIndex = headers.indexOf('name');
+  if (codeIndex < 0) return [];
+  var rotated = [];
+  for (var i = 1; i < values.length; i++) {
+    var oldCode = normalizeIranDigits(String(values[i][codeIndex] || '').trim()).toUpperCase();
+    var prefix = officialDefaultCodePrefix_(oldCode);
+    if (!prefix) continue;
+    var newCode = generateOfficialAccessCode_(prefix);
+    sheet.getRange(i + 1, codeIndex + 1).setValue(newCode);
+    rotated.push({
+      name: nameIndex >= 0 ? String(values[i][nameIndex] || '') : '',
+      code: newCode
+    });
+  }
+  return rotated;
+}
+
 function verifyOfficialCode(code) {
   var target = normalizeIranDigits(String(code || '').trim()).toUpperCase();
-  if (!target) return null;
+  if (!target || officialDefaultCodePrefix_(target)) return null;
   var rows = getSheetObjects('مسئولین');
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
@@ -1096,7 +1148,10 @@ function memberAuth(p) {
   if (!fullName || fullName.length < 2) throw new Error('برای ساخت حساب جدید، نام و نام خانوادگی را وارد کن');
 
   var parts = fullName.split(' ');
-  var last = parts.length > 1 ? parts.pop() : '';
+  if (parts.length < 2 || !parts[0] || !parts[1]) {
+    throw new Error('برای ساخت حساب جدید، نام و نام خانوادگی را وارد کن');
+  }
+  var last = parts.pop();
   var first = parts.join(' ');
   var salt = Utilities.getUuid() + '-' + Utilities.getUuid();
   var hash = memberPasswordHash(password, salt);
