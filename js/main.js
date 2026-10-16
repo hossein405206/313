@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.23.0',
+    VERSION: '5.24.0',
     BACKEND_VERSION: '4.17.0-jalali-date-normalization'
   };
 
@@ -550,7 +550,8 @@
       btn.textContent = 'در حال بررسی...';
 
       try {
-        await Api.checkBackendVersion();
+        // verifyOfficialCode performs its own server-side validation. Do not block official login
+        // when an unrelated backend patch version (such as date normalization) has not been deployed.
         var res = await Api.post({ action: 'verifyOfficialCode', code: code });
         if (!res.official) throw new Error('کد نامعتبر است');
 
