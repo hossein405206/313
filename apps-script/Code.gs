@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.15.0-post-auth-reads';
+var APP_VERSION = '5.18.0';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -522,6 +522,8 @@ function handlePost(p) {
     requireCoachPermission(p.token, 'game');
     return saveGamePrize(String(p.prize || '').trim());
   }
+
+  if (action === 'startGameSession') return startGameSession(p);
 
   if (action === 'submitGameScore') {
     return submitGameScore(p);
@@ -1070,7 +1072,9 @@ function ensureSecret() {
 }
 
 function getSecret() {
-  return PropertiesService.getScriptProperties().getProperty('AUTH_SECRET') || 'UNINITIALIZED';
+  var secret = PropertiesService.getScriptProperties().getProperty('AUTH_SECRET');
+  if (!secret) throw new Error('کلید امنیتی سامانه تنظیم نشده است؛ مدیر باید setup() را اجرا کند');
+  return secret;
 }
 
 function b64(s) {
@@ -2264,6 +2268,40 @@ function ensureLifetimeGameRecords() {
   }
 }
 
+function startGameSession(p) {
+  var auth = requireToken(p.token, ['member']);
+  var member = findMemberByPhone(auth.subject, true);
+  if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+  if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
+  var runId = Utilities.getUuid();
+  var run = { memberId: String(member.id), startedAt: Date.now() };
+  CacheService.getScriptCache().put('313_game_run_' + runId, JSON.stringify(run), 600);
+  return { ok: true, runId: runId };
+}
+
+function consumeGameSession_(runId, memberId) {
+  var id = String(runId || '').trim();
+  if (!id || id.length > 80) throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن');
+  var cache = CacheService.getScriptCache();
+  var lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  var raw = null;
+  try {
+    var key = '313_game_run_' + id;
+    raw = cache.get(key);
+    if (raw) cache.remove(key);
+  } finally {
+    lock.releaseLock();
+  }
+  if (!raw) throw new Error('نشست بازی منقضی شده یا قبلاً استفاده شده است؛ بازی را دوباره شروع کن');
+  var run;
+  try { run = JSON.parse(raw); } catch (e) { throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
+  if (String(run.memberId || '') !== String(memberId || '')) throw new Error('نشست بازی متعلق به این حساب نیست');
+  var elapsedSeconds = (Date.now() - Number(run.startedAt || 0)) / 1000;
+  if (!isFinite(elapsedSeconds) || elapsedSeconds < 0 || elapsedSeconds > 600) throw new Error('زمان بازی معتبر نیست؛ بازی را دوباره شروع کن');
+  return elapsedSeconds;
+}
+
 function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
@@ -2271,6 +2309,11 @@ function submitGameScore(p) {
   if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
+  var elapsedSeconds = consumeGameSession_(p.runId, member.id);
+  if (score > 0) {
+    var plausibleMax = Math.floor(Math.max(0, elapsedSeconds - 1.8) / 1.1) + 1;
+    if (score > plausibleMax) throw new Error('امتیاز با مدت بازی سازگار نیست؛ رکورد ثبت نشد');
+  }
   var memberSheet = getSheet('اعضا');
   var memberRow = findRow(memberSheet, 'id', member.id);
   if (!memberRow) throw new Error('رکورد عضو پیدا نشد');
