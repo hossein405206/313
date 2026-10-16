@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.25.0',
-    BACKEND_VERSION: '4.17.0-jalali-date-normalization'
+    VERSION: '5.26.0',
+    BACKEND_VERSION: '4.18.0-required-consent-photo'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -803,6 +803,7 @@
       var keys = Object.keys(data);
       for (var i = 0; i < keys.length; i++) data[keys[i]] = String(data[keys[i]]).trim();
 
+      if (!selectedFile) { Toast.error('عکس رضایت‌نامه پدر را انتخاب کن'); if (zone) zone.focus(); return; }
       if (!data.campId)         { Toast.error('اردو رو انتخاب کن'); return; }
       if (!data.firstName)      { Toast.error('نام رو وارد کن'); return; }
       if (!data.lastName)       { Toast.error('نام خانوادگی رو وارد کن'); return; }
