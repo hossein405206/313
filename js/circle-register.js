@@ -3,6 +3,14 @@ var $=function(s){return document.querySelector(s)};
 var form=$('#circleRegisterForm'),button=$('#circleSubmit'),notice=$('#circleFormNotice');
 function normalizePhone(v){return String(v||'').replace(/[^0-9۰-۹٠-٩]/g,'').replace(/[۰-۹]/g,function(d){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))}).replace(/[٠-٩]/g,function(d){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))})}
 function showNotice(message,error){notice.textContent=message;notice.classList.remove('hidden','is-error');if(error)notice.classList.add('is-error');notice.scrollIntoView({behavior:'smooth',block:'center'})}
+function localIsoDate(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0')}
+var birthInput=$('#circleBirthDate');
+if(birthInput){
+ var today=new Date(), oldest=new Date(today.getFullYear()-100,today.getMonth(),today.getDate());
+ var latest=new Date(today.getFullYear()-7,today.getMonth(),today.getDate());
+ birthInput.min=localIsoDate(oldest);
+ birthInput.max=localIsoDate(latest);
+}
 ['#circlePhone','#circleGuardianPhone'].forEach(function(selector){var input=$(selector);input.addEventListener('input',function(){input.value=normalizePhone(input.value).slice(0,11)})});
 form.addEventListener('submit',async function(e){e.preventDefault();
  var data={firstName:$('#circleFirstName').value.trim(),lastName:$('#circleLastName').value.trim(),phone:normalizePhone($('#circlePhone').value),birthDate:$('#circleBirthDate').value,school:$('#circleSchool').value.trim(),grade:$('#circleGrade').value,guardianName:$('#circleGuardianName').value.trim(),guardianPhone:normalizePhone($('#circleGuardianPhone').value),notes:$('#circleNotes').value.trim(),guardianConsent:$('#circleGuardianConsent').checked};
