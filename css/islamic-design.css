@@ -699,7 +699,7 @@ body,.form-control,.btn-submit,.btn-secondary,.quick-item,.service-card{font-fam
 @font-face{
   font-family:"Estedad";
   src:url("https://cdn.jsdelivr.net/gh/aminabedi68/Estedad@master/fonts/webfonts/Estedad-Bold.woff2") format("woff2");
-  font-style:normal;font-weight:700 900;font-display:swap;
+  font-style:normal;font-weight:700;font-display:swap;
 }
 @font-face{
   font-family:"Aref Ruqaa";
@@ -712,7 +712,7 @@ body,.form-control,.btn-submit,.btn-secondary,.quick-item,.service-card{font-fam
 }
 html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-secondary,
 .form-group label,.form-hint,.form-help,.section-subtitle,.service-copy,.feature-info p,
-.official-role-explanation,.jalali-picker__choice,.jalali-picker__head button,.jalali-picker__foot button{
+.official-role-explanation,.jalali-picker__choice,.jalali-picker__head button,.jalali-picker__foot button,.jalali-calendar-toggle small,.jalali-picker__days button,.jalali-picker__selected{
   font-family:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif!important;
 }
 .app-header h1,.section-title,.hero-title,.contact-hero h2,.feedback-hero h2,.game-hero h2,
@@ -728,3 +728,8 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 /* Use the supplied brand image instead of a typographic stand-in. */
 .contact-credit .media-credit-logo--image{width:min(100%,260px);min-height:0;height:auto;aspect-ratio:auto;margin:0 auto 10px;padding:8px;border:1px solid #e5d7ac;border-radius:18px;display:flex;align-items:center;justify-content:center;background:#fffdf7;box-shadow:0 8px 22px rgba(120,89,25,.09)}
 .contact-credit .media-credit-logo--image img{display:block;width:100%;max-width:100%;max-height:160px;height:auto;object-fit:contain;border-radius:12px}
+
+/* v5.21.0 — Explicit static font-weight mapping and consistent Jalali picker typography. */
+.jalali-picker__years,.jalali-picker__months{scrollbar-width:thin;scrollbar-color:#b7d9ce #f0f7f4}
+.jalali-picker__years .jalali-picker__choice{min-height:42px;aspect-ratio:1.6}
+.jalali-picker__months .jalali-picker__choice{min-height:44px}
