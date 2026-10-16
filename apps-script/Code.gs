@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.16.0-master-member-password';
+var APP_VERSION = '4.17.0-jalali-date-normalization';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1512,14 +1512,17 @@ function getRingRegistration(p) {
   };
 }
 
-function isValidJalaliRingDate(value){
-  var m=/^(\d{4})\/(\d{2})\/(\d{2})$/.exec(String(value||'').trim());
-  if(!m)return false;
+function normalizeJalaliRingDate_(value){
+  // Accept Persian, Arabic, and Latin digits plus /, - or . separators;
+  // always persist a canonical yyyy/MM/dd value.
+  var normalized=normalizeIranDigits(String(value||'').trim()).replace(/[.\\-]/g,'/').replace(/\\s+/g,'');
+  var m=/^(\\d{4})\\/(\\d{1,2})\\/(\\d{1,2})$/.exec(normalized);
+  if(!m)return '';
   var y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]);
-  if(y<1300||y>1500||mo<1||mo>12||d<1)return false;
+  if(y<1300||y>1500||mo<1||mo>12||d<1)return '';
   var breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
   var leapJ=-14,jp=breaks[0],jm,jump,leapG,march,n;
-  for(var i=1;i<breaks.length;i++){jm=breaks[i];jump=jm-jp;if(y<jm)break;leapJ=Math.floor(jump/33)*8+Math.floor((jump%33)/4);jp=jm;}
+  for(var i=1;i<breaks.length;i++){jm=breaks[i];jump=jm-jp;if(y<jm)break;leapJ+=Math.floor(jump/33)*8+Math.floor((jump%33)/4);jp=jm;}
   n=y-jp;leapJ+=Math.floor(n/33)*8+Math.floor(((n%33)+3)/4);
   if(((jump%33)===4)&&(jump-n===4))leapJ++;
   leapG=Math.floor((y+621)/4)-Math.floor((Math.floor((y+621)/100)+1)*3/4)-150;
@@ -1527,8 +1530,10 @@ function isValidJalaliRingDate(value){
   if(jump-n<6)n=n-jump+Math.floor((jump+4)/33)*33;
   var leap=((n+1)%33-1)%4;if(leap===-1)leap=4;
   var leapYear=leap===0,max=mo<=6?31:(mo<=11?30:(leapYear?30:29));
-  return d<=max;
+  if(d>max)return '';
+  return y+'/'+('0'+mo).slice(-2)+'/'+('0'+d).slice(-2);
 }
+function isValidJalaliRingDate(value){return !!normalizeJalaliRingDate_(value);}
 function saveRingRegistration(p) {
   var auth = requireToken(String(p.token || ''), ['member']);
   var phone = normalizeMemberPhone(auth.subject);
@@ -1536,7 +1541,7 @@ function saveRingRegistration(p) {
   if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد؛ یک‌بار خارج شو و دوباره وارد شو');
 
   var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\s+/g, '');
-  var birthDate = String(p.birthDate || '').trim();
+  var birthDate = normalizeJalaliRingDate_(p.birthDate);
   var fatherName = String(p.fatherName || '').trim();
   var fatherPhone = normalizeMemberPhone(p.fatherPhone);
   var address = String(p.address || '').trim();
@@ -1546,7 +1551,7 @@ function saveRingRegistration(p) {
   var emergencyPhone = normalizeMemberPhone(p.emergencyPhone || p.fatherPhone);
 
   if (!/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
-  if (!isValidJalaliRingDate(birthDate)) throw new Error('تاریخ تولد شمسی معتبر نیست؛ نمونه: ۱۳۸۹/۰۶/۱۵');
+  if (!birthDate) throw new Error('تاریخ تولد شمسی معتبر نیست؛ لطفاً از تقویم یک تاریخ معتبر انتخاب کن.');
   if (!fatherName) throw new Error('نام پدر را وارد کن');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (address.length < 8) throw new Error('آدرس را کامل‌تر وارد کن');
