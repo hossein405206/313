@@ -200,11 +200,7 @@ function handleGet(p) {
     return { ok: true, official: officialPublic(official), token: issueToken(official.roleCode, official.code) };
   }
 
-  if (action === 'verifyCoachCode') {
-    var coach = verifyCoachCode(String(p.code || '').trim().toUpperCase());
-    if (!coach) throw new Error('کد مربی نامعتبر است');
-    return { ok: true, coach: { name: coach.name, role: coach.role, isMaster: coach.isMaster, permissions: coachPermissions(coach) }, token: issueToken('coach', coach.code, coach.isMaster, coachPermissions(coach)) };
-  }
+  // Legacy code-only coach login is disabled; use loginCoach with phone and password.
 
   if (action === 'listMembers') {
     var auth = requireToken(p.token, ['attendance','coach']);
@@ -398,12 +394,38 @@ function verifyOfficialCode(code) {
 }
 
 function verifyCoachCode(code){var rows=getSheetObjects('مربیان');for(var i=0;i<rows.length;i++){var r=rows[i];if(truthy(r.active)&&String(r.role||'')!=='master'&&String(r.code).toUpperCase()===String(code).toUpperCase())return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:false};}return null;}
-function loginCoach(p){
-var phone=normalizeIranDigits(String(p.phone||'').trim()).replace(/\s+/g,'');var password=String(p.code||p.password||'');
-if(!/^09\d{9}$/.test(phone)||!password)throw new Error('شماره همراه و رمز عبور معتبر را وارد کن');
-if(phone===CFG.MASTER_COACH_PHONE){var owner=findMemberByPhone(phone,true);if(!owner||String(owner.role||'')!=='owner'||!verifyMemberPassword(owner,password))throw new Error('شماره همراه یا رمز عبور نادرست است');var master=getSheetObjects('مربیان').filter(function(r){return String(r.phone||'')===phone&&String(r.role||'')==='master';})[0];if(!master||!truthy(master.active))throw new Error('حساب مالک غیرفعال است');return {ok:true,coach:{name:CFG.MASTER_COACH_NAME,phone:phone,role:'master',isMaster:true,permissions:allCoachPermissions()},token:issueToken('coach',String(master.code),true,allCoachPermissions())};}
-var rows=getSheetObjects('مربیان'),coach=rows.filter(function(r){return truthy(r.active)&&String(r.role||'')!=='master'&&normalizeIranDigits(String(r.phone||'')).replace(/\s+/g,'')===phone&&String(r.code||'').trim()===password;})[0];
-if(!coach)throw new Error('شماره همراه یا رمز ورود مربی نادرست است');return {ok:true,coach:{name:coach.name,phone:phone,role:coach.role,isMaster:false,permissions:coachPermissions(coach)},token:issueToken('coach',coach.code,false,coachPermissions(coach))};
+function loginCoach(p) {
+  var phone = normalizeIranDigits(String(p.phone || '').trim()).replace(/\\s+/g, '');
+  var password = String(p.code || p.password || '');
+  if (!/^09\\d{9}$/.test(phone) || !password) throw new Error('شماره همراه و رمز عبور معتبر را وارد کن');
+  var cache = CacheService.getScriptCache();
+  var attemptKey = 'coach-login-fail:' + phone;
+  var attempts = Number(cache.get(attemptKey) || 0);
+  if (attempts >= 8) throw new Error('تعداد تلاش‌های ورود زیاد است؛ ۱۵ دقیقه دیگر دوباره تلاش کن');
+  var coach = null;
+  if (phone === CFG.MASTER_COACH_PHONE) {
+    var owner = findMemberByPhone(phone, true);
+    var master = getSheetObjects('مربیان').filter(function(r) {
+      return normalizePhone(r.phone) === phone && String(r.role || '') === 'master';
+    })[0];
+    if (!owner || String(owner.role || '') !== 'owner' || !verifyMemberPassword(owner, password) || !master || !truthy(master.active)) {
+      cache.put(attemptKey, String(attempts + 1), 900);
+      throw new Error('شماره همراه یا رمز عبور نادرست است');
+    }
+    cache.remove(attemptKey);
+    return { ok: true, coach: { name: CFG.MASTER_COACH_NAME, phone: phone, role: 'master', isMaster: true, permissions: allCoachPermissions() }, token: issueToken('coach', String(master.code), true, allCoachPermissions()) };
+  }
+  var rows = getSheetObjects('مربیان');
+  coach = rows.filter(function(r) {
+    return truthy(r.active) && String(r.role || '') !== 'master' &&
+      normalizePhone(r.phone) === phone && String(r.code || '').trim() === password;
+  })[0];
+  if (!coach) {
+    cache.put(attemptKey, String(attempts + 1), 900);
+    throw new Error('شماره همراه یا رمز ورود مربی نادرست است');
+  }
+  cache.remove(attemptKey);
+  return { ok: true, coach: { name: coach.name, phone: phone, role: coach.role, isMaster: false, permissions: coachPermissions(coach) }, token: issueToken('coach', coach.code, false, coachPermissions(coach)) };
 }
 function ensureOwnerMember(){var phone=CFG.MASTER_COACH_PHONE,existing=findMemberByPhone(phone,true);if(existing){var sheet=getSheet('اعضا'),headers=sheet.getDataRange().getValues()[0].map(String),pos=findMemberRowByPhone(phone),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.firstName]=CFG.MASTER_COACH_FIRST_NAME;row[idx.lastName]=CFG.MASTER_COACH_LAST_NAME;row[idx.name]=CFG.MASTER_COACH_NAME;row[idx.nickname]=CFG.MASTER_COACH_NICKNAME;row[idx.role]='owner';row[idx.active]=true;row[idx.profileCompleted]=true;sheet.getRange(pos,1,1,headers.length).setValues([row]);return;}addMemberInternal({firstName:CFG.MASTER_COACH_FIRST_NAME,lastName:CFG.MASTER_COACH_LAST_NAME,phone:phone,nickname:CFG.MASTER_COACH_NICKNAME,profileCompleted:true,active:true,role:'owner'});}
 function ensureMasterCoach(){var sheet=getSheet('مربیان'),rows=getSheetObjects('مربیان'),phone=CFG.MASTER_COACH_PHONE,found=rows.filter(function(r){return String(r.phone||'')===phone&&String(r.role||'')==='master';})[0],code='OWNER-MASTER-'+Utilities.getUuid().replace(/-/g,'').slice(0,18).toUpperCase();if(found){var pos=findRow(sheet,'phone',phone,'role','master'),headers=sheet.getDataRange().getValues()[0].map(String),row=sheet.getRange(pos,1,1,headers.length).getValues()[0],idx={};headers.forEach(function(h,i){idx[h]=i;});row[idx.name]=CFG.MASTER_COACH_NAME;row[idx.active]=true;row[idx.permissions]=JSON.stringify(allCoachPermissions());row[idx.updatedAt]=nowIso();if(String(row[idx.code]||'').indexOf('OWNER-MASTER-')!==0)row[idx.code]=code;sheet.getRange(pos,1,1,headers.length).setValues([row]);}else sheet.appendRow([code,CFG.MASTER_COACH_NAME,phone,true,'master',JSON.stringify(allCoachPermissions()),nowIso(),nowIso()]);}
@@ -537,10 +559,14 @@ function ensureOfficialRoles() {
   var sheet=getSheet('مسئولین'), rows=getSheetObjects('مسئولین');
   var roles=['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'];
   roles.forEach(function(role){
-    var exists=rows.some(function(r){return truthy(r.active)&&String(r.role||'')===role;});
-    if(!exists){
-      var prefix=role.indexOf('راهنمایی')>=0?'ATT-GUIDE':role.indexOf('دبستان')>=0?'ATT-ELEMENTARY':'SUP';
-      sheet.appendRow([prefix+'-'+Utilities.getUuid().split('-')[0].toUpperCase(),'مسئول '+role,role,true,nowIso()]);
+    var prefix=role.indexOf('راهنمایی')>=0?'ATT-GUIDE':role.indexOf('دبستان')>=0?'ATT-ELEMENTARY':'SUP';
+    var matches=rows.filter(function(r){return String(r.role||'')===role;});
+    var active=matches.filter(function(r){return truthy(r.active);})[0];
+    if(active && /CHANGE-ME|CHANGE_ME|DEFAULT/i.test(String(active.code||''))){
+      var rowNo=findRow(sheet,'code',String(active.code||''));if(rowNo)sheet.getRange(rowNo,1).setValue(prefix+'-'+Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase());
+    }
+    if(!active){
+      sheet.appendRow([prefix+'-'+Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase(),'مسئول '+role,role,true,nowIso()]);
     }
   });
 }
