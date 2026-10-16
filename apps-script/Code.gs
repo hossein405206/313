@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.14.0-credential-hardening';
+var APP_VERSION = '4.15.0-post-auth-reads';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -238,8 +238,21 @@ function setup() {
 /* GET Actions                                                                */
 /* -------------------------------------------------------------------------- */
 
-function handleGet(p) {
+function isPostOnlyAuthenticatedReadAction_(action) {
+  return [
+    'listSystemErrors', 'listFeedback', 'listActivityReportsManage',
+    'listCoaches', 'listOfficialsManage', 'getRingRegistration',
+    'getMyGameRole', 'listMembers', 'getAttendanceToday',
+    'listMonthlyAttendance', 'listWarnings', 'listRegistrations',
+    'getDashboard'
+  ].indexOf(String(action || '')) >= 0;
+}
+
+function handleGet(p, allowPostOnlyAuthenticatedRead) {
   var action = String(p.action || 'ping');
+  if (!allowPostOnlyAuthenticatedRead && isPostOnlyAuthenticatedReadAction_(action)) {
+    throw new Error('برای امنیت نشست، این عملیات فقط از طریق POST مجاز است');
+  }
 
   if (action === 'ping') return { ok: true, service: '313', version: APP_VERSION, serverTime: nowIso() };
 
@@ -398,6 +411,7 @@ function handleGet(p) {
 
 function handlePost(p) {
   var action = String(p.action || '');
+  if (isPostOnlyAuthenticatedReadAction_(action)) return handleGet(p, true);
 
   if (action === 'memberAuth') { return memberAuth(p); }
   if (action === 'saveRingRegistration') return saveRingRegistration(p);

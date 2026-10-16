@@ -101,7 +101,7 @@
     setRole('unregistered');
     var api = getAPI();
     if (!member || !member.token || !api) return;
-    api.get({ action: 'getMyGameRole', token: member.token }).then(function (res) {
+    api.post({ action: 'getMyGameRole', token: member.token }).then(function (res) {
       setRole(res && res.roleKey || 'unregistered');
     }).catch(function () { setRole('unregistered'); });
   }
@@ -175,7 +175,7 @@
     if (!api || !el || !member.phone) return;
 
     try {
-      var res = await api.get({
+      var res = await api.post({
         action: 'listRegistrations',
         token: member.token
       });
