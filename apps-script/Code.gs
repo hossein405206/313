@@ -2297,7 +2297,6 @@ function submitGameScore(p) {
   if (!isFinite(score) || score < 0 || score > 100000 || Math.floor(score) !== score) {
     throw new Error('امتیاز نامعتبر است');
   }
-
   var memberSheet = getSheet('اعضا');
   var memberRow = findRow(memberSheet, 'id', member.id);
   if (!memberRow) throw new Error('رکورد عضو پیدا نشد');
@@ -2317,13 +2316,17 @@ function submitGameScore(p) {
 
     var gameSession;
     try { gameSession = JSON.parse(sessionJson); }
-    catch (sessionError) { cache.remove(cacheKey); throw new Error('جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
+    catch (sessionError) {
+      cache.remove(cacheKey);
+      throw new Error('جلسهٔ بازی معتبر نیست؛ بازی را دوباره شروع کن');
+    }
 
     if (String(gameSession.memberId || '') !== String(member.id) ||
         normalizeMemberPhone(gameSession.phone || '') !== normalizeMemberPhone(auth.subject)) {
       throw new Error('این جلسهٔ بازی متعلق به حساب شما نیست');
     }
 
+    // نشست پیش از اعتبارسنجی امتیاز مصرف می‌شود تا همان شناسه دوباره قابل استفاده نباشد.
     cache.remove(cacheKey);
     var startedAt = Number(gameSession.startedAt);
     var elapsedSeconds = (Date.now() - startedAt) / 1000;
@@ -2359,16 +2362,16 @@ function submitGameScore(p) {
     if (!isFinite(lifetimeBest) || lifetimeBest < 0) lifetimeBest = 0;
     var saved = false;
 
-    // بهترین امتیاز هفته مستقل از رکورد تاریخی است؛ پیشرفت هفتگی نباید به شکستن رکورد کل عمر وابسته باشد.
-    if (score > weeklyBest) {
-      if (score > lifetimeBest) {
-        var memberHeaders = memberSheet.getDataRange().getValues()[0].map(String);
-        var bestScoreIndex = memberHeaders.indexOf('bestScore');
-        if (bestScoreIndex < 0) throw new Error('ستون رکورد تاریخی عضو پیدا نشد؛ setup را بررسی کن');
-        memberSheet.getRange(memberRow, bestScoreIndex + 1).setValue(score);
-        lifetimeBest = score;
-      }
+    // رکورد تاریخی و رکورد هفتگی دو معیار مستقل‌اند.
+    if (score > lifetimeBest) {
+      var memberHeaders = memberSheet.getDataRange().getValues()[0].map(String);
+      var bestScoreIndex = memberHeaders.indexOf('bestScore');
+      if (bestScoreIndex < 0) throw new Error('ستون رکورد تاریخی عضو پیدا نشد؛ setup را بررسی کن');
+      memberSheet.getRange(memberRow, bestScoreIndex + 1).setValue(score);
+      lifetimeBest = score;
+    }
 
+    if (score > weeklyBest) {
       if (existing) {
         var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
         vals[1] = member.id;
