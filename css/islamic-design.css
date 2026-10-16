@@ -573,3 +573,95 @@ label {
     transition-duration: .01ms !important;
   }
 }
+
+/*
+ * Frontend release: 5.18.0
+ * When changing frontend assets, bump the v=5.18.0 cache marker in every HTML page
+ * so visitors receive the current CSS/JS without manually clearing their browser cache.
+ */
+
+/* A slightly rounder, more cohesive finish without changing the existing layout. */
+:root {
+  --r-sm: 12px;
+  --r-md: 17px;
+  --r-lg: 23px;
+  --r-xl: 28px;
+}
+
+.app-header {
+  border-radius: 0 0 22px 22px;
+}
+
+.card,
+.stat-card,
+.game-player-card,
+.sup-form-card,
+.schedule-card,
+.activity-report-card,
+.prize-card,
+.feature-card,
+.service-card,
+.quick-item,
+.contact-item,
+.modal-content,
+.panel,
+.profile-card,
+.welcome-card,
+.login-card,
+.register-card,
+.form-card {
+  border-radius: 22px;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  border-radius: 15px;
+}
+
+button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-submit,
+a.button,
+input[type="submit"] {
+  border-radius: 15px;
+}
+
+.bottom-nav {
+  border-radius: 22px 22px 0 0;
+}
+
+@media (max-width: 600px) {
+  .app-container {
+    padding-inline: 0;
+  }
+
+  .page,
+  main.page {
+    padding-inline: 14px;
+  }
+
+  .card,
+  .stat-card,
+  .game-player-card,
+  .sup-form-card,
+  .schedule-card,
+  .activity-report-card,
+  .prize-card,
+  .feature-card,
+  .service-card,
+  .quick-item,
+  .contact-item,
+  .modal-content,
+  .panel,
+  .profile-card,
+  .welcome-card,
+  .login-card,
+  .register-card,
+  .form-card {
+    border-radius: 19px;
+  }
+}
+
