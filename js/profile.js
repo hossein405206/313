@@ -319,6 +319,20 @@
 
     var member = session.getMember();
 
+    // نقش و عضویت را از سرور تازه‌سازی کن تا تأیید عضویت جدید فوراً در پروفایل دیده شود.
+    if (member && member.token && getAPI()) {
+      try {
+        var membership = await getAPI().get({ action: 'getCircleMembership', token: member.token });
+        if (membership && Object.prototype.hasOwnProperty.call(membership, 'badgeRole')) {
+          member.badgeRole = membership.badgeRole || '';
+          member.isCircleMember = !!membership.isMember;
+          session.setMember(member);
+        }
+      } catch (refreshError) {
+        // اگر اتصال موقتاً قطع بود، پروفایل ذخیره‌شده را همچنان نمایش بده.
+      }
+    }
+
     // اگه کاربر وارد نشده، برو به login
     if (!member) {
       toast('اول باید وارد بشی', 'error');
