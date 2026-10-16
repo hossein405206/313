@@ -27,8 +27,7 @@ var CFG = {
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
-  MASTER_COACH_NAME: 'مربی ارشد',
-  MASTER_ACCOUNT_PHONE: '09935661397' // Allow-list only; never store the owner's password in source.
+  MASTER_COACH_NAME: 'مربی ارشد'
 };
 
 // Credentials are stored in Script Properties, never in the public repository.
@@ -641,8 +640,9 @@ function loginCoach(p){
   if(!coach){
     // مالک می‌تواند در پنل مربیان با گذرواژهٔ حساب عضو خود وارد شود.
     // شماره فقط شناسهٔ مجاز است؛ گذرواژه با هش ذخیره‌شده در برگهٔ اعضا بررسی می‌شود.
-    var ownerPhone = normalizeIranMobile_(CFG.MASTER_ACCOUNT_PHONE);
-    if(phone === ownerPhone){
+    // The existing Script Property is the allow-list; no private phone number is hard-coded in the public repository.
+    var ownerPhone = masterConfig.phone;
+    if(ownerPhone && phone === ownerPhone){
       var owner = findMemberByPhone(phone, true);
       var ownerPassword = String(p.code || '');
       var ownerSalt = String(owner && owner.passwordSalt || '');
