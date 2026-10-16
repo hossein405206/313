@@ -595,8 +595,14 @@ function updateOfficial(p) {
 }
 function setOfficialStatus(p) {
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند وضعیت مسئولین را تغییر دهد');
-  var pos=findRow(getSheet('مسئولین'),'code',String(p.code||'')); if(!pos)throw new Error('مسئول پیدا نشد');
-  var sheet=getSheet('مسئولین'), vals=sheet.getRange(pos,1,1,5).getValues()[0]; vals[3]=p.active===true || String(p.active).toLowerCase()==='true'; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
+  var code=String(p.code||''), pos=findRow(getSheet('مسئولین'),'code',code); if(!pos)throw new Error('مسئول پیدا نشد');
+  var sheet=getSheet('مسئولین'), vals=sheet.getRange(pos,1,1,5).getValues()[0];
+  var active=p.active===true || String(p.active).toLowerCase()==='true';
+  if(active){
+    var role=String(vals[2]||''), rows=getSheetObjects('مسئولین');
+    if(rows.some(function(r){return truthy(r.active)&&String(r.role||'')===role&&String(r.code||'')!==code;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد');
+  }
+  vals[3]=active; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
 }
 function requireCoachPermission(token, permission) {
   var auth=requireToken(token,['coach']); if(auth.isMaster)return auth;
