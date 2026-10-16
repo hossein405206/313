@@ -573,3 +573,52 @@ label {
     transition-duration: .01ms !important;
   }
 }
+
+/* Accessibility refinements: readable contrast and comfortable touch targets. */
+:root {
+  --text-muted: #657080;
+}
+
+.app-container .muted,
+.app-container .game-hint,
+.app-container .game-name p,
+.app-container .activities-intro p,
+.app-container .activity-body p,
+.app-container .activity-foot time,
+.app-container .coach-stat span,
+.app-container .admin-item-main small,
+.app-container .panel-subtitle,
+.app-container .ranking-score small,
+.app-container .podium-rank,
+.app-container .ranking-note p {
+  color: #657080;
+}
+
+.app-container .eyebrow,
+.app-container .activities-intro span,
+.app-container .archive-count,
+.app-container .activity-foot b,
+.app-container .rank,
+.app-container .ranking-position,
+.app-container .ranking-name small,
+.app-container .ranking-heading span,
+.app-container .ranking-heading a {
+  color: #795a1b;
+}
+
+.app-container :is(.mini-action, .admin-actions button, .chip, .role-gate) {
+  min-height: 40px;
+}
+
+.app-container :is(.close-btn, .drawer-close) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (max-width: 380px) {
+  .app-container .activity-body p,
+  .app-container .ranking-note p,
+  .app-container .panel-subtitle {
+    font-size: 0.75rem;
+  }
+}
