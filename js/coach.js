@@ -83,7 +83,7 @@ function resetCoachEditor(){
  state.editingCoachCode='';$('#newCoachName').value='';$('#newCoachPhone').value='';$('#newCoachCode').value='';
  renderPermissionChecks($('#newCoachPermissions'),{});$('#addCoachBtn').textContent='ثبت مدیر';$('#cancelCoachEditBtn').classList.add('hidden');
 }
-function setCoachStatus(code,active){api().post({action:'setCoachStatus',token:state.token,code:code,active:active}).then(function(){toast(active?'مدیر فعال شد ✓':'دسترسی مدیر بسته شد');loadCoaches()}).catch(function(e){toast(e.message,1)})}
+function setCoachStatus(code,active){if(!confirm(active?'دسترسی این مربی دوباره فعال شود؟':'دسترسی این مربی غیرفعال شود؟'))return;api().post({action:'setCoachStatus',token:state.token,code:code,active:active}).then(function(){toast(active?'مدیر فعال شد ✓':'دسترسی مدیر بسته شد');loadCoaches()}).catch(function(e){toast(e.message,1)})}
 function loadOfficials(){api().get({action:'listOfficialsManage',token:state.token}).then(function(r){var box=$('#officialList');box.innerHTML=r.items.map(function(x){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.role)+' · '+esc(x.code)+(x.phone?' · '+esc(x.phone):'')+'</small></div><div class="admin-actions"><button data-off-edit="'+esc(x.code)+'">ویرایش</button><button data-off-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'اخراج':'فعال‌سازی')+'</button></div></div>'}).join('')}).catch(function(e){toast(e.message,1)})}
 function editOfficial(code,list){
  var x=list.find(function(y){return y.code===code});if(!x)return;
@@ -113,7 +113,7 @@ function setupStaff(){
  $('#cancelOfficialEditBtn').onclick=resetOfficialEditor;
  $('#officialList').addEventListener('click',function(e){
   var edit=e.target.closest('[data-off-edit]'),st=e.target.closest('[data-off-status]');
-  if(st){api().post({action:'setOfficialStatus',token:state.token,code:st.dataset.offStatus,active:st.dataset.active==='1'}).then(function(){toast('وضعیت مسئول تغییر کرد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}
+  if(st){if(!confirm(st.dataset.active==='1'?'این مسئول دوباره فعال شود؟':'دسترسی این مسئول غیرفعال شود؟'))return;api().post({action:'setOfficialStatus',token:state.token,code:st.dataset.offStatus,active:st.dataset.active==='1'}).then(function(){toast('وضعیت مسئول تغییر کرد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}
   else if(edit){api().get({action:'listOfficialsManage',token:state.token}).then(function(r){editOfficial(edit.dataset.offEdit,r.items||[])}).catch(function(x){toast(x.message,1)})}
  });
 }
