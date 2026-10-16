@@ -1935,6 +1935,20 @@ function listCamps() {
     .map(function(r){ return { id:r.id, title:r.title, status:r.status }; });
 }
 
+function hasActiveCampRegistration_(campId, phone, firstName, lastName, nationalCode) {
+  return getSheetObjects('ثبت‌نام‌ها').some(function(r) {
+    if (String(r.campId || '') !== String(campId) || String(r.status || '') === 'رد شد') return false;
+    var samePersonAndPhone =
+      normalizeMemberPhone(r.phone) === normalizeMemberPhone(phone) &&
+      String(r.firstName || '').trim().toLowerCase() === String(firstName || '').trim().toLowerCase() &&
+      String(r.lastName || '').trim().toLowerCase() === String(lastName || '').trim().toLowerCase();
+    var normalizedNationalCode = normalizeIranDigits(String(nationalCode || '')).replace(/\s+/g, '');
+    var sameNationalCode = !!normalizedNationalCode &&
+      normalizeIranDigits(String(r.nationalCode || '')).replace(/\s+/g, '') === normalizedNationalCode;
+    return samePersonAndPhone || sameNationalCode;
+  });
+}
+
 function registerCamp(p) {
   var campId = String(p.campId || '').trim();
   var firstName = String(p.firstName || '').trim();
@@ -1951,17 +1965,9 @@ function registerCamp(p) {
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
 
-  var existingRegistration = getSheetObjects('ثبت‌نام‌ها').some(function(r) {
-    if (String(r.campId || '') !== campId || String(r.status || '') === 'رد شد') return false;
-    var samePersonAndPhone =
-      normalizeMemberPhone(r.phone) === phone &&
-      String(r.firstName || '').trim().toLowerCase() === firstName.toLowerCase() &&
-      String(r.lastName || '').trim().toLowerCase() === lastName.toLowerCase();
-    var sameNationalCode = !!nationalCode &&
-      normalizeIranDigits(String(r.nationalCode || '')).replace(/\s+/g, '') === nationalCode;
-    return samePersonAndPhone || sameNationalCode;
-  });
-  if (existingRegistration) throw new Error('برای این عضو در همین اردو درخواست فعالی وجود دارد');
+  if (hasActiveCampRegistration_(campId, phone, firstName, lastName, nationalCode)) {
+    throw new Error('برای این عضو در همین اردو درخواست فعالی وجود دارد');
+  }
 
   var uploaded = null;
   var photoUrl = '';
@@ -1989,13 +1995,23 @@ function registerCamp(p) {
     createdAt: nowIso(),
     updatedAt: nowIso()
   };
+  var registrationLock = LockService.getScriptLock();
+  var lockAcquired = false;
   try {
+    registrationLock.waitLock(10000);
+    lockAcquired = true;
+    // دوباره داخل قفل بررسی می‌کنیم تا دو درخواست هم‌زمان ثبت تکراری نسازند.
+    if (hasActiveCampRegistration_(campId, phone, firstName, lastName, nationalCode)) {
+      throw new Error('برای این عضو در همین اردو درخواست فعالی وجود دارد');
+    }
     sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
   } catch (err) {
     if (uploaded && uploaded.id) {
       try { DriveApp.getFileById(uploaded.id).setTrashed(true); } catch (cleanupError) {}
     }
     throw err;
+  } finally {
+    if (lockAcquired) registrationLock.releaseLock();
   }
   return { ok: true, id: row.id, status: row.status };
 }
