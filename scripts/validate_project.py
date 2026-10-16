@@ -166,6 +166,20 @@ def main() -> int:
     check("weeklySaved" in game_client and "weeklySaved" in backend,
           "Weekly and lifetime score outcomes are not both surfaced by client and backend")
 
+    attendance_fn = re.search(r"^function\s+saveAttendanceBatch\b[\s\S]*?(?=^function\s+|\Z)", backend, re.M)
+    check(bool(attendance_fn)
+          and "activeMembersById" in attendance_fn.group(0)
+          and "seenMemberIds" in attendance_fn.group(0)
+          and "var recordName = (String(member.firstName" in attendance_fn.group(0),
+          "Attendance save must reject duplicate/fake members and use canonical member names")
+    warning_fn = re.search(r"^function\s+saveWarning\b[\s\S]*?(?=^function\s+|\Z)", backend, re.M)
+    check(bool(warning_fn)
+          and "getSheetObjects('مسئولین')" in warning_fn.group(0)
+          and "truthy(row.active)" in warning_fn.group(0)
+          and "responsibility.length > 80" in warning_fn.group(0)
+          and "reason.length > 300" in warning_fn.group(0),
+          "Warning save must validate active officials and enforce text limits")
+
     # Keep API action names aligned across every browser JS/HTML entry point and backend dispatcher.
     client_actions: set[str] = set()
     client_files = sorted((ROOT / "js").glob("*.js")) + sorted(ROOT.glob("*.html"))
