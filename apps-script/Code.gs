@@ -27,7 +27,8 @@ var CFG = {
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
-  MASTER_COACH_NAME: 'مربی ارشد'
+  MASTER_COACH_NAME: 'مربی ارشد',
+  MASTER_ACCOUNT_PHONE: '09935661397' // Allow-list only; never store the owner's password in source.
 };
 
 // Credentials are stored in Script Properties, never in the public repository.
@@ -62,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.15.0-post-auth-reads';
+var APP_VERSION = '4.16.0-master-member-password';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -637,7 +638,36 @@ function loginCoach(p){
     return truthy(r.active)&&rowPhone===phone&&rowCode===code&&(String(r.role||'')!=='master'||(masterConfig.phone===phone&&masterCode===code));
   })[0];
 
-  if(!coach) throw new Error('شماره یا کد مربی نادرست است');
+  if(!coach){
+    // مالک می‌تواند در پنل مربیان با گذرواژهٔ حساب عضو خود وارد شود.
+    // شماره فقط شناسهٔ مجاز است؛ گذرواژه با هش ذخیره‌شده در برگهٔ اعضا بررسی می‌شود.
+    var ownerPhone = normalizeIranMobile_(CFG.MASTER_ACCOUNT_PHONE);
+    if(phone === ownerPhone){
+      var owner = findMemberByPhone(phone, true);
+      var ownerPassword = String(p.code || '');
+      var ownerSalt = String(owner && owner.passwordSalt || '');
+      var ownerHash = String(owner && owner.passwordHash || '');
+      if(owner && truthy(owner.active) && ownerSalt && ownerHash &&
+         memberPasswordHash(ownerPassword, ownerSalt) === ownerHash){
+        var props = PropertiesService.getScriptProperties();
+        var effectiveCode = (masterConfig.phone === phone && masterCode)
+          ? masterConfig.code
+          : ('owner-' + Utilities.getUuid() + '-' + Utilities.getUuid());
+        var ownerName = String(owner.name || ((owner.firstName || '') + ' ' + (owner.lastName || '')).trim() || CFG.MASTER_COACH_NAME);
+        props.setProperty('MASTER_COACH_PHONE', phone);
+        props.setProperty('MASTER_COACH_CODE', effectiveCode);
+        props.setProperty('MASTER_COACH_NAME', ownerName);
+        ensureMasterCoach();
+        return {
+          ok:true,
+          coach:{name:ownerName,phone:phone,role:'master',isMaster:true,permissions:allCoachPermissions()},
+          token:issueToken('coach', effectiveCode, true, allCoachPermissions())
+        };
+      }
+      throw new Error('شماره مالک یا گذرواژه حساب مالک نادرست است');
+    }
+    throw new Error('شماره یا کد مربی نادرست است');
+  }
   var isMaster=String(coach.role||'')==='master';
   return {
     ok:true,
