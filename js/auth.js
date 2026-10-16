@@ -85,7 +85,7 @@ function validPhone(p){return /^09\d{9}$/.test(String(p||'').trim());}
 function init(){
  showWisdom();
  var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), password=$('#passwordInput'), btn=$('#memberSubmit'); if(!form)return;
- phone.addEventListener('input',function(){phone.value=phone.value.replace(/\D/g,'').slice(0,11);});
+ phone.addEventListener('input',function(){phone.value=phone.value.replace(/[۰-۹]/g,function(d){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d));}).replace(/[٠-٩]/g,function(d){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d));}).replace(/\\D/g,'').slice(0,11);});
  form.addEventListener('submit',async function(e){
   e.preventDefault();
   var n=name.value.trim().replace(/\s+/g,' '), p=phone.value.trim(), pw=password?password.value:'';
