@@ -2159,14 +2159,36 @@ function saveAttendanceBatch(p) {
 
     var sheet = getSheet('حضورغیاب');
     var now = nowIso();
+    var activeMembersById = {};
+    listActiveMembers().forEach(function(member) {
+      var memberId = String(member.id || '').trim();
+      if (memberId) activeMembersById[memberId] = member;
+    });
+    var seenMemberIds = {};
     var values = [];
 
-    records.forEach(function(r){
-      var recordName = String(r.memberName || r.fullName || '').trim();
-      if (!r.memberId || !recordName || !r.status) return;
-      var status = String(r.status);
-      if (['حاضر','موجه','غیبت'].indexOf(status) < 0) return;
-      values.push([date, String(r.memberId), recordName, status, String(r.note || ''), official.subject, now]);
+    records.forEach(function(r) {
+      if (!r || typeof r !== 'object') throw new Error('رکورد حضور نامعتبر است؛ صفحه را تازه‌سازی کن');
+      var memberId = String(r.memberId || '').trim();
+      var status = String(r.status || '').trim();
+      var note = String(r.note || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim();
+
+      if (!memberId || seenMemberIds[memberId]) {
+        throw new Error('عضو تکراری یا بدون شناسه در فهرست حضور وجود دارد');
+      }
+      var member = activeMembersById[memberId];
+      if (!member) throw new Error('یکی از اعضا دیگر فعال نیست؛ فهرست را تازه‌سازی کن');
+      if (['حاضر','موجه','غیبت'].indexOf(status) < 0) {
+        throw new Error('وضعیت حضور نامعتبر است؛ صفحه را تازه‌سازی کن');
+      }
+      if (note.length > 80) throw new Error('توضیحات هر رکورد نباید بیشتر از ۸۰ نویسه باشد');
+
+      // نام از شیت اعضای فعال گرفته می‌شود؛ به نام ارسالی مرورگر اعتماد نکن.
+      var recordName = (String(member.firstName || '').trim() + ' ' +
+        String(member.lastName || '').trim()).trim() ||
+        String(member.name || member.phone || memberId).trim();
+      seenMemberIds[memberId] = true;
+      values.push([date, memberId, recordName, status, note, official.subject, now]);
     });
 
     if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
