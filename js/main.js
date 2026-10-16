@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.17.0',
-    BACKEND_VERSION: '4.15.0-post-auth-reads'
+    VERSION: '5.18.0',
+    BACKEND_VERSION: '4.16.0-game-session-guard'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -134,8 +134,13 @@
     },
 
     get: async function (params) {
+      // نشست‌ها هرگز در query string قرار نمی‌گیرند؛ خواندن‌های احراز‌شده از POST عبور می‌کنند.
+      if (params && params.token) {
+        Logger.info('POST (authenticated read)', params.action);
+        return Api.post(params);
+      }
       var url = Api._buildUrl(params);
-      Logger.info('GET', url);
+      Logger.info('GET', params && params.action);
 
       var res;
       try {
