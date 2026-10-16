@@ -2311,7 +2311,7 @@ function submitGameScore(p) {
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
   var elapsedSeconds = consumeGameSession_(p.runId, member.id);
   if (score > 0) {
-    var plausibleMax = Math.floor(Math.max(0, elapsedSeconds - 1.8) / 1.1) + 1;
+    var plausibleMax = elapsedSeconds < 2.25 ? 0 : Math.floor((elapsedSeconds - 2.25) / 1.1) + 1;
     if (score > plausibleMax) throw new Error('امتیاز با مدت بازی سازگار نیست؛ رکورد ثبت نشد');
   }
   var memberSheet = getSheet('اعضا');
