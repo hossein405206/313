@@ -5,7 +5,7 @@
   var start=document.getElementById('startGame'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
   var board=document.getElementById('leaderboardList'),allTimeBoard=document.getElementById('allTimeLeaderboardList');
   var playerNameEl=document.getElementById('playerName'),prize=document.getElementById('prizeText'),message=document.getElementById('gameMessage');
-  var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
+  var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='',runId='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
   var best=0,submitting=false;
@@ -74,19 +74,32 @@
       say('فعلاً دریافت رکوردها ممکن نیست. لطفاً کمی بعد دوباره تلاش کن.');
     }
   }
-  function startReady(){
-    if(state==='playing'||submitting)return;
+  async function startReady(){
+    if(state==='playing'||state==='preparing'||submitting)return;
     if(raf)cancelAnimationFrame(raf);
-    raf=0;lastFrame=0;
-    state='ready';score=0;worldTime=0;pipes=[];particles=[];
-    bird={x:88,y:H*.48,vy:0,r:13,wing:0};
-    scoreEl.textContent=faNum(0);
-    setButton('بازی آماده است',false);
-    say('عالیه! حالا روی زمین بازی لمس کن تا پرواز شروع شود.');
-    draw();
+    raf=0;lastFrame=0;runId='';
+    state='preparing';
+    setButton('در حال آماده‌سازی…',true);
+    say('در حال آماده‌سازی یک دور جدید بازی…');
+    try{
+      var session=await api().post({action:'startGameSession',token:member.token});
+      if(!session||!session.runId)throw new Error('نشست بازی ساخته نشد');
+      runId=String(session.runId);
+      state='ready';score=0;worldTime=0;pipes=[];particles=[];
+      bird={x:88,y:H*.48,vy:0,r:13,wing:0};
+      scoreEl.textContent=faNum(0);
+      setButton('بازی آماده است',false);
+      say('عالیه! حالا روی زمین بازی لمس کن تا پرواز شروع شود.');
+      draw();
+    }catch(e){
+      state='over';runId='';
+      setButton('تلاش دوباره',false);
+      say('آماده‌سازی بازی ناموفق بود. اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
+      toast(e.message||'آماده‌سازی بازی ناموفق بود',true);
+    }
   }
   function beginPlaying(){
-    if(state!=='ready')return;
+    if(state!=='ready'||!runId)return;
     state='playing';lastFrame=0;
     spawnPipe(W+26);
     bird.vy=-390;bird.wing=1;
