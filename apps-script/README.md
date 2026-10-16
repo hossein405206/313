@@ -1,4 +1,4 @@
-# Backend سایت 313 — نسخه 5.5.0
+# Backend سایت 313 — نسخه 5.5.1
 
 فایل `apps-script/Code.gs` بک‌اند Google Apps Script پروژه است.
 
@@ -42,7 +42,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 کدهای اولیه مسئولین را حتماً بعد از setup تغییر بده.
 
 ### 5) Deploy
-نسخه هماهنگ فعلی: `5.5.0`.
+نسخه هماهنگ فعلی: `5.5.1`.
 
 برای حفظ URL فعلی، از **Deploy → Manage deployments → Edit → New version → Deploy** استفاده کن. فقط اگر قصد تغییر URL داری، از **New deployment → Web app** استفاده کن.
 
@@ -92,7 +92,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 `https://script.google.com/macros/s/AKfycbzI6-Csz0Fk8qixHiWTYOHrCGJq8W-7X2lWID6n5qkQOSLYGXC6-Jwixs7Bf38PunC0/exec`
 
-این همان Web App endpoint است که در `js/main.js` تنظیم شده است. نسخه Apps Script در پاسخ `ping` نیز `5.5.0` است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
+این همان Web App endpoint است که در `js/main.js` تنظیم شده است. نسخه Apps Script در پاسخ `ping` نیز `5.5.1` است. برای انتشار نسخه جدید، Deployment فعلی را ویرایش کن و نسخه جدید را انتخاب کن؛ URL را تغییر نده.
 
 ## حساب و رمز عبور
 
