@@ -759,7 +759,8 @@ function circleMembershipResponse(phone) {
   var apps = getSheetObjects('درخواست عضویت').filter(function(r) { return normalizePhone(r.phone) === normalizePhone(phone); }).sort(byNewest);
   var latest = apps[0] || null;
   var isMember = isCircleMember(phone);
-  return { ok: true, isMember: isMember, status: isMember ? 'عضو حلقه' : (latest ? String(latest.status || 'در انتظار بررسی') : 'ثبت‌نام نکرده'), application: latest ? { id: latest.id, status: latest.status, updatedAt: latest.updatedAt } : null };
+  var profileMember = findMemberByPhone(phone, true);
+  return { ok: true, isMember: isMember, badgeRole: profileMember ? profileBadgeRole(profileMember) : '', status: isMember ? 'عضو حلقه' : (latest ? String(latest.status || 'در انتظار بررسی') : 'ثبت‌نام نکرده'), application: latest ? { id: latest.id, status: latest.status, updatedAt: latest.updatedAt } : null };
 }
 
 function registerMember(p) {
