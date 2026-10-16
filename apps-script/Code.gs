@@ -395,7 +395,7 @@ function verifyOfficialCode(code) {
 
 function verifyCoachCode(code){var rows=getSheetObjects('مربیان');for(var i=0;i<rows.length;i++){var r=rows[i];if(truthy(r.active)&&String(r.role||'')!=='master'&&String(r.code).toUpperCase()===String(code).toUpperCase())return {code:String(r.code),name:String(r.name||''),phone:String(r.phone||''),role:String(r.role||'coach'),isMaster:false};}return null;}
 function loginCoach(p) {
-  var phone = normalizeIranDigits(String(p.phone || '').trim()).replace(/\\s+/g, '');
+  var phone = normalizeIranDigits(String(p.phone || '').trim()).replace(/\s+/g, '');
   var password = String(p.code || p.password || '');
   if (!/^09\\d{9}$/.test(phone) || !password) throw new Error('شماره همراه و رمز عبور معتبر را وارد کن');
   var cache = CacheService.getScriptCache();
