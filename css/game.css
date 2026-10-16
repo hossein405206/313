@@ -20,3 +20,14 @@
 .member-role-badge--member{color:#176b2e!important;background:#e0f7e7!important;border-color:#8cdaa1!important}
 .member-role-badge--official{color:#155eaa!important;background:#e0f0ff!important;border-color:#8cc5ff!important}
 .member-role-badge--coach{color:#75520b!important;background:#fff4cc!important;border-color:#e4c35c!important}
+
+
+/* v5.19.0 — Make the weekly prize the visual focal point. */
+.game-hero{padding:26px 18px 22px;background:radial-gradient(circle at 50% 0,rgba(235,194,91,.16),transparent 48%),linear-gradient(145deg,#172f4b,#091625)}
+.game-hero h2{font-family:'Noto Naskh Arabic UI','Noto Naskh Arabic','B Nazanin','Aref Ruqaa',serif;font-size:clamp(1.85rem,7vw,2.35rem);line-height:1.65}
+.game-hero p{font-family:'Noto Sans Arabic','Noto Naskh Arabic UI','Vazirmatn',Tahoma,Arial,sans-serif;font-size:.82rem;max-width:29rem;margin:0 auto;color:rgba(255,255,255,.79)}
+.prize-panel{margin:18px auto 0;padding:15px 14px 17px;max-width:430px;border-radius:22px;border:1px solid rgba(255,226,147,.72);background:linear-gradient(145deg,#fff0b7,#e6b94d 50%,#c98c26);box-shadow:0 12px 28px rgba(205,156,45,.22);color:#563b08;position:relative;overflow:hidden}
+.prize-panel__label{display:block;font-family:'Noto Sans Arabic','Noto Naskh Arabic UI',Tahoma,Arial,sans-serif;font-size:.86rem;font-weight:900;margin-bottom:7px;color:#72500e}
+.prize-panel .prize-pill{display:block;max-width:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#4b3205;font-family:'Noto Naskh Arabic UI','Noto Sans Arabic','Vazirmatn',Tahoma,Arial,sans-serif;font-size:clamp(1rem,4vw,1.25rem);font-weight:900;line-height:1.9}
+.game-page .section-heading h2{font-family:'Noto Naskh Arabic UI','Noto Sans Arabic','Vazirmatn',Tahoma,Arial,sans-serif;font-size:1.05rem;font-weight:900}
+@media(max-width:360px){.prize-panel{padding:13px 10px}.prize-panel__label{font-size:.73rem}.prize-panel .prize-pill{font-size:.96rem}}
