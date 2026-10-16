@@ -216,9 +216,6 @@ function setup() {
   migrateSheetHeaders(coaches, 'مربیان');
   ensureMasterCoach();
   normalizeCoachRecords();
-  ensureOfficialRoles();
-
-  var officials = getSheet('مسئولین');
   var generatedOfficialCodes = ensureOfficialRoles();
   generatedOfficialCodes = generatedOfficialCodes.concat(rotateUnsafeDefaultOfficialCodes_());
 
