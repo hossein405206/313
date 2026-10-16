@@ -283,7 +283,7 @@
       $('ringRegisterName').textContent=[member.firstName,member.lastName].filter(Boolean).join(' ')||'عضو حلقه';
       $('ringRegisterPhone').textContent=member.phone||'';
       set('firstName',member.firstName||'');set('lastName',member.lastName||'');
-      window.KanoonApp.api.get({action:'getRingRegistration',token:member.token}).then(function(res){
+      window.KanoonApp.api.post({action:'getRingRegistration',token:member.token}).then(function(res){
         if(res.registered&&res.item){alreadyRegistered=true;fill(res.item);show('ثبت‌نام حلقه برای این حساب وجود دارد؛ در صورت نیاز اطلاعات را اصلاح و دوباره ذخیره کن.','success');button.textContent='ذخیره تغییرات ثبت‌نام';}
         else if(new URLSearchParams(location.search).get('required')) show('برای ورود به بازی، ابتدا فرم ثبت‌نام در حلقه را کامل کن.','info');
       }).catch(function(err){show(err.message||'دریافت وضعیت عضویت ناموفق بود.','error');});
