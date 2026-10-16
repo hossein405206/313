@@ -15,6 +15,7 @@ if(birthInput){
 form.addEventListener('submit',async function(e){e.preventDefault();
  var data={firstName:$('#circleFirstName').value.trim(),lastName:$('#circleLastName').value.trim(),phone:normalizePhone($('#circlePhone').value),birthDate:$('#circleBirthDate').value,school:$('#circleSchool').value.trim(),grade:$('#circleGrade').value,guardianName:$('#circleGuardianName').value.trim(),guardianPhone:normalizePhone($('#circleGuardianPhone').value),notes:$('#circleNotes').value.trim(),guardianConsent:$('#circleGuardianConsent').checked};
  if(!data.firstName||!data.lastName||!data.school||!data.grade||!data.guardianName){showNotice('لطفاً فیلدهای ستاره‌دار را کامل کن.',true);return}
+ if(data.birthDate){var birth=new Date(data.birthDate+'T00:00:00');var todayDate=new Date();var cutoff=new Date(todayDate.getFullYear()-7,todayDate.getMonth(),todayDate.getDate());if(Number.isNaN(birth.getTime())||birth>cutoff||data.birthDate>localIsoDate(cutoff)){showNotice('برای ثبت‌نام، سن فرد باید دست‌کم ۷ سال باشد.',true);birthInput.focus();return}}
  if(!/^09\d{9}$/.test(data.phone)||!/^09\d{9}$/.test(data.guardianPhone)){showNotice('شماره همراه عضو و ولی باید ۱۱ رقم و با ۰۹ شروع شود.',true);return}
  if(!data.guardianConsent){showNotice('برای ارسال درخواست، تأیید ولی لازم است.',true);return}
  if(!window.KanoonApp||!window.KanoonApp.api){showNotice('ارتباط با سرور آماده نیست؛ صفحه را دوباره باز کن.',true);return}
