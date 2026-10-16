@@ -840,49 +840,6 @@ function registerMember(p) {
   }
 }
 
-function generateLoginCode(phone) {
-  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
-
-  var code = String(Math.floor(10000 + Math.random() * 90000));
-  CacheService.getScriptCache().put('login:' + phone, code, 300);
-
-  var member = findMemberByPhone(phone);
-  return {
-    ok: true,
-    code: code,
-    codeId: Utilities.getUuid(),
-    expiresIn: 300,
-    isNewUser: !member
-  };
-}
-
-function verifyLoginCode(phone, code) {
-  var cached = CacheService.getScriptCache().get('login:' + phone);
-  if (!cached || cached !== code) throw new Error('کد نامعتبر یا منقضی شده');
-
-  CacheService.getScriptCache().remove('login:' + phone);
-
-  var member = findMemberByPhone(phone);
-  if (!member) {
-    var created = addMemberInternal({
-      firstName: '',
-      lastName: '',
-      phone: phone,
-      active: true
-    });
-    member = created;
-  }
-
-  member = publicMember(member);
-  return {
-    ok: true,
-    isNewUser: !member.firstName && !member.lastName,
-    member: member,
-    token: issueToken('member', phone)
-  };
-}
-
-/* -------------------------------------------------------------------------- */
 /* Members                                                                    */
 /* -------------------------------------------------------------------------- */
 
