@@ -994,7 +994,9 @@
       var items=r.items||[];
       if(!items.length){root.innerHTML='<div class="event-empty"><strong>فعلاً رویداد جدیدی ثبت نشده</strong></div>';return}
       root.innerHTML=items.slice(0,6).map(function(e,i){
-        return '<a class="home-event-slide '+(i===0?'active':'')+'" href="activities.html" aria-hidden="'+(i!==0)+'"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="'+(i===0?'eager':'lazy')+'"><div class="home-event-overlay"><span>'+esc(e.label||'رویداد')+'</span><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||e.date||'')+'</p><b>مشاهده جزئیات ←</b></div></a>';
+        var label=String(e.label||'').trim();
+        var labelMarkup=label && label!=='رویداد' ? '<span>'+esc(label)+'</span>' : '';
+        return '<a class="home-event-slide '+(i===0?'active':'')+'" href="activities.html" aria-hidden="'+(i!==0)+'"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'" alt="'+esc(e.title)+'" loading="'+(i===0?'eager':'lazy')+'"><div class="home-event-overlay">'+labelMarkup+'<h3>'+esc(e.title)+'</h3><p>'+esc(e.description||e.date||'')+'</p><b>مشاهده جزئیات ←</b></div></a>';
       }).join('');
       if(items.length>1){
         var n=0,slides=root.querySelectorAll('.home-event-slide');
