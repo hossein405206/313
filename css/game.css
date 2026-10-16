@@ -4,7 +4,7 @@
 @media(max-width:390px){.schedule-card{grid-template-columns:62px 1fr}}
 .game-player-card{margin-top:12px;padding:13px 15px;border-radius:18px;background:#fff;border:1px solid rgba(23,35,56,.07);display:flex;align-items:center;justify-content:space-between;box-shadow:0 7px 18px rgba(23,35,56,.05)}.game-player-card span{display:block;font-size:.52rem;color:#8993a1}.game-player-card strong{display:block;font-size:.75rem;color:#253952;margin-top:3px}.game-player-card a{font-size:.6rem;font-weight:800;color:#a57d28;padding:8px 11px;border-radius:12px;background:#f8f1df}.records-link{font-size:.56rem;color:#9a7525;font-weight:800}.leader-row.me{border-color:rgba(178,138,55,.35);background:#fffaf0}.leader-name small{font-size:.48rem;color:#a57d28;margin-right:4px}.game-shell .btn-submit.playing{opacity:.45;pointer-events:none}
 
-/* Visual refinement v6 */
+/* Visual refinements — release 4.17.0 */
 .game-page{padding-top:18px}.game-hero{border-radius:23px;padding:27px 21px;box-shadow:0 18px 38px rgba(15,24,40,.15)}.game-hero h2{font-size:1.85rem;letter-spacing:-.04em}.game-shell{border-radius:23px;padding:9px;box-shadow:0 16px 34px rgba(23,35,56,.12)}.leaderboard{margin-top:26px}.leader-row{border:1px solid rgba(23,35,56,.075);box-shadow:0 4px 12px rgba(23,35,56,.045);transition:transform .18s,box-shadow .18s}.leader-row:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,35,56,.07)}.leaderboard--alltime{padding-top:2px}.game-player-card{border-radius:17px}
 
 /* نقش و وضعیت عضویت در آواتارهای جدول بازی */
@@ -20,3 +20,106 @@
 .member-role-badge--member{color:#176b2e!important;background:#e0f7e7!important;border-color:#8cdaa1!important}
 .member-role-badge--official{color:#155eaa!important;background:#e0f0ff!important;border-color:#8cc5ff!important}
 .member-role-badge--coach{color:#75520b!important;background:#fff4cc!important;border-color:#e4c35c!important}
+
+
+/* Release 4.17.0: clearer game controls, readable stats and an unobstructed playfield. */
+.game-top {
+  position: static;
+  z-index: auto;
+  inset: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  color: #fff;
+  font-size: .9rem;
+  text-shadow: none;
+  pointer-events: auto;
+}
+.game-top strong,
+.game-top strong:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 5px;
+  border-radius: 13px;
+  color: #fff;
+  background: rgba(17, 40, 59, .82);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.game-top .game-stat-label {
+  color: rgba(255, 255, 255, .82);
+  font-size: .68rem;
+  font-weight: 600;
+  text-shadow: none;
+}
+.game-top strong > span:last-child {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.game-shell canvas,
+#gameCanvas {
+  outline-offset: 3px;
+}
+#gameCanvas:focus-visible {
+  outline: 3px solid var(--gold-500, #c49a3a);
+}
+.game-shell .btn-submit {
+  position: static;
+  z-index: auto;
+  inset: auto;
+  transform: none;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 12px auto 0;
+  box-shadow: 0 7px 18px rgba(23, 35, 56, .12);
+}
+.game-shell .btn-submit.playing {
+  display: none;
+  opacity: 1;
+  visibility: hidden;
+  pointer-events: none;
+}
+.game-message {
+  min-height: 1.8em;
+  margin: 10px 4px 0;
+  font-size: .82rem;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+.game-hint {
+  margin: 8px 4px 2px;
+  font-size: .72rem;
+  line-height: 1.8;
+  color: #64748b;
+}
+.game-hero p {
+  font-size: .88rem;
+  line-height: 1.9;
+}
+.prize-pill {
+  font-size: .76rem;
+  line-height: 1.7;
+}
+.leader-name {
+  font-size: .8rem;
+}
+.leader-score {
+  font-size: .9rem;
+}
+@media (max-width: 380px) {
+  .game-top { gap: 5px; }
+  .game-top strong { padding: 8px 3px; border-radius: 10px; }
+  .game-top .game-stat-label { font-size: .59rem; }
+  .game-top strong > span:last-child { font-size: .9rem; }
+  .game-shell { padding: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .leader-row:hover { transform: none; }
+}
