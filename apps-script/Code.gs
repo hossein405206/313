@@ -312,11 +312,7 @@ function handleGet(p) {
     };
   }
 
-  if (action === 'verifyOfficialCode') {
-    var official = verifyOfficialCode(normalizeIranDigits(String(p.code || '').trim()).toUpperCase());
-    if (!official) throw new Error('کد مسئولیت نامعتبر است');
-    return { ok: true, official: officialPublic(official), token: issueToken(official.roleCode, official.code) };
-  }
+  // Credential verification is POST-only so access codes never appear in URL query strings.
 
   if (action === 'verifyCoachCode') {
     throw new Error('برای ورود مربیان، شماره همراه و کد ورود هر دو لازم است');
@@ -797,12 +793,6 @@ function normalizeCoachRecords() {
     }
   }
   if(changed) sheet.getRange(1,1,rows.length,headers.length).setValues(rows);
-}
-function requireCoachPermission(token, permission) {
-  var auth=requireToken(token,['coach']);
-  if(auth.isMaster)return auth;
-  if(!auth.permissions || auth.permissions[permission] !== true) throw new Error('دسترسی این بخش برای شما فعال نیست');
-  return auth;
 }
 function findCoachRowByCode(code) {
   var target = normalizeCoachCode_(code);
