@@ -8,7 +8,7 @@
   var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
-  var best=0,submitting=false;
+  var best=0,submitting=false,startingGame=false,gameSessionId='';
   function app(){return window.KanoonApp;}
   function api(){return app()&&app().api;}
   function toast(text,error){var t=app()&&app().toast;if(t)(error?t.error:t.success)(text);}
@@ -75,17 +75,34 @@
     }
   }
   function startReady(){
-    if(state==='playing'||submitting)return;
+    if(state==='playing'||startingGame||submitting)return;
     if(raf)cancelAnimationFrame(raf);
     raf=0;lastFrame=0;
     state='ready';score=0;worldTime=0;pipes=[];particles=[];
+    startingGame=false;gameSessionId='';
     bird={x:88,y:H*.48,vy:0,r:13,wing:0};
     scoreEl.textContent=faNum(0);
     setButton('بازی آماده است',false);
-    say('عالیه! حالا روی زمین بازی لمس کن تا پرواز شروع شود.');
+    say('عالیه! حالا روی محیط بازی لمس کن تا پرواز شروع شود.');
     draw();
   }
-  function beginPlaying(){
+  async function beginPlaying(){
+    if(state!=='ready'||startingGame)return;
+    startingGame=true;
+    setButton('در حال آماده‌سازی…',true);
+    say('در حال آماده‌سازی جلسه بازی…');
+    try{
+      var session=await api().post({action:'startGameSession',token:member.token});
+      if(!session||!session.ok||!session.sessionId)throw new Error('جلسه بازی ساخته نشد؛ دوباره تلاش کن.');
+      gameSessionId=String(session.sessionId);
+    }catch(e){
+      startingGame=false;
+      setButton('بازی آماده است',false);
+      say('شروع بازی ناموفق بود؛ دوباره روی محیط بازی لمس کن.');
+      toast(e.message||'شروع بازی ناموفق بود',true);
+      return;
+    }
+    startingGame=false;
     if(state!=='ready')return;
     state='playing';lastFrame=0;
     spawnPipe(W+26);
@@ -208,13 +225,15 @@
     else say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
     draw();
     if(score>best)submitScore();
+    else gameSessionId='';
   }
   async function submitScore(){
     if(submitting||!member||!member.token)return;
-    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
+    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);gameSessionId='';return;}
+    if(!gameSessionId){say('جلسه بازی معتبر نیست؛ برای ثبت رکورد یک دور تازه بازی کن.');setButton('دوباره بازی کن',false);return;}
     submitting=true;setButton('در حال ذخیره رکورد…',true);
     try{
-      var response=await api().post({action:'submitGameScore',token:member.token,score:score});
+      var response=await api().post({action:'submitGameScore',token:member.token,sessionId:gameSessionId,score:score});
       renderBoard(response.leaderboard||[]);
       renderAllTimeBoard(response.allTimeLeaderboard||[]);
       var savedLifetime=Number(response.lifetimeBest||member.bestScore||0);
@@ -234,6 +253,7 @@
       toast(e.message||'ثبت رکورد ناموفق بود',true);
     }finally{
       submitting=false;
+      gameSessionId='';
       if(state==='over')setButton('دوباره بازی کن',false);
     }
   }
