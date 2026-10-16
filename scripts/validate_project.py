@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-import tempfile
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
@@ -138,6 +137,15 @@ def main() -> int:
 
     check(not re.search(r"function\s+getSecret\s*\(\s*\)\s*\{[^}]*['\"]UNINITIALIZED['\"]", backend, re.S),
           "getSecret() still has a known fallback secret")
+    issue_token = re.search(r"^function\s+issueToken\b[\s\S]*?(?=^function\s+|\Z)", backend, re.M)
+    password_hash = re.search(r"^function\s+memberPasswordHash\b[\s\S]*?(?=^function\s+|\Z)", backend, re.M)
+    setup_fn = re.search(r"^function\s+setup\b[\s\S]*?(?=^function\s+|\Z)", backend, re.M)
+    check(bool(issue_token) and "ensureSecret()" not in issue_token.group(0),
+          "issueToken() must not silently recreate a missing AUTH_SECRET")
+    check(bool(password_hash) and "ensureSecret()" not in password_hash.group(0),
+          "memberPasswordHash() must not silently rotate the AUTH_SECRET")
+    check(bool(setup_fn) and "ensureSecret()" in setup_fn.group(0),
+          "setup() should initialize AUTH_SECRET explicitly")
     check("if (!p.photoBase64) throw new Error('عکس رضایت‌نامه پدر الزامی است');" in backend,
           "Backend does not require the consent photo even though the form does")
     check("function uploadConsentPhotoPrivate" in backend and "validImageSignature" in backend,
@@ -150,6 +158,16 @@ def main() -> int:
           "Game-session field name differs between browser and backend")
     check("weeklySaved" in game_client and "weeklySaved" in backend,
           "Weekly and lifetime score outcomes are not both surfaced by client and backend")
+
+    # Keep API action names aligned across every browser JS/HTML entry point and backend dispatcher.
+    client_actions: set[str] = set()
+    client_files = sorted((ROOT / "js").glob("*.js")) + sorted(ROOT.glob("*.html"))
+    for client_file in client_files:
+        source = client_file.read_text(encoding="utf-8")
+        client_actions.update(re.findall(r"\baction\s*:\s*['\"]([^'\"]+)['\"]", source))
+    server_actions = set(re.findall(r"\baction\s*===?\s*['\"]([^'\"]+)['\"]", backend))
+    missing_actions = sorted(client_actions - server_actions)
+    check(not missing_actions, "Client API action(s) are not handled by Code.gs: " + ", ".join(missing_actions))
 
     for path in sorted((ROOT / "js").glob("*.js")):
         run_node_check(path.read_text(encoding="utf-8"), str(path.relative_to(ROOT)))
