@@ -2206,9 +2206,9 @@ function saveAttendanceBatch(p) {
 
 function saveWarning(p) {
   var auth = requireToken(p.token, ['supervision']);
-  var responsibility = String(p.responsibility || '').replace(/[\\u0000-\\u001F\\u007F]/g, ' ').replace(/\\s+/g, ' ').trim();
-  var requestedName = String(p.memberName || '').replace(/\\s+/g, ' ').trim();
-  var reason = String(p.reason || '').replace(/[\\u0000-\\u001F\\u007F]/g, ' ').trim();
+  var responsibility = String(p.responsibility || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim();
+  var requestedName = String(p.memberName || '').replace(/\s+/g, ' ').trim();
+  var reason = String(p.reason || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim();
 
   if (!responsibility) throw new Error('اسم مسئولیت الزامی است');
   if (responsibility.length > 80) throw new Error('عنوان مسئولیت نباید بیشتر از ۸۰ نویسه باشد');
@@ -2219,7 +2219,7 @@ function saveWarning(p) {
   // گزینهٔ انتخابی از مرورگر را دوباره با فهرست رسمیِ مسئولان فعال تطبیق می‌دهیم.
   // هیچ نام ساختگی یا نام مسئولی که غیرفعال/حذف شده باشد، نباید ذخیره شود.
   var officialRecord = getSheetObjects('مسئولین').filter(function(row) {
-    return truthy(row.active) && String(row.name || '').replace(/\\s+/g, ' ').trim() === requestedName;
+    return truthy(row.active) && String(row.name || '').replace(/\s+/g, ' ').trim() === requestedName;
   })[0];
   if (!officialRecord) throw new Error('این مسئول دیگر فعال نیست یا در فهرست رسمی نیست؛ صفحه را تازه‌سازی کن');
 
