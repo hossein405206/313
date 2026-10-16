@@ -150,9 +150,16 @@ def main() -> int:
           "Backend does not require the consent photo even though the form does")
     check("function uploadConsentPhotoPrivate" in backend and "validImageSignature" in backend,
           "Private consent upload is missing server-side image signature checks")
-    check("action: 'listCamps'" in (ROOT / "register.html").read_text(encoding="utf-8")
-          and "action: 'registerCamp'" in (ROOT / "register.html").read_text(encoding="utf-8"),
-          "Camp registration page is not wired to listCamps/registerCamp")
+    register_page = (ROOT / "register.html").read_text(encoding="utf-8")
+    check('id="registerForm"' in register_page and 'id="uploadZone"' in register_page
+          and 'id="registerStatus"' in register_page,
+          "Camp registration page is missing its form, upload control, or status output")
+    check("action: 'listCamps'" in main_js and "action: 'registerCamp'" in main_js,
+          "Shared RegisterForm in js/main.js is not wired to listCamps/registerCamp")
+    check("if (!selectedFile) return showStatus('برای ثبت‌نام، عکس رضایت‌نامه پدر را انتخاب کن.', 'error');" in main_js,
+          "Client form does not require the consent photo")
+    check("action: 'registerCamp'" not in register_page,
+          "register.html must not duplicate the shared form submission handler")
     game_client = (ROOT / "js/game.js").read_text(encoding="utf-8")
     check("gameSessionId:gameSessionId" in game_client and "p.gameSessionId" in backend,
           "Game-session field name differs between browser and backend")
