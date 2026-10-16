@@ -42,7 +42,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 کدهای اولیه مسئولین را حتماً بعد از setup تغییر بده.
 
-**امنیت مربی ارشد:** اطلاعات ورود را فقط در `Project Settings → Script Properties` ذخیره کن: `MASTER_COACH_PHONE`، `MASTER_COACH_CODE` و اختیاری `MASTER_COACH_NAME`. نام نمایشی می‌تواند فارسی باشد. اطلاعات ورود واقعی نباید در فایل کد یا مخزن عمومی قرار بگیرد. پس از تنظیم یا تغییر ساختار شیت‌ها، `setup()` را اجرا کن.
+**امنیت مربی ارشد:** شمارهٔ مجاز مالک و تنظیمات مربی ارشد را فقط در `Project Settings → Script Properties` نگه دار. کلیدهای اصلی `MASTER_COACH_PHONE`، `MASTER_COACH_CODE` و در صورت نیاز `MASTER_COACH_NAME` هستند. شمارهٔ مالک را در `MASTER_COACH_PHONE` ثبت کن؛ مالک می‌تواند برای ورود به پنل مربیان از گذرواژهٔ حساب عضو خود استفاده کند و بک‌اند آن را با هش ذخیره‌شده مقایسه می‌کند. گذرواژه هرگز نباید در فایل کد یا مخزن عمومی قرار بگیرد. پس از تغییر فایل، نسخهٔ جدید Web App را منتشر کن.
 
 **ثبت‌نام در حلقه و بازی:** اطلاعات عضویت در شیت جداگانه «ثبت‌نام حلقه» ذخیره می‌شود؛ ثبت‌نام در این فرم شرط ورود به بازی است و تکمیل پروفایل به‌تنهایی شرط بازی نیست. اجرای `setup()` شیت جدید را ایجاد می‌کند.
 
@@ -110,3 +110,6 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 `https://script.google.com/macros/s/AKfycbwQu_bIijvel7wu1898AZVlWMKavL00egnJc6-eTT3HiWxxjOo54-LKUblvLNLZOCO9/exec`
 
 این همان Web App endpoint است که در `js/main.js` تنظیم شده است. پس از تغییر `Code.gs`، Deployment فعلی را ویرایش و نسخه جدید را Deploy کن؛ تغییر فایل GitHub به‌تنهایی کد منتشرشده Google Apps Script را تغییر نمی‌دهد.
+
+
+نسخهٔ بک‌اند این انتشار: `4.16.0-master-member-password`.
