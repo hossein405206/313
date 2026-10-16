@@ -1515,8 +1515,8 @@ function getRingRegistration(p) {
 function normalizeJalaliRingDate_(value){
   // Accept Persian, Arabic, and Latin digits plus /, - or . separators;
   // always persist a canonical yyyy/MM/dd value.
-  var normalized=normalizeIranDigits(String(value||'').trim()).replace(/[.\\-]/g,'/').replace(/\\s+/g,'');
-  var m=/^(\\d{4})\\/(\\d{1,2})\\/(\\d{1,2})$/.exec(normalized);
+  var normalized=normalizeIranDigits(String(value||'').trim()).replace(/[.-]/g,'/').replace(/\s+/g,'');
+  var m=/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(normalized);
   if(!m)return '';
   var y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]);
   if(y<1300||y>1500||mo<1||mo>12||d<1)return '';
@@ -1534,6 +1534,7 @@ function normalizeJalaliRingDate_(value){
   return y+'/'+('0'+mo).slice(-2)+'/'+('0'+d).slice(-2);
 }
 function isValidJalaliRingDate(value){return !!normalizeJalaliRingDate_(value);}
+
 function saveRingRegistration(p) {
   var auth = requireToken(String(p.token || ''), ['member']);
   var phone = normalizeMemberPhone(auth.subject);
