@@ -1,6 +1,6 @@
 /* ============================================================================
    313 / حلقه شهید هادی ذوالفقاری
-   Google Apps Script Backend v4
+   Google Apps Script Backend v4.16.0
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.15.0-post-auth-reads';
+var APP_VERSION = '4.16.0-game-session-guard';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -522,6 +522,8 @@ function handlePost(p) {
     requireCoachPermission(p.token, 'game');
     return saveGamePrize(String(p.prize || '').trim());
   }
+
+  if (action === 'startGameSession') return startGameSession(p);
 
   if (action === 'submitGameScore') {
     return submitGameScore(p);
@@ -2264,13 +2266,54 @@ function ensureLifetimeGameRecords() {
   }
 }
 
+function startGameSession(p) {
+  var auth = requireToken(p.token, ['member']);
+  var member = findMemberByPhone(auth.subject, true);
+  if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+  if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
+
+  var sessionId = Utilities.getUuid();
+  var startedAt = Date.now();
+  var session = {
+    memberId: String(member.id),
+    phone: normalizeMemberPhone(auth.subject),
+    startedAt: startedAt
+  };
+  CacheService.getScriptCache().put('313-game-session:' + sessionId, JSON.stringify(session), 600);
+  return { ok: true, gameSessionId: sessionId, expiresInSeconds: 600 };
+}
+
 function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
   if (!member || !truthy(member.active)) throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
   if (!getRingRegistrationByPhone(auth.subject)) throw new Error('برای بازی ابتدا ثبت‌نام در حلقه را تکمیل کن');
+
+  var sessionId = String(p.gameSessionId || '').trim();
+  if (!sessionId) throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن');
+  var cache = CacheService.getScriptCache();
+  var cacheKey = '313-game-session:' + sessionId;
+  var sessionRaw = cache.get(cacheKey);
+  if (!sessionRaw) throw new Error('نشست بازی منقضی شده یا قبلاً استفاده شده؛ بازی را دوباره شروع کن');
+  var gameSession;
+  try { gameSession = JSON.parse(sessionRaw); }
+  catch (sessionError) { cache.remove(cacheKey); throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
+  if (String(gameSession.memberId || '') !== String(member.id) ||
+      normalizeMemberPhone(gameSession.phone) !== normalizeMemberPhone(auth.subject)) {
+    throw new Error('این نشست بازی به حساب شما تعلق ندارد');
+  }
+  cache.remove(cacheKey);
+  var elapsedSeconds = (Date.now() - Number(gameSession.startedAt || 0)) / 1000;
+  if (!isFinite(elapsedSeconds) || elapsedSeconds < 0 || elapsedSeconds > 600) {
+    throw new Error('زمان نشست بازی معتبر نیست؛ دوباره بازی کن');
+  }
+
   var score = Math.floor(Number(p.score || 0));
   if (!isFinite(score) || score < 0 || score > 100000) throw new Error('امتیاز نامعتبر است');
+  // هر امتیاز به زمان واقعی سپری‌شده وابسته است؛ این بررسی رکوردهای غیرممکن را محدود می‌کند.
+  if (score > Math.floor(elapsedSeconds * 1.35)) {
+    throw new Error('امتیاز با مدت بازی سازگار نیست؛ دوباره بازی کن');
+  }
   var memberSheet = getSheet('اعضا');
   var memberRow = findRow(memberSheet, 'id', member.id);
   if (!memberRow) throw new Error('رکورد عضو پیدا نشد');
