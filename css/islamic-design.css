@@ -723,3 +723,8 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-wisdom__arabic,.ali-wisdom__arabic,.game-hero h2{
   font-family:"Aref Ruqaa","Estedad","Vazirmatn",Tahoma,serif!important;
 }
+
+
+/* Use the supplied brand image instead of a typographic stand-in. */
+.contact-credit .media-credit-logo--image{width:min(100%,260px);min-height:0;height:auto;aspect-ratio:auto;margin:0 auto 10px;padding:8px;border:1px solid #e5d7ac;border-radius:18px;display:flex;align-items:center;justify-content:center;background:#fffdf7;box-shadow:0 8px 22px rgba(120,89,25,.09)}
+.contact-credit .media-credit-logo--image img{display:block;width:100%;max-width:100%;max-height:160px;height:auto;object-fit:contain;border-radius:12px}
