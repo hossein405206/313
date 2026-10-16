@@ -1,6 +1,6 @@
 # سایت حلقه شهید هادی ذوالفقاری
 
-**نسخه انتشار هماهنگ:** `5.5.0` (سایت و Google Apps Script)
+**نسخه‌ها:** سایت `5.5.0`، بک‌اند Google Apps Script `5.5.1`
 
 سایت موبایل‌محور مسجد امام رضا (ع) / حلقه شهید هادی ذوالفقاری با GitHub Pages و Google Apps Script.
 
@@ -37,7 +37,7 @@
 
 ## به‌روزرسانی بک‌اند
 
-نسخه هماهنگ این انتشار `5.5.0` است. در Google Apps Script از **Deploy → Manage deployments → Edit** استفاده کن، گزینه **New version** را انتخاب کن و همان Deployment را به‌روزرسانی کن؛ URL فعلی را ثابت نگه دار. پیش از اجرا از Google Sheet نسخه پشتیبان بگیر.
+نسخه سایت `5.5.0` و نسخه بک‌اند `5.5.1` است. در Google Apps Script از **Deploy → Manage deployments → Edit** استفاده کن، گزینه **New version** را انتخاب کن و همان Deployment را به‌روزرسانی کن؛ URL فعلی را ثابت نگه دار. پیش از اجرا از Google Sheet نسخه پشتیبان بگیر.
 
 ## GitHub Pages
 
