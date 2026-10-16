@@ -1,6 +1,6 @@
 /* ============================================================================
    313 / حلقه شهید هادی ذوالفقاری
-   Google Apps Script Backend v4.16.0
+   Google Apps Script Backend v4.17.0
    ----------------------------------------------------------------------------
    این فایل را داخل Google Apps Script پروژه‌ی backend قرار بده.
 
@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.16.0-game-session-guard';
+var APP_VERSION = '4.17.0-quality-hardening';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1946,13 +1946,27 @@ function registerCamp(p) {
   if (!campId) throw new Error('اردو انتخاب نشده');
   if (!listCamps().some(function(camp){ return String(camp.id) === campId; })) throw new Error('این اردو دیگر فعال نیست؛ صفحه را تازه‌سازی کن');
   if (!firstName || !lastName || !fatherName) throw new Error('اطلاعات ناقص است');
+  if (firstName.length > 80 || lastName.length > 80 || fatherName.length > 80) throw new Error('نام‌ها نباید بیشتر از ۸۰ نویسه باشند');
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
 
+  var existingRegistration = getSheetObjects('ثبت‌نام‌ها').some(function(r) {
+    if (String(r.campId || '') !== campId || String(r.status || '') === 'رد شد') return false;
+    var samePersonAndPhone =
+      normalizeMemberPhone(r.phone) === phone &&
+      String(r.firstName || '').trim().toLowerCase() === firstName.toLowerCase() &&
+      String(r.lastName || '').trim().toLowerCase() === lastName.toLowerCase();
+    var sameNationalCode = !!nationalCode &&
+      normalizeIranDigits(String(r.nationalCode || '')).replace(/\s+/g, '') === nationalCode;
+    return samePersonAndPhone || sameNationalCode;
+  });
+  if (existingRegistration) throw new Error('برای این عضو در همین اردو درخواست فعالی وجود دارد');
+
+  var uploaded = null;
   var photoUrl = '';
   if (p.photoBase64) {
-    var uploaded = uploadConsentPhotoPrivate(
+    uploaded = uploadConsentPhotoPrivate(
       String(p.photoBase64),
       String(p.photoMimeType || 'image/jpeg'),
       'registration-' + Date.now()
@@ -1975,7 +1989,14 @@ function registerCamp(p) {
     createdAt: nowIso(),
     updatedAt: nowIso()
   };
-  sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
+  try {
+    sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
+  } catch (err) {
+    if (uploaded && uploaded.id) {
+      try { DriveApp.getFileById(uploaded.id).setTrashed(true); } catch (cleanupError) {}
+    }
+    throw err;
+  }
   return { ok: true, id: row.id, status: row.status };
 }
 
@@ -2293,16 +2314,25 @@ function submitGameScore(p) {
   if (!sessionId) throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن');
   var cache = CacheService.getScriptCache();
   var cacheKey = '313-game-session:' + sessionId;
-  var sessionRaw = cache.get(cacheKey);
-  if (!sessionRaw) throw new Error('نشست بازی منقضی شده یا قبلاً استفاده شده؛ بازی را دوباره شروع کن');
+  var sessionLock = LockService.getScriptLock();
   var gameSession;
-  try { gameSession = JSON.parse(sessionRaw); }
-  catch (sessionError) { cache.remove(cacheKey); throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن'); }
-  if (String(gameSession.memberId || '') !== String(member.id) ||
-      normalizeMemberPhone(gameSession.phone) !== normalizeMemberPhone(auth.subject)) {
-    throw new Error('این نشست بازی به حساب شما تعلق ندارد');
+  sessionLock.waitLock(10000);
+  try {
+    var sessionRaw = cache.get(cacheKey);
+    if (!sessionRaw) throw new Error('نشست بازی منقضی شده یا قبلاً استفاده شده؛ بازی را دوباره شروع کن');
+    try { gameSession = JSON.parse(sessionRaw); }
+    catch (sessionError) {
+      cache.remove(cacheKey);
+      throw new Error('نشست بازی معتبر نیست؛ بازی را دوباره شروع کن');
+    }
+    if (String(gameSession.memberId || '') !== String(member.id) ||
+        normalizeMemberPhone(gameSession.phone) !== normalizeMemberPhone(auth.subject)) {
+      throw new Error('این نشست بازی به حساب شما تعلق ندارد');
+    }
+    cache.remove(cacheKey);
+  } finally {
+    sessionLock.releaseLock();
   }
-  cache.remove(cacheKey);
   var elapsedSeconds = (Date.now() - Number(gameSession.startedAt || 0)) / 1000;
   if (!isFinite(elapsedSeconds) || elapsedSeconds < 0 || elapsedSeconds > 600) {
     throw new Error('زمان نشست بازی معتبر نیست؛ دوباره بازی کن');
