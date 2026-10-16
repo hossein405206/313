@@ -64,7 +64,7 @@ function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHT
 async function viewRegistrationPhoto(id,button){
  var modal=$('#registrationPhotoModal'),img=$('#registrationPhotoImage'),status=$('#registrationPhotoStatus');
  if(!modal||!img||!status){toast('نمایشگر رضایت‌نامه آماده نیست',1);return}
- modal.hidden=false;document.body.style.overflow='hidden';img.hidden=true;img.removeAttribute('src');status.textContent='در حال دریافت امن عکس رضایت‌نامه…';
+ modal.hidden=false;modal.classList.add('active');document.body.style.overflow='hidden';img.hidden=true;img.removeAttribute('src');status.textContent='در حال دریافت امن عکس رضایت‌نامه…';
  if(button)setBusy(button,'در حال دریافت…');
  try{
   var result=await api().post({action:'getRegistrationPhoto',token:state.token,id:id});
@@ -77,7 +77,7 @@ async function viewRegistrationPhoto(id,button){
 }
 function closeRegistrationPhotoModal(){
  var modal=$('#registrationPhotoModal'),img=$('#registrationPhotoImage'),status=$('#registrationPhotoStatus');
- if(modal)modal.hidden=true;if(img){img.hidden=true;img.removeAttribute('src')}if(status)status.textContent='';document.body.style.overflow='';
+ if(modal){modal.hidden=true;modal.classList.remove('active')}if(img){img.hidden=true;img.removeAttribute('src')}if(status)status.textContent='';document.body.style.overflow='';
 }
 function setupRegistrationPhotoModal(){
  var modal=$('#registrationPhotoModal'),close=$('#registrationPhotoClose');
