@@ -681,3 +681,45 @@ body,.form-control,.btn-submit,.btn-secondary,.quick-item,.service-card{font-fam
 .home-event-overlay p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-family:var(--font-persian-ui);font-size:.68rem!important;line-height:1.6!important;max-height:3.2em;margin-top:5px!important}
 .home-event-overlay h3{font-family:var(--font-persian-display);line-height:1.5;margin-block:3px 5px}
 .home-event-overlay{padding:15px 16px 14px!important}
+
+
+/* v5.20.0 — Persian typography: Estedad for UI, Aref Ruqaa for religious display.
+   Sources: aminabedi68/Estedad and aliftype/aref-ruqaa (SIL Open Font License 1.1).
+   jsDelivr replaces Google Fonts; device-local fallbacks remain if a CDN is unavailable. */
+@font-face{
+  font-family:"Estedad";
+  src:url("https://cdn.jsdelivr.net/gh/aminabedi68/Estedad@master/fonts/webfonts/Estedad-Regular.woff2") format("woff2");
+  font-style:normal;font-weight:400;font-display:swap;
+}
+@font-face{
+  font-family:"Estedad";
+  src:url("https://cdn.jsdelivr.net/gh/aminabedi68/Estedad@master/fonts/webfonts/Estedad-SemiBold.woff2") format("woff2");
+  font-style:normal;font-weight:600;font-display:swap;
+}
+@font-face{
+  font-family:"Estedad";
+  src:url("https://cdn.jsdelivr.net/gh/aminabedi68/Estedad@master/fonts/webfonts/Estedad-Bold.woff2") format("woff2");
+  font-style:normal;font-weight:700 900;font-display:swap;
+}
+@font-face{
+  font-family:"Aref Ruqaa";
+  src:url("https://cdn.jsdelivr.net/gh/aliftype/aref-ruqaa@main/fonts/ArefRuqaa-Bold.ttf") format("truetype");
+  font-style:normal;font-weight:700;font-display:swap;
+}
+:root{
+  --font-persian-ui:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif;
+  --font-persian-display:"Aref Ruqaa","Estedad","Vazirmatn",Tahoma,serif;
+}
+html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-secondary,
+.form-group label,.form-hint,.form-help,.section-subtitle,.service-copy,.feature-info p,
+.official-role-explanation,.jalali-picker__choice,.jalali-picker__head button,.jalali-picker__foot button{
+  font-family:"Estedad","Vazirmatn","Noto Sans Arabic",Tahoma,Arial,sans-serif!important;
+}
+.app-header h1,.section-title,.hero-title,.contact-hero h2,.feedback-hero h2,.game-hero h2,
+.home-event-overlay h3,.section-heading h2,.event-head h2,.auth-title,.form-section-title{
+  font-family:"Estedad","Vazirmatn",Tahoma,Arial,sans-serif!important;
+  font-weight:800;
+}
+.home-wisdom__arabic,.ali-wisdom__arabic,.game-hero h2{
+  font-family:"Aref Ruqaa","Estedad","Vazirmatn",Tahoma,serif!important;
+}
