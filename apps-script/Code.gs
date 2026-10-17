@@ -2332,17 +2332,17 @@ function submitGameScore(p) {
     var weeklyBest = existing ? Number(existing.score || 0) : 0;
     var lifetimeBest = Number(member.bestScore || 0);
 
-    // هیچ رکوردی ذخیره نمی‌شود مگر اینکه رکورد تاریخی خود عضو شکسته شود.
-    if (score <= lifetimeBest || (existing && score <= weeklyBest)) {
-      return {ok:true, saved:false, score:Math.max(weeklyBest, lifetimeBest), weekKey:week, lifetimeBest:lifetimeBest,
-        leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
-    }
+    // رکورد هفتگی و رکورد تاریخی مستقل‌اند.
+if (score <= weeklyBest) {
+  return {ok:true, saved:false, score:weeklyBest, weekKey:week, lifetimeBest:lifetimeBest,
+    leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
+}
 
-    // فقط رکورد هفتگی بهتر می‌شود؛ رکورد تاریخی نیز فقط در صورت عبور از بهترین قبلی تغییر می‌کند.
-    if (score > lifetimeBest) {
-      memberSheet.getRange(memberRow, 8).setValue(score);
-      lifetimeBest = score;
-    }
+// رکورد هفتگی با امتیاز بهتر به‌روز می‌شود؛ رکورد تاریخی فقط هنگام شکستن بهترین قبلی تغییر می‌کند.
+if (score > lifetimeBest) {
+  memberSheet.getRange(memberRow, 8).setValue(score);
+  lifetimeBest = score;
+}
 
     if (existing) {
       var vals = sheet.getRange(existingRow, 1, 1, 5).getValues()[0];
