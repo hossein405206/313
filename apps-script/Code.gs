@@ -196,6 +196,8 @@ function saveSchedule(p){
   if(category!=='حلقه'&&category!=='بازی')throw new Error('دسته برنامه را انتخاب کن');
   var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),category:category};
   if(dayIndex<0||!obj.title)throw new Error('روز معتبر و عنوان برنامه را وارد کن');
+  if(obj.title.length>120)throw new Error('عنوان برنامه نباید بیشتر از ۱۲۰ نویسه باشد');
+  if(obj.location.length>160)throw new Error('مکان برنامه نباید بیشتر از ۱۶۰ نویسه باشد');
   if(pos){var old=rows[pos-2];obj.createdAt=old.createdAt||obj.createdAt;sheet.getRange(pos,1,1,HEADERS['برنامه'].length).setValues([rowToArray('برنامه',obj)]);}else sheet.appendRow(rowToArray('برنامه',obj));
   return {ok:true,item:obj};
 }
@@ -1690,6 +1692,12 @@ function saveEvent(p) {
   };
 
   if (!rowObj.title) throw new Error('عنوان رویداد الزامی است');
+  if (rowObj.title.length > 160) throw new Error('عنوان رویداد نباید بیشتر از ۱۶۰ نویسه باشد');
+  if (rowObj.description.length > 3000) throw new Error('توضیحات رویداد نباید بیشتر از ۳۰۰۰ نویسه باشد');
+  if (rowObj.label.length > 60) throw new Error('برچسب رویداد نباید بیشتر از ۶۰ نویسه باشد');
+  if (rowObj.imageUrl.length > 2048 || rowObj.imageId.length > 256) throw new Error('اطلاعات تصویر رویداد بیش از حد طولانی است');
+  if (rowObj.date && !/^\\d{4}-\\d{2}-\\d{2}$/.test(rowObj.date)) throw new Error('تاریخ رویداد معتبر نیست');
+  if (!isFinite(rowObj.sort) || rowObj.sort < 0 || rowObj.sort > 9999) throw new Error('ترتیب نمایش رویداد معتبر نیست');
 
   if (!id) {
     sheet.appendRow(rowToArray('رویدادها', rowObj));
