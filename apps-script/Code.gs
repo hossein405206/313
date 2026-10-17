@@ -2166,6 +2166,7 @@ function saveAttendanceBatch(p) {
 
     var sheet = getSheet('حضورغیاب');
     var activeMembers = getSheetObjects('اعضا').filter(function(m) { return truthy(m.active); });
+    if (records.length !== activeMembers.length) throw new Error('برای همه اعضای فعال باید وضعیت حضور ثبت شود');
     var memberById = {};
     activeMembers.forEach(function(m) { memberById[String(m.id)] = m; });
     var seen = {};
