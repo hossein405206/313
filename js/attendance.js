@@ -318,6 +318,11 @@
         });
       }
 
+      if (records.length !== state.members.length) {
+        toast('برای همه اعضا وضعیت حضور را انتخاب کن', 'error');
+        return;
+      }
+
       if (!records.length) {
         toast('هیچ حضوری ثبت نکردی', 'error');
         return;
