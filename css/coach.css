@@ -155,3 +155,8 @@
 .coach-page .panel-head small,.coach-page .muted{line-height:1.9}
 @media(max-width:420px){.coach-login h2{font-size:1.65rem}.coach-login p{font-size:.75rem}.coach-panel .editor-actions{flex-wrap:wrap}.coach-panel .editor-actions>*{min-width:100%}.coach-quick-link{min-height:94px}}
 @media(prefers-reduced-motion:reduce){.coach-page *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* v5.34.0 accessibility and restrained role styling */
+.coach-login .form-control::placeholder{color:rgba(255,255,255,.86)!important;opacity:1;font-weight:500}
+.coach-role-badge.is-owner,.staff-role-badge.is-owner{color:#344256;background:#eef1f5;border:1px solid #d9dfe7;box-shadow:none;animation:none;background-size:auto}
+.coach-login .form-control{caret-color:#f1d16d}
