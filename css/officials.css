@@ -336,3 +336,5 @@
 #openOfficialLogin{position:relative;margin-top:4px}
 @media(max-width:420px){.role-gates{grid-template-columns:1fr}.official-gate .role-gate{min-height:76px}}
 @media(prefers-reduced-motion:reduce){.official-gate .role-gate{transition:none}.official-gate .role-gate:hover{transform:none}}
+
+.official-security-note{position:relative;margin:13px 0 0;color:rgba(241,246,250,.58);font-size:.61rem;line-height:1.9;text-align:center}
