@@ -160,3 +160,17 @@
 .coach-login .form-control::placeholder{color:rgba(255,255,255,.86)!important;opacity:1;font-weight:500}
 .coach-role-badge.is-owner,.staff-role-badge.is-owner{color:#344256;background:#eef1f5;border:1px solid #d9dfe7;box-shadow:none;animation:none;background-size:auto}
 .coach-login .form-control{caret-color:#f1d16d}
+
+/* Camp management and 8-day attendance line chart */
+.attendance-trend-panel{overflow:hidden}
+.attendance-trend-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin-bottom:7px;border-radius:15px;background:linear-gradient(125deg,#e6f7f1,#f7fbf9);border:1px solid #cce8de}
+.attendance-trend-summary span{color:#58766d;font-size:.72rem;font-weight:700}
+.attendance-trend-summary strong{color:#087b66;font-size:1.15rem;font-weight:900}
+.attendance-trend-chart{width:100%;overflow:hidden}
+.attendance-trend-chart svg{display:block;width:100%;height:auto;min-height:160px}
+.attendance-trend-note{margin:0;padding:0 5px;color:#82918e;font-size:.62rem;line-height:1.8}
+.camp-admin-item,.camp-registration-item{align-items:flex-start}
+.camp-admin-item .admin-item-main small,.camp-registration-item .admin-item-main small{line-height:1.9;overflow-wrap:anywhere}
+.camp-admin-item .admin-actions,.camp-registration-item .admin-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:46%}
+.payment-waiting{font-size:.58rem;color:#8a6420;background:#fff4d5;border-radius:9px;padding:6px 8px}
+@media(max-width:420px){.camp-admin-item,.camp-registration-item{flex-direction:column}.camp-admin-item .admin-actions,.camp-registration-item .admin-actions{max-width:100%;width:100%;justify-content:flex-start}.attendance-trend-summary strong{font-size:1rem}}
