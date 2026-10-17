@@ -139,3 +139,19 @@
 .coach-panel:focus-within{border-color:rgba(15,107,98,.2)}
 @media(max-width:720px){.coach-page{padding:14px 12px 105px}.coach-login{min-height:unset;margin:18px auto 25px;padding:28px 18px;border-radius:24px}.coach-quick-link{min-height:100px}.coach-stats{gap:9px}}
 @media(prefers-reduced-motion:reduce){.coach-stat,.coach-login .btn-submit,.coach-quick-link{transition:none}.coach-stat:hover,.coach-login .btn-submit:hover,.coach-quick-link:hover{transform:none}}
+
+
+/* v5.33.0 — polished coach workspace, keyboard access, and mobile forms */
+.coach-page{color:#20334b}
+.coach-login{isolation:isolate}
+.coach-login:focus-within{border-color:rgba(224,192,100,.42);box-shadow:0 30px 80px rgba(15,24,40,.25),0 0 0 4px rgba(224,192,100,.07)}
+.coach-login .form-control{width:100%;min-height:49px;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:rgba(255,255,255,.075);color:#fff;padding:12px 14px;font:600 .78rem/1.7 var(--font-persian-ui,"Estedad",Tahoma,sans-serif);transition:border-color .18s,background .18s,box-shadow .18s}
+.coach-login .form-control::placeholder{color:rgba(255,255,255,.48)}
+.coach-login .form-control:focus{outline:none;border-color:#d9b34d;background:rgba(255,255,255,.11);box-shadow:0 0 0 4px rgba(217,179,77,.12)}
+.coach-quick-link:active,.coach-page .btn-submit:active,.coach-page .mini-action:active,.coach-page .btn-secondary:active{transform:translateY(1px)}
+.coach-panel .form-control:focus,.coach-panel input:focus,.coach-panel textarea:focus,.coach-panel select:focus{outline:none;border-color:#16877c;box-shadow:0 0 0 3px rgba(22,135,124,.12)}
+.coach-panel .admin-item,.coach-panel .feedback-item{overflow-wrap:anywhere}
+.coach-panel button:focus-visible,.coach-panel a:focus-visible,.coach-page button:focus-visible{outline:3px solid #d9b34d;outline-offset:3px}
+.coach-page .panel-head small,.coach-page .muted{line-height:1.9}
+@media(max-width:420px){.coach-login h2{font-size:1.65rem}.coach-login p{font-size:.75rem}.coach-panel .editor-actions{flex-wrap:wrap}.coach-panel .editor-actions>*{min-width:100%}.coach-quick-link{min-height:94px}}
+@media(prefers-reduced-motion:reduce){.coach-page *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
