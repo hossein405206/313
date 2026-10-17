@@ -8,7 +8,7 @@
   var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
-  var best=0,submitting=false;
+  var best=0,weeklyBest=0,submitting=false;
   function app(){return window.KanoonApp;}
   function api(){return app()&&app().api;}
   function toast(text,error){var t=app()&&app().toast;if(t)(error?t.error:t.success)(text);}
@@ -66,6 +66,8 @@
       prize.textContent=r.prize||'به بیشترین رکورد هفته جایزه داده می‌شود';
       renderBoard(r.leaderboard||[]);
       renderAllTimeBoard(r.allTimeLeaderboard||[]);
+      var weeklyMine=(r.leaderboard||[]).find(function(x){return member&&String(x.memberId)===String(member.id);});
+      weeklyBest=weeklyMine?Math.max(0,Number(weeklyMine.score||0)):0;
       var mine=(r.allTimeLeaderboard||[]).find(function(x){return member&&String(x.memberId)===String(member.id);});
       if(mine)best=Math.max(best,Number(mine.score||0));
       best=Math.max(best,Number(member.bestScore||0));
@@ -204,14 +206,14 @@
     if(state!=='playing')return;
     state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;
     setButton('دوباره بازی کن',false);
-    if(score>best)say('رکورد جدید! در حال ذخیره '+faNum(score)+'…');
-    else say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
+    if(score>weeklyBest)say('رکورد هفتگی جدید! در حال ذخیره '+faNum(score)+'…');
+    else say('این دور از رکورد هفتگی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
     draw();
-    if(score>best)submitScore();
+    if(score>weeklyBest)submitScore();
   }
   async function submitScore(){
     if(submitting||!member||!member.token)return;
-    if(score<=best){say('این دور از رکورد قبلی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
+    if(score<=weeklyBest){say('این دور از رکورد هفتگی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
     submitting=true;setButton('در حال ذخیره رکورد…',true);
     try{
       var response=await api().post({action:'submitGameScore',token:member.token,score:score});
@@ -222,12 +224,13 @@
       member.bestScore=best;
       app().session.setMember(member);
       bestEl.textContent=faNum(best);
+      weeklyBest=Math.max(weeklyBest,Number(response.score||0),response.saved?score:0);
       if(response.saved){
         best=Math.max(best,score);
         bestEl.textContent=faNum(best);
         say('رکورد جدید '+faNum(score)+' ثبت شد و در جدول این هفته قرار گرفت. آفرین! 💙');
       }else{
-        say('رکورد جدیدتری ثبت نشد؛ بهترین رکورد هفتگی شما '+faNum(response.score||score)+' است.');
+        say('رکورد جدیدتری ثبت نشد؛ بهترین رکورد هفتگی شما '+faNum(weeklyBest)+' است.');
       }
     }catch(e){
       say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
