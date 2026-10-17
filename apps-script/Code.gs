@@ -1240,9 +1240,10 @@ function verifyLoginCode() {
 function addMember(p) {
   var first = String(p.firstName || '').trim();
   var last = String(p.lastName || '').trim();
-  var phone = String(p.phone || '').trim();
+  var phone = normalizeIranMobile_(p.phone || '');
 
   if (!first || !last) throw new Error('نام و نام خانوادگی الزامی است');
+  if (first.length > 60 || last.length > 80) throw new Error('نام یا نام خانوادگی بیش از حد طولانی است');
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
 
   if (findMemberByPhone(phone, true)) throw new Error('این عضو قبلاً وجود دارد');
@@ -1303,6 +1304,7 @@ function updateMember(p) {
     var lastName = String(p.lastName || '').trim();
     var nickname = String(p.nickname || '').trim();
     if (!firstName || !lastName || !nickname) throw new Error('نام، نام خانوادگی و نام نمایشی الزامی است');
+    if (firstName.length > 60 || lastName.length > 80) throw new Error('نام یا نام خانوادگی بیش از حد طولانی است');
     if (nickname.length > 24) throw new Error('نام نمایشی حداکثر ۲۴ نویسه باشد');
 
     row[idx.firstName] = firstName;
