@@ -134,7 +134,7 @@
     if (!state.official) return;
 
     try {
-      var res = await api.get({
+      var res = await api.post({
         action: 'listWarnings',
         token: state.official.token
       });
