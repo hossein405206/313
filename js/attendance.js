@@ -336,7 +336,6 @@
         await api.post({
           action: 'saveAttendanceBatch',
           token: official.token,
-          date: todayISO(),
           records: records
         });
 
