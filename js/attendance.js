@@ -160,7 +160,7 @@
   }
 
   function attachListEvents() {
-    var removeBtns = $('.att-remove');
+    var removeBtns = $$('.att-remove');
     for (var rb = 0; rb < removeBtns.length; rb++) { (function(btn){ btn.addEventListener('click', async function(){ var item=btn.closest('.att-item'); var id=(state.members.find(function(m){return String(m.phone)===String(item.getAttribute('data-phone'))})||{}).id; if(!id)return; if(!confirm('این عضو از فهرست حذف شود؟'))return; var api=getAPI(); try{await api.post({action:'deleteMember',token:state.official.token,id:id}); toast('عضو حذف شد ✓'); await loadMembers();}catch(e){toast(e.message||'خطا در حذف','error');} });})(removeBtns[rb]); }
 
     var items = $$('.att-item');
