@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.29.0',
-    BACKEND_VERSION: '4.18.0-required-consent-photo'
+    VERSION: '5.30.0',
+    BACKEND_VERSION: '4.19.0-audit-hardening'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
