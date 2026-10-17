@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.18.0-required-consent-photo';
+var APP_VERSION = '4.19.0-audit-hardening';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
