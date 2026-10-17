@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0F6B62">
   <title>ثبت‌نام در حلقه | حلقه شهید هادی ذوالفقاری</title>
-  <link rel="stylesheet" href="css/style.css?v=5.33.0">
+  <link rel="stylesheet" href="css/style.css?v=5.34.0">
   <style>
     .ring-register-intro{background:linear-gradient(135deg,#eaf6f2,#f8f4e9);border:1px solid #d4e9e2;border-radius:18px;padding:16px;margin:12px 0 22px;line-height:1.9}
     .ring-register-intro strong{display:block;color:#0f6b62;margin-bottom:4px}
@@ -75,7 +75,7 @@
     @media(max-width:360px){.jalali-picker__years{grid-template-columns:repeat(3,minmax(0,1fr))}.jalali-picker__months{grid-template-columns:repeat(2,minmax(0,1fr))}.jalali-picker__choice{min-height:40px;font-size:.76rem}}
     
   </style>
-  <link rel="stylesheet" href="css/islamic-design.css?v=5.33.0">
+  <link rel="stylesheet" href="css/islamic-design.css?v=5.34.0">
 </head>
 <body>
   <div class="app-container">
@@ -142,7 +142,7 @@
     </main>
     <nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
   </div>
-  <script src="js/main.js?v=5.33.0" defer></script>
+  <script src="js/main.js?v=5.34.0" defer></script>
   <script>
   (function(){
     'use strict';
@@ -237,6 +237,14 @@
       if(field){field.classList.remove('field-invalid');field.removeAttribute('aria-invalid');}
       if(err){err.textContent='';err.hidden=true;}
     }
+    function writeBirthDate(value){
+      var field=$('birthDate');
+      if(!field)return;
+      field.value=toPersianDigits(value);
+      clearFieldError('birthDate');
+      field.dispatchEvent(new Event('input',{bubbles:true}));
+      field.dispatchEvent(new Event('change',{bubbles:true}));
+    }
     function clearAllFieldErrors(){fieldIds.forEach(clearFieldError);}
     function markFieldError(id,message){
       var field=$(id),err=field?getFieldError(id,field):null;
@@ -309,9 +317,7 @@
             if(!validJalaliDate(candidate)){return;}
             stagedDate=candidate;
             // Show the selected date in the field immediately; confirmation still closes the picker.
-            var dateField=$('birthDate');
-            dateField.value=toPersianDigits(candidate);
-            clearFieldError('birthDate');
+            writeBirthDate(candidate);
             renderDatePicker();
           };}(y0,m0,d0));
           grid.appendChild(db);
@@ -333,8 +339,7 @@
       $('closeBirthDatePickerFooter').addEventListener('click',hideDatePicker);
       $('jalaliConfirmDate').addEventListener('click',function(){
         if(!stagedDate||!validJalaliDate(stagedDate))return;
-        field.value=toPersianDigits(stagedDate);
-        clearFieldError('birthDate');
+        writeBirthDate(stagedDate);
         hideDatePicker();
       });
       document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('birthDatePicker').hidden)hideDatePicker();});
@@ -357,7 +362,7 @@
     function fill(item){
       if(!item)return;
       ['nationalCode','fatherName','fatherPhone','address','school','grade','emergencyPhone'].forEach(function(k){set(k,item[k]||'');});
-      set('birthDate',toPersianDigits(birthDateToJalali(item.birthDate)));
+      writeBirthDate(birthDateToJalali(item.birthDate));
     }
     function boot(){
       if(!window.KanoonApp||!window.KanoonApp.session||!window.KanoonApp.api){setTimeout(boot,80);return;}

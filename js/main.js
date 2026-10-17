@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.33.0',
+    VERSION: '5.34.0',
     BACKEND_VERSION: '4.19.0-audit-hardening'
   };
 
@@ -924,7 +924,7 @@
     if (user) {
       var firstName = user.firstName || user.name || 'کاربر';
       var initial = String(firstName).charAt(0);
-      btn.href = member ? 'profile.html' : (official && String(official.role || '').indexOf('حضور') >= 0 ? 'attendance.html' : (official && String(official.role || '').indexOf('نظارت') >= 0 ? 'supervision.html' : 'officials.html'));
+      btn.href = member ? 'profile.html' : (official && String(official.role || '').indexOf('حضور') >= 0 ? 'attendance.html' : (official && String(official.role || '').indexOf('نظارت') >= 0 ? 'supervision.html' : 'officials.html?v='+CONFIG.VERSION));
       btn.setAttribute('aria-label', official && !member ? 'پنل مسئولیت' : 'پروفایل من');
       btn.innerHTML = '<span class="header-auth__avatar">' + DOM.escape(initial) + '</span>';
     } else {
@@ -1194,7 +1194,7 @@ function buildBottomNav() {
     ['game.html','◉','بازی'],
     staffPage?['officials.html','♙','مسئولین']:[member?'profile.html':'login.html',member?'♙':'↗',member?'پروفایل':'ورود']
   ];
-  nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
+  nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';var href=x[0]==='officials.html'?x[0]+'?v='+CONFIG.VERSION:x[0];return '<a class="nav-item'+active+'" href="'+href+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
 }
 function bindGlobalNavigation(){
   buildBottomNav();

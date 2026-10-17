@@ -786,7 +786,7 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-wisdom__arabic,
 .ali-wisdom__arabic {
   font-family: "Amiri", "Noto Naskh Arabic", serif !important;
-  font-size: 1.04rem !important;
+  font-size: .98rem !important;
   font-weight: 400 !important;
   line-height: 2.12 !important;
   letter-spacing: 0 !important;
@@ -796,7 +796,7 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 @media (max-width: 360px) {
   .home-wisdom__arabic,
   .ali-wisdom__arabic {
-    font-size: .96rem !important;
+    font-size: .9rem !important;
     line-height: 2.08 !important;
   }
 }
