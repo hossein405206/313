@@ -2405,6 +2405,14 @@ function dashboardData(auth) {
   var warnings = warningsForMonth(month);
   var todayAttendance = attendance.filter(function(r){ return r.date === today; });
   var presentToday = todayAttendance.filter(function(r){ return String(r.status || '') === 'حاضر'; }).length;
+  var campRows = getSheetObjects('اردوها');
+  var adminRegistrations = regs.sort(byNewest).slice(0, 50).map(function(r) {
+    var camp = campRows.filter(function(c){ return String(c.id) === String(r.campId || ''); })[0] || {};
+    var item = Object.assign({}, r);
+    item.campTitle = String(camp.title || 'اردوی حذف‌شده');
+    item.campCost = Number(camp.cost || 0);
+    return item;
+  });
 
   return {
     ok:true,
@@ -2418,7 +2426,7 @@ function dashboardData(auth) {
       monthWarnings:warnings.length
     },
     events:(!auth || auth.isMaster || auth.permissions.events) ? listEventsPublic() : [],
-    registrations:(!auth || auth.isMaster || auth.permissions.registrations) ? regs.sort(byNewest).slice(0,50) : [],
+    registrations:(!auth || auth.isMaster || auth.permissions.registrations) ? adminRegistrations : [],
     attendance:(!auth || auth.isMaster || auth.permissions.reports) ? attendance : [],
     warnings:(!auth || auth.isMaster || auth.permissions.reports) ? warnings : [],
     prize:(!auth || auth.isMaster || auth.permissions.game) ? (getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE) : '',
