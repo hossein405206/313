@@ -2142,35 +2142,44 @@ function hasAttendanceDate(date) {
 }
 
 function saveAttendanceBatch(p) {
+  var official = requireToken(p.token, ['attendance']);
   var date = String(p.date || currentDate());
   if (date !== currentDate()) throw new Error('ثبت حضور فقط برای امروز مجاز است');
-  if (hasAttendanceDate(date)) throw new Error('حضور امروز قبلاً ثبت شده و دیگر قابل ثبت مجدد نیست');
-
   var records = Array.isArray(p.records) ? p.records : [];
   if (!records.length) throw new Error('رکوردی برای ذخیره وجود ندارد');
+  if (records.length > 500) throw new Error('تعداد رکوردهای حضور بیش از حد مجاز است');
 
-  var official = requireToken(p.token, ['attendance']);
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
-
   try {
-    if (hasAttendanceDate(date)) throw new Error('حضور امروز قبلاً ثبت شده');
+    if (hasAttendanceDate(date)) throw new Error('حضور امروز قبلاً ثبت شده و دیگر قابل ثبت مجدد نیست');
 
     var sheet = getSheet('حضورغیاب');
+    var activeMembers = getSheetObjects('اعضا').filter(function(m) { return truthy(m.active); });
+    var memberById = {};
+    activeMembers.forEach(function(m) { memberById[String(m.id)] = m; });
+    var seen = {};
     var now = nowIso();
     var values = [];
+    var validStatuses = ['حاضر', 'موجه', 'غیبت'];
 
-    records.forEach(function(r){
-      var recordName = String(r.memberName || r.fullName || '').trim();
-      if (!r.memberId || !recordName || !r.status) return;
-      var status = String(r.status);
-      if (['حاضر','موجه','غیبت'].indexOf(status) < 0) return;
-      values.push([date, String(r.memberId), recordName, status, String(r.note || ''), official.subject, now]);
+    records.forEach(function(r) {
+      if (!r || typeof r !== 'object') throw new Error('یکی از رکوردهای حضور نامعتبر است');
+      var memberId = String(r.memberId || '').trim();
+      if (!memberId || !memberById[memberId]) throw new Error('یکی از اعضا پیدا نشد یا غیرفعال است؛ فهرست را تازه‌سازی کن');
+      if (seen[memberId]) throw new Error('برای یک عضو بیش از یک وضعیت ارسال شده است');
+      seen[memberId] = true;
+      var status = String(r.status || '').trim();
+      if (validStatuses.indexOf(status) < 0) throw new Error('وضعیت حضور یکی از اعضا معتبر نیست');
+      var note = String(r.note || '').trim();
+      if (note.length > 500) throw new Error('یادداشت حضور نباید بیشتر از ۵۰۰ نویسه باشد');
+      var member = memberById[memberId];
+      var recordName = String(member.name || [member.firstName, member.lastName].filter(Boolean).join(' ') || 'عضو').trim();
+      values.push([date, memberId, recordName, status, note, official.subject, now]);
     });
 
     if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
-    sheet.getRange(sheet.getLastRow()+1,1,values.length,7).setValues(values);
-
+    sheet.getRange(sheet.getLastRow() + 1, 1, values.length, 7).setValues(values);
     return { ok:true, locked:true, count:values.length };
   } finally {
     lock.releaseLock();
