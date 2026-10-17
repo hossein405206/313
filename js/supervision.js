@@ -96,7 +96,7 @@
 
   async function loadOfficials() {
     var api = getAPI();
-    var select = $('#memberSelect');
+    var select = $('#responsibilityInput');
     if (!api || !select) return;
 
     try {
@@ -248,7 +248,7 @@
     var charCount = $('#charCount');
     var submitBtn = $('#submitWarning');
 
-    if (!form || !select || !textarea) return;
+    if (!form || !textarea) return;
 
     // شمارنده کاراکتر
     if (charCount) {
@@ -271,14 +271,9 @@
         return;
       }
 
-      var memberName = select.value.trim();
       var responsibility = $('#responsibilityInput').value.trim();
       var description = textarea.value.trim();
 
-      if (!memberName) {
-        toast('نام مسئول رو انتخاب کن', 'error');
-        return;
-      }
       if (!responsibility) {
         toast('مسئولیت رو وارد کن', 'error');
         return;
@@ -296,7 +291,7 @@
           action: 'saveWarning',
           token: state.official.token,
           responsibility: responsibility,
-          memberName: memberName,
+          memberName: responsibility,
           reason: description,
           date: todayISO()
         });
