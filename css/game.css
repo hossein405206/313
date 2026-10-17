@@ -31,3 +31,11 @@
 .prize-panel .prize-pill{display:block;max-width:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#4b3205;font-family:'Noto Naskh Arabic UI','Noto Sans Arabic','Vazirmatn',Tahoma,Arial,sans-serif;font-size:clamp(1rem,4vw,1.25rem);font-weight:900;line-height:1.9}
 .game-page .section-heading h2{font-family:'Noto Naskh Arabic UI','Noto Sans Arabic','Vazirmatn',Tahoma,Arial,sans-serif;font-size:1.05rem;font-weight:900}
 @media(max-width:360px){.prize-panel{padding:13px 10px}.prize-panel__label{font-size:.73rem}.prize-panel .prize-pill{font-size:.96rem}}
+
+/* v5.34.0: keep the game control below the playfield, not over its center. */
+.game-shell .btn-submit{position:relative;z-index:1;left:auto;top:auto;transform:none;display:block;width:min(100%,260px);margin:12px auto 0;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.leader-row .leader-avatar{display:inline-flex;align-items:center;justify-content:center;position:relative;box-sizing:border-box;width:38px;height:38px;min-width:38px;flex:0 0 38px;border-radius:50%;overflow:hidden;font-size:.82rem;line-height:1}
+.leader-row .leader-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.leader-row .leader-name{display:flex;align-items:center;gap:9px;min-width:0}
+.leader-player-name{display:block;min-width:0;overflow-wrap:anywhere}
+.leader-row .leader-avatar__fallback{display:grid;place-items:center;width:100%;height:100%}
