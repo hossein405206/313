@@ -96,7 +96,7 @@
 
   async function loadOfficials() {
     var api = getAPI();
-    var select = $('#responsibilityInput');
+    var select = $('#memberSelect');
     if (!api || !select) return;
 
     try {
@@ -243,7 +243,6 @@
 
   function setupForm() {
     var form = $('#warningForm');
-    var select = $('#memberSelect');
     var textarea = $('#warningText');
     var charCount = $('#charCount');
     var submitBtn = $('#submitWarning');
