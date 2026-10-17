@@ -47,8 +47,8 @@ var HEADERS = {
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
-  'اردوها': ['id','title','status','createdAt'],
-  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt'],
+  'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline'],
+  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','receiptPhotoUrl','paymentStatus'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.19.0-audit-hardening';
+var APP_VERSION = '4.20.0-camps-attendance';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -223,7 +223,7 @@ function setup() {
 
   var camps = getSheet('اردوها');
   if (camps.getLastRow() < 2) {
-    camps.appendRow([uid('CAMP'), 'اردوی مشهد', 'active', nowIso()]);
+    camps.appendRow(rowToArray('اردوها', {id:uid('CAMP'), title:'اردوی مشهد', status:'active', createdAt:nowIso(), cardNumber:'', cost:0, registrationDeadline:''}));
   }
 
   ensureLifetimeGameRecords();
@@ -444,6 +444,11 @@ function handlePost(p) {
   if (action === 'updateOwnCoachCredentials') return updateOwnCoachCredentials(p);
 
   if (action === 'setFeedbackStatus') return setFeedbackStatus(p);
+
+  if (action === 'saveCamp') return saveCamp(p);
+  if (action === 'deleteCamp') return deleteCamp(p);
+  if (action === 'uploadCampReceipt') return uploadCampReceipt(p);
+  if (action === 'setCampPaymentStatus') return setCampPaymentStatus(p);
 
   if (action === 'registerCamp') {
     return registerCamp(p);
@@ -1986,13 +1991,116 @@ function setFeedbackStatus(p) {
 /* -------------------------------------------------------------------------- */
 
 function listCamps() {
-  return getSheetObjects('اردوها')
-    .filter(function(r){ return String(r.status) === 'active'; })
-    .map(function(r){ return { id:r.id, title:r.title, status:r.status }; });
+  var sheet = getSheet('اردوها');
+  var rows = getSheetObjects('اردوها');
+  var today = currentDate();
+  rows.forEach(function(r) {
+    var deadline = String(r.registrationDeadline || '').trim();
+    if (String(r.status) === 'active' && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < today) {
+      var pos = findRow(sheet, 'id', String(r.id || ''));
+      if (pos) sheet.getRange(pos, HEADERS['اردوها'].indexOf('status') + 1).setValue('expired');
+      r.status = 'expired';
+    }
+  });
+  return rows.filter(function(r){ return String(r.status) === 'active'; }).map(function(r) {
+    return {
+      id:String(r.id || ''), title:String(r.title || ''), status:String(r.status || ''),
+      cardNumber:String(r.cardNumber || ''), cost:Number(r.cost || 0),
+      registrationDeadline:String(r.registrationDeadline || '')
+    };
+  });
+}
+
+function saveCamp(p) {
+  requireCoachPermission(p.token, 'events');
+  var title = String(p.title || '').trim();
+  var cardNumber = normalizeIranDigits(String(p.cardNumber || '')).replace(/[\s-]/g, '');
+  var costText = normalizeIranDigits(String(p.cost == null ? '' : p.cost)).replace(/[\s,،٬]/g, '');
+  var cost = Number(costText || 0);
+  var deadline = String(p.registrationDeadline || '').trim();
+  var id = String(p.id || '').trim();
+  if (!title) throw new Error('نام اردو را وارد کن');
+  if (title.length > 140) throw new Error('نام اردو نباید بیش از ۱۴۰ نویسه باشد');
+  if (!isFinite(cost) || cost < 0 || cost > 10000000000) throw new Error('هزینه اردو معتبر نیست');
+  if (cost > 0 && !/^\d{16,26}$/.test(cardNumber)) throw new Error('شماره کارت یا شبای مقصد را درست وارد کن');
+  if (cost === 0) cardNumber = '';
+  if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) throw new Error('تاریخ پایان ثبت‌نام معتبر نیست');
+  if (deadline && deadline < currentDate()) throw new Error('تاریخ پایان ثبت‌نام نمی‌تواند در گذشته باشد');
+  var sheet = getSheet('اردوها');
+  var pos = id ? findRow(sheet, 'id', id) : 0;
+  if (id && !pos) throw new Error('اردو برای ویرایش پیدا نشد');
+  var existing = pos ? getSheetObjects('اردوها').filter(function(r){return String(r.id) === id;})[0] : null;
+  var camp = {
+    id:id || uid('CAMP'), title:title, status:'active',
+    createdAt:String(existing && existing.createdAt || nowIso()),
+    cardNumber:cardNumber, cost:cost, registrationDeadline:deadline
+  };
+  var values = rowToArray('اردوها', camp);
+  if (pos) sheet.getRange(pos, 1, 1, values.length).setValues([values]);
+  else sheet.appendRow(values);
+  return {ok:true, item:camp};
+}
+
+function deleteCamp(p) {
+  requireCoachPermission(p.token, 'events');
+  var id = String(p.id || '').trim();
+  var sheet = getSheet('اردوها');
+  var pos = findRow(sheet, 'id', id);
+  if (!id || !pos) throw new Error('اردو پیدا نشد');
+  sheet.getRange(pos, HEADERS['اردوها'].indexOf('status') + 1).setValue('inactive');
+  return {ok:true, id:id};
+}
+
+function uploadCampReceipt(p) {
+  var id = String(p.registrationId || '').trim();
+  if (!id) throw new Error('شناسه ثبت‌نام پیدا نشد؛ صفحه را تازه‌سازی نکن و دوباره تلاش کن');
+  var sheet = getSheet('ثبت‌نام‌ها');
+  var pos = findRow(sheet, 'id', id);
+  if (!pos) throw new Error('درخواست ثبت‌نام پیدا نشد');
+  var width = HEADERS['ثبت‌نام‌ها'].length;
+  var values = sheet.getRange(pos, 1, 1, width).getValues()[0];
+  var statusIndex = HEADERS['ثبت‌نام‌ها'].indexOf('status');
+  var receiptIndex = HEADERS['ثبت‌نام‌ها'].indexOf('receiptPhotoUrl');
+  var payIndex = HEADERS['ثبت‌نام‌ها'].indexOf('paymentStatus');
+  var updatedIndex = HEADERS['ثبت‌نام‌ها'].indexOf('updatedAt');
+  if (String(values[statusIndex] || '') !== 'در انتظار تایید') throw new Error('این ثبت‌نام دیگر منتظر پرداخت نیست');
+  var receiptBase64 = String(p.receiptBase64 || '');
+  var mime = String(p.receiptMimeType || 'image/jpeg').toLowerCase();
+  if (!receiptBase64) throw new Error('عکس رسید کارت‌به‌کارت را انتخاب کن');
+  var uploaded = uploadConsentPhotoPrivate(receiptBase64, mime, 'registration-payment-' + Date.now());
+  values[receiptIndex] = uploaded.url;
+  values[payIndex] = 'در انتظار تایید رسید';
+  values[updatedIndex] = nowIso();
+  sheet.getRange(pos, 1, 1, width).setValues([values]);
+  return {ok:true, status:'در انتظار تایید رسید'};
+}
+
+function setCampPaymentStatus(p) {
+  requireCoachPermission(p.token, 'registrations');
+  var id = String(p.id || '').trim();
+  var nextStatus = String(p.status || '').trim();
+  if (['تایید پرداخت', 'رد پرداخت'].indexOf(nextStatus) < 0) throw new Error('وضعیت رسید معتبر نیست');
+  var sheet = getSheet('ثبت‌نام‌ها');
+  var pos = findRow(sheet, 'id', id);
+  if (!pos) throw new Error('ثبت‌نام اردو پیدا نشد');
+  var width = HEADERS['ثبت‌نام‌ها'].length;
+  var values = sheet.getRange(pos, 1, 1, width).getValues()[0];
+  var receiptIndex = HEADERS['ثبت‌نام‌ها'].indexOf('receiptPhotoUrl');
+  var paymentIndex = HEADERS['ثبت‌نام‌ها'].indexOf('paymentStatus');
+  var updatedIndex = HEADERS['ثبت‌نام‌ها'].indexOf('updatedAt');
+  if (!values[receiptIndex]) throw new Error('برای این ثبت‌نام رسیدی ارسال نشده است');
+  values[paymentIndex] = nextStatus;
+  values[updatedIndex] = nowIso();
+  sheet.getRange(pos, 1, 1, width).setValues([values]);
+  if (nextStatus === 'تایید پرداخت') {
+    setRegistrationStatus({token:p.token, id:id, status:'تایید شد'});
+  }
+  return {ok:true, id:id, paymentStatus:nextStatus};
 }
 
 function registerCamp(p) {
   var campId = String(p.campId || '').trim();
+  var activeCamp = listCamps().filter(function(camp){ return String(camp.id) === campId; })[0];
   var firstName = String(p.firstName || '').trim();
   var lastName = String(p.lastName || '').trim();
   var fatherName = String(p.fatherName || '').trim();
@@ -2000,7 +2108,7 @@ function registerCamp(p) {
   var fatherPhone = normalizeIranMobile_(p.fatherPhone || '');
   var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\s+/g, '');
   if (!campId) throw new Error('اردو انتخاب نشده');
-  if (!listCamps().some(function(camp){ return String(camp.id) === campId; })) throw new Error('این اردو دیگر فعال نیست؛ صفحه را تازه‌سازی کن');
+  if (!activeCamp) throw new Error('این اردو دیگر فعال نیست یا مهلت ثبت‌نام آن تمام شده؛ صفحه را تازه‌سازی کن');
   if (!firstName || !lastName || !fatherName) throw new Error('اطلاعات ناقص است');
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
@@ -2031,10 +2139,12 @@ function registerCamp(p) {
     photoUrl: photoUrl,
     status: 'در انتظار تایید',
     createdAt: nowIso(),
-    updatedAt: nowIso()
+    updatedAt: nowIso(),
+    receiptPhotoUrl: '',
+    paymentStatus: Number(activeCamp.cost || 0) > 0 ? 'منتظر ارسال رسید' : 'پرداخت لازم نیست'
   };
   sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
-  return { ok: true, id: row.id, status: row.status };
+  return { ok: true, id: row.id, status: row.status, camp:{id:activeCamp.id,title:activeCamp.title,cardNumber:activeCamp.cardNumber,cost:activeCamp.cost,registrationDeadline:activeCamp.registrationDeadline} };
 }
 
 function getRegistrationPhoto(p) {
@@ -2045,14 +2155,16 @@ function getRegistrationPhoto(p) {
     return String(row.id || '') === registrationId;
   })[0];
   if (!registration) throw new Error('ثبت‌نام پیدا نشد');
-  var url = String(registration.photoUrl || '');
+  var isReceipt = String(p.type || '') === 'receipt';
+  var url = String((isReceipt ? registration.receiptPhotoUrl : registration.photoUrl) || '');
   var match = /[?&]id=([A-Za-z0-9_-]{10,})/.exec(url);
-  if (!match) throw new Error('برای این ثبت‌نام عکس رضایت‌نامه‌ای ثبت نشده است');
+  if (!match) throw new Error(isReceipt ? 'برای این ثبت‌نام رسید پرداختی ثبت نشده است' : 'برای این ثبت‌نام عکس رضایت‌نامه‌ای ثبت نشده است');
   var file;
   try { file = DriveApp.getFileById(match[1]); }
   catch (e) { throw new Error('فایل رضایت‌نامه پیدا نشد یا دسترسی به آن ممکن نیست'); }
-  if (file.isTrashed() || !/^registration-/i.test(String(file.getName() || ''))) {
-    throw new Error('فایل به‌عنوان عکس رضایت‌نامه قابل تأیید نیست');
+  var expectedFileName = isReceipt ? /^registration-payment-/i : /^registration-/i;
+  if (file.isTrashed() || !expectedFileName.test(String(file.getName() || ''))) {
+    throw new Error(isReceipt ? 'فایل به‌عنوان رسید پرداخت قابل تأیید نیست' : 'فایل به‌عنوان عکس رضایت‌نامه قابل تأیید نیست');
   }
   var parents = file.getParents(), insideTargetFolder = false;
   while (parents.hasNext()) {
@@ -2083,6 +2195,14 @@ function setRegistrationStatus(p) {
   var sheet = getSheet('ثبت‌نام‌ها');
   var pos = findRow(sheet, 'id', id);
   if (!pos) throw new Error('ثبت‌نام پیدا نشد');
+  if (status === 'تایید شد') {
+    var regBeforeApproval = getSheetObjects('ثبت‌نام‌ها').filter(function(r){return String(r.id) === id;})[0];
+    var campBeforeApproval = getSheetObjects('اردوها').filter(function(c){return String(c.id) === String(regBeforeApproval && regBeforeApproval.campId || '');})[0];
+    if (campBeforeApproval && Number(campBeforeApproval.cost || 0) > 0 &&
+        (!regBeforeApproval.receiptPhotoUrl || String(regBeforeApproval.paymentStatus || '') !== 'تایید پرداخت')) {
+      throw new Error('برای تأیید این اردو ابتدا رسید کارت‌به‌کارت را بررسی و تأیید کن');
+    }
+  }
 
   var width = HEADERS['ثبت‌نام‌ها'].length;
   var values = sheet.getRange(pos, 1, 1, width).getValues()[0];
@@ -2154,6 +2274,27 @@ function attendanceForMonth(month) {
     });
 }
 
+
+function attendanceTrend_() {
+  var today = currentDate();
+  var anchor = new Date(today + 'T12:00:00Z');
+  var days = [];
+  for (var offset = 7; offset >= 0; offset--) {
+    var date = new Date(anchor.getTime() - offset * 86400000);
+    var key = Utilities.formatDate(date, 'GMT', 'yyyy-MM-dd');
+    days.push({date:key, present:0, recorded:false});
+  }
+  var byDate = {};
+  days.forEach(function(d){byDate[d.date] = d;});
+  getSheetObjects('حضورغیاب').forEach(function(row) {
+    var key = String(row.date || '').slice(0, 10);
+    if (!byDate[key]) return;
+    byDate[key].recorded = true;
+    if (String(row.status || '').trim() === 'حاضر') byDate[key].present++;
+  });
+  return days;
+}
+
 function hasAttendanceDate(date) {
   var rows = getSheetObjects('حضورغیاب');
   return rows.some(function(r){ return String(r.date) === String(date); });
@@ -2213,20 +2354,15 @@ function saveWarning(p) {
   var auth = requireToken(p.token, ['supervision']);
   var responsibility = String(p.responsibility || '').trim();
   var memberId = String(p.memberId || '').trim();
-  var memberName = String(p.memberName || '').trim();
+  var memberName = String(p.memberName || responsibility).trim();
   var reason = String(p.reason || '').trim();
+  var allowedResponsibilities = ['مسئول PS5','مسئول سیستم صوتی','مسئول خرید','مسئول مسجد','مسئول کانون','مسئول هیئت','مسئول مکبری','مسئول آشپزخانه','مسئول تدارکات','مسئول هماهنگی','مسئول رسانه','مسئول اتاق رسانه','مسئول ورزش','مسئول VR','مسئول عکاسی','مسئول حضور و غیاب'];
 
-  if (!responsibility) throw new Error('اسم مسئولیت الزامی است');
-  if (!memberName) throw new Error('نام مسئول الزامی است');
+  if (allowedResponsibilities.indexOf(responsibility) < 0) throw new Error('از فهرست مسئولیت‌های تعریف‌شدهٔ مسجد انتخاب کن');
   if (!reason) throw new Error('دلیل اخطار الزامی است');
   if (responsibility.length > 100) throw new Error('مسئولیت نباید بیشتر از ۱۰۰ نویسه باشد');
   if (memberName.length > 120) throw new Error('نام مسئول بیش از حد طولانی است');
   if (reason.length > 300) throw new Error('دلیل اخطار نباید بیشتر از ۳۰۰ نویسه باشد');
-  var knownOfficial = getSheetObjects('مسئولین').some(function(o) {
-    return truthy(o.active) && String(o.name || '').trim() === memberName;
-  });
-  if (!knownOfficial) throw new Error('مسئول انتخاب‌شده معتبر نیست؛ فهرست را تازه‌سازی کن');
-
   var sheet = getSheet('اخطارها');
   sheet.appendRow([
     currentDate(),
@@ -2268,15 +2404,17 @@ function dashboardData(auth) {
   var attendance = attendanceForMonth(month);
   var warnings = warningsForMonth(month);
   var todayAttendance = attendance.filter(function(r){ return r.date === today; });
+  var presentToday = todayAttendance.filter(function(r){ return String(r.status || '') === 'حاضر'; }).length;
 
   return {
     ok:true,
     month:month,
     today:today,
+    attendanceTrend:attendanceTrend_(),
     stats:{
       activeMembers:listActiveMembers().length,
       pendingRegistrations:pending,
-      todayAttendance:todayAttendance.length,
+      todayAttendance:presentToday,
       monthWarnings:warnings.length
     },
     events:(!auth || auth.isMaster || auth.permissions.events) ? listEventsPublic() : [],
