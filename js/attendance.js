@@ -371,7 +371,7 @@
     }
 
     try {
-      var res = await api.get({
+      var res = await api.post({
         action: 'listMembers',
         token: official.token
       });
