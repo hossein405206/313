@@ -2210,6 +2210,13 @@ function saveWarning(p) {
   if (!responsibility) throw new Error('اسم مسئولیت الزامی است');
   if (!memberName) throw new Error('نام مسئول الزامی است');
   if (!reason) throw new Error('دلیل اخطار الزامی است');
+  if (responsibility.length > 100) throw new Error('مسئولیت نباید بیشتر از ۱۰۰ نویسه باشد');
+  if (memberName.length > 120) throw new Error('نام مسئول بیش از حد طولانی است');
+  if (reason.length > 300) throw new Error('دلیل اخطار نباید بیشتر از ۳۰۰ نویسه باشد');
+  var knownOfficial = getSheetObjects('مسئولین').some(function(o) {
+    return truthy(o.active) && String(o.name || '').trim() === memberName;
+  });
+  if (!knownOfficial) throw new Error('مسئول انتخاب‌شده معتبر نیست؛ فهرست را تازه‌سازی کن');
 
   var sheet = getSheet('اخطارها');
   sheet.appendRow([
