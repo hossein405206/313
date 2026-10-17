@@ -318,3 +318,21 @@
 #officialLoginForm .btn-submit{min-height:48px;border-radius:13px;font-weight:850}
 @media(max-width:420px){.official-gate{border-radius:22px;padding:24px 17px}.official-role-explanation{font-size:.76rem}#officialLoginForm{padding:17px}}
 @media(prefers-reduced-motion:reduce){#openOfficialLogin{transition:none}#openOfficialLogin:hover{transform:none}}
+
+
+/* v5.33.0 — clear role selection and accessible official entry */
+.officials-login-page{max-width:680px;margin-inline:auto;padding:18px 14px 105px}
+.official-gate{position:relative;overflow:hidden;border:1px solid rgba(224,192,100,.18);background:radial-gradient(circle at 100% 0,rgba(28,151,139,.16),transparent 34%),linear-gradient(145deg,#142b43 0%,#0c1929 72%);box-shadow:0 22px 55px rgba(12,25,41,.2)}
+.official-gate:before{content:"";position:absolute;inset:10px;border:1px solid rgba(224,192,100,.11);border-radius:20px;pointer-events:none}
+.official-gate h2{position:relative;font-family:var(--font-persian-ui,"Estedad",Tahoma,sans-serif);font-size:1.45rem;line-height:1.7;color:#f4df9d}
+.official-gate .official-role-explanation{position:relative;max-width:520px;margin:0 auto 18px;color:rgba(241,246,250,.76);font-size:.78rem;line-height:2.1}
+.role-gates{position:relative;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:20px 0 16px}
+.official-gate .role-gate{width:100%;min-width:0;min-height:92px;align-items:center;border:1px solid rgba(255,255,255,.13);background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.035));transition:transform .18s,border-color .18s,background .18s;cursor:pointer}
+.official-gate .role-gate:hover{border-color:rgba(224,192,100,.48);background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045));transform:translateY(-2px)}
+.official-gate .role-gate span{background:linear-gradient(145deg,rgba(224,192,100,.25),rgba(21,155,141,.18));color:#f0d98d}
+.official-gate .role-gate strong{font-size:.76rem;color:#fff}
+.official-gate .role-gate small{font-size:.6rem;line-height:1.8;color:rgba(241,246,250,.63)}
+.official-gate .role-gate:focus-visible{outline:3px solid #e4c56d;outline-offset:3px}
+#openOfficialLogin{position:relative;margin-top:4px}
+@media(max-width:420px){.role-gates{grid-template-columns:1fr}.official-gate .role-gate{min-height:76px}}
+@media(prefers-reduced-motion:reduce){.official-gate .role-gate{transition:none}.official-gate .role-gate:hover{transform:none}}
