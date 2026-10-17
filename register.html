@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#0F6B62">
   <title>ثبت‌نام اردو | کانون</title>
 
-  <link rel="stylesheet" href="css/style.css?v=5.33.0">
-  <link rel="stylesheet" href="css/islamic-design.css?v=5.33.0">
+  <link rel="stylesheet" href="css/style.css?v=5.34.0">
+  <link rel="stylesheet" href="css/islamic-design.css?v=5.34.0">
+  <link rel="stylesheet" href="css/camp-payment.css?v=5.34.0">
 </head>
 <body>
 
@@ -52,6 +53,7 @@
           <select id="campSelect" class="form-control" required>
             <option value="">در حال بارگذاری...</option>
           </select>
+          <div id="campInfoCard" class="camp-info-card" hidden aria-live="polite"><div class="camp-info-card__heading"><span>جزئیات اردو</span><strong id="campInitialName">—</strong></div><div class="camp-info-row"><span>هزینه</span><strong id="campInitialCost">—</strong></div><div class="camp-info-row"><span>شماره کارت / شبا</span><strong id="campInitialCard" dir="ltr">—</strong></div><div class="camp-info-row"><span>پایان ثبت‌نام</span><strong id="campInitialDeadline">—</strong></div></div>
         </div>
 
         <!-- ═══ اطلاعات شخصی ═══ -->
@@ -122,6 +124,20 @@
 
       </form>
 
+      <section id="campPaymentStep" class="camp-payment-step hidden" hidden aria-labelledby="campPaymentTitle">
+        <div class="camp-payment-card">
+          <div class="camp-payment-card__icon" aria-hidden="true">✓</div>
+          <p class="camp-payment-eyebrow">مرحله دوم · پرداخت اردو</p>
+          <h2 id="campPaymentTitle">ارسال رسید کارت‌به‌کارت</h2>
+          <p class="camp-payment-intro">اطلاعات ثبت‌نام دریافت شد. هزینه را به شماره زیر واریز کن و تصویر رسید را بفرست.</p>
+          <div class="camp-payment-details"><div><span>نام اردو</span><strong id="campFinalName">—</strong></div><div class="camp-payment-cost"><span>مبلغ قابل پرداخت</span><strong id="campFinalCost">—</strong></div><div><span>شماره کارت / شبا</span><strong id="campFinalCard" dir="ltr">—</strong></div><div><span>مهلت ثبت‌نام</span><strong id="campFinalDeadline">—</strong></div></div>
+          <label class="camp-receipt-picker" for="receiptInput"><span class="camp-receipt-picker__icon" aria-hidden="true">⇧</span><strong>تصویر رسید کارت‌به‌کارت</strong><small>روی این کادر بزن و عکس رسید را انتخاب کن (JPG، PNG یا WebP؛ حداکثر ۵ مگابایت)</small><input id="receiptInput" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div id="receiptPreview" class="camp-receipt-preview" hidden></div>
+          <button type="button" id="sendReceiptBtn" class="btn-submit camp-receipt-submit">ثبت و ارسال رسید</button>
+          <p id="paymentStepStatus" class="camp-payment-status" role="status" aria-live="polite">پس از ارسال رسید، منتظر تأیید مربی بمان.</p>
+        </div>
+      </section>
+
     </main>
 
     <nav class="bottom-nav" aria-label="ناوبری اصلی">
@@ -141,7 +157,7 @@
 
   </div>
 
-  <script src="js/main.js?v=5.33.0" defer></script>
+  <script src="js/main.js?v=5.34.0" defer></script>
   <script>
     /* ========================================================================
        Auto-fill از پروفایل کاربر
