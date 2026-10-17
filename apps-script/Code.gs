@@ -1566,10 +1566,13 @@ function saveRingRegistration(p) {
   if (!/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
   if (!birthDate) throw new Error('تاریخ تولد شمسی معتبر نیست؛ لطفاً از تقویم یک تاریخ معتبر انتخاب کن.');
   if (!fatherName) throw new Error('نام پدر را وارد کن');
+  if (fatherName.length > 100 || guardianName.length > 100) throw new Error('نام پدر یا سرپرست بیش از حد طولانی است');
   if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
   if (address.length < 8) throw new Error('آدرس را کامل‌تر وارد کن');
+  if (address.length > 500) throw new Error('آدرس نباید بیشتر از ۵۰۰ نویسه باشد');
   if (!school) throw new Error('نام مدرسه را وارد کن');
-  if (!grade) throw new Error('پایه تحصیلی را انتخاب کن');
+  if (school.length > 120) throw new Error('نام مدرسه نباید بیشتر از ۱۲۰ نویسه باشد');
+  if (!grade || grade.length > 40) throw new Error('پایه تحصیلی را به‌درستی انتخاب کن');
   if (!guardianName) throw new Error('نام پدر را وارد کن');
   if (!/^09\d{9}$/.test(emergencyPhone)) throw new Error('شماره تماس اضطراری نامعتبر است');
 
@@ -1939,6 +1942,7 @@ function submitFeedback(p) {
   var message = String(p.message || '').trim();
 
   if (!message) throw new Error('متن پیام خالی است');
+  if (name.length > 100) throw new Error('نام نباید بیشتر از ۱۰۰ نویسه باشد');
   if (phone && !/^09\d{9}$/.test(phone)) throw new Error('شماره تماس نامعتبر است');
   if (['پیشنهاد','انتقاد','شکایت','سایر'].indexOf(category) < 0) category = 'سایر';
   if (message.length > 2000) throw new Error('متن پیام بیش از حد طولانی است');
