@@ -802,7 +802,7 @@ function updateOwnCoachCredentials(p) {
 function addCoach(p){
   var auth=requireToken(p.token,['coach']); if(!auth.isMaster)throw new Error('فقط مربی ارشد می‌تواند مربی اضافه کند');
   var name=String(p.name||'').trim(),phone=normalizeIranMobile_(p.phone||''),code=normalizeCoachCode_(p.code);
-  if(!name)throw new Error('نام مربی را وارد کن'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(code.length<8)throw new Error('رمز ورود مربی باید دست‌کم ۸ نویسه داشته باشد');
+  if(!name)throw new Error('نام مربی را وارد کن'); if(name.length>120)throw new Error('نام مربی نباید بیشتر از ۱۲۰ نویسه باشد'); if(!/^09\d{9}$/.test(phone))throw new Error('شماره مربی نامعتبر است'); if(code.length<8)throw new Error('رمز ورود مربی باید دست‌کم ۸ نویسه داشته باشد'); if(code.length>64)throw new Error('رمز ورود مربی بیش از حد طولانی است');
   var rows=getSheetObjects('مربیان');
   if(rows.some(function(r){return normalizeIranMobile_(r.phone||'')===phone;}))throw new Error('این شماره قبلاً ثبت شده');
   if(rows.some(function(r){return normalizeCoachCode_(r.code)===code;}))throw new Error('این کد قبلاً استفاده شده');
@@ -965,8 +965,10 @@ function addOfficial(p) {
   ensureOfficialPhoneColumn_();
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeMemberPhone(p.phone||'');
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  if(name.length>120)throw new Error('نام مسئول نباید بیشتر از ۱۲۰ نویسه باشد');
   if(phone&&!/^09\d{9}$/.test(phone))throw new Error('شماره همراه مسئول باید ۱۱ رقم و با ۰۹ شروع شود');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
+  if(code.length>64)throw new Error('کد مسئولیت بیش از حد طولانی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
   getSheet('مسئولین').appendRow(rowToArray('مسئولین',{code:code,name:name,role:role,active:true,createdAt:nowIso(),phone:phone})); return {ok:true};
@@ -977,8 +979,10 @@ function updateOfficial(p) {
   var oldCode=String(p.oldCode||'').trim(), pos=findRow(getSheet('مسئولین'),'code',oldCode); if(!pos)throw new Error('مسئول پیدا نشد');
   var code=String(p.code||'').trim(),name=String(p.name||'').trim(),role=String(p.role||'').trim(),phone=normalizeMemberPhone(p.phone||'');
   if(!code||!name||!role)throw new Error('نام، کد و نوع مسئولیت الزامی است');
+  if(name.length>120)throw new Error('نام مسئول نباید بیشتر از ۱۲۰ نویسه باشد');
   if(phone&&!/^09\d{9}$/.test(phone))throw new Error('شماره همراه مسئول باید ۱۱ رقم و با ۰۹ شروع شود');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
+  if(code.length>64)throw new Error('کد مسئولیت بیش از حد طولانی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var rows=getSheetObjects('مسئولین');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
