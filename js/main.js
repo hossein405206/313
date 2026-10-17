@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.33.0',
-    BACKEND_VERSION: '4.19.0-audit-hardening'
+    VERSION: '5.34.0',
+    BACKEND_VERSION: '4.20.0-camps-attendance'
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -725,6 +725,39 @@
     var preview = DOM.qs('#uploadPreview');
     var campSelect = DOM.qs('#campSelect');
     var selectedFile = null;
+    var camps = [];
+    var pendingRegistrationId = '';
+    var receiptFile = null;
+    var campInfoCard = DOM.qs('#campInfoCard');
+    var paymentStep = DOM.qs('#campPaymentStep');
+    var receiptInput = DOM.qs('#receiptInput');
+    var receiptPreview = DOM.qs('#receiptPreview');
+    var receiptBtn = DOM.qs('#sendReceiptBtn');
+    var paymentStatus = DOM.qs('#paymentStepStatus');
+
+    function money(value) { return Number(value || 0).toLocaleString('fa-IR') + ' تومان'; }
+    function selectedCamp() {
+      var id = campSelect ? campSelect.value : '';
+      for (var i = 0; i < camps.length; i++) if (String(camps[i].id) === String(id)) return camps[i];
+      return null;
+    }
+    function updateCampInfo(camp, finalStep) {
+      camp = camp || selectedCamp();
+      if (!camp) { if (campInfoCard) campInfoCard.hidden = true; return; }
+      if (campInfoCard) campInfoCard.hidden = false;
+      var fields = finalStep ? {
+        campFinalName: camp.title || '—',
+        campFinalCost: Number(camp.cost || 0) > 0 ? money(camp.cost) : 'بدون هزینه',
+        campFinalCard: camp.cardNumber || 'ثبت نشده',
+        campFinalDeadline: camp.registrationDeadline || 'اعلام نشده'
+      } : {
+        campInitialName: camp.title || '—',
+        campInitialCost: Number(camp.cost || 0) > 0 ? money(camp.cost) : 'بدون هزینه',
+        campInitialCard: camp.cardNumber || 'ثبت نشده',
+        campInitialDeadline: camp.registrationDeadline || 'اعلام نشده'
+      };
+      Object.keys(fields).forEach(function(id) { var el = DOM.qs('#' + id); if (el) el.textContent = fields[id]; });
+    }
 
     function handleFile(file) {
       var allowedTypes = ['image/jpeg','image/png','image/webp'];
@@ -771,14 +804,18 @@
     if (campSelect) {
       Api.get({ action: 'listCamps', status: 'active' })
         .then(function (res) {
-          var camps = res.items || [];
+          camps = res.items || [];
           var html = '<option value="">انتخاب کن...</option>';
           for (var i = 0; i < camps.length; i++) {
-            html += '<option value="' + DOM.escape(camps[i].id) + '">' + DOM.escape(camps[i].title) + '</option>';
+            var costLabel = Number(camps[i].cost || 0) > 0 ? ' · ' + money(camps[i].cost) : ' · بدون هزینه';
+            html += '<option value="' + DOM.escape(camps[i].id) + '">' + DOM.escape(camps[i].title) + DOM.escape(costLabel) + '</option>';
           }
           campSelect.innerHTML = html;
+          updateCampInfo();
+          DOM.on(campSelect, 'change', function() { updateCampInfo(); });
           if (!camps.length) {
             campSelect.innerHTML = '<option value="">هیچ اردوی فعالی نیست</option>';
+            if (campInfoCard) campInfoCard.hidden = true;
           }
         })
         .catch(function (err) {
@@ -819,7 +856,7 @@
         var photoBase64 = '';
         if (selectedFile) photoBase64 = await RegisterForm._fileToBase64(selectedFile);
 
-        await Api.post({
+        var registrationResult = await Api.post({
           action: 'registerCamp',
           campId: data.campId,
           firstName: data.firstName,
@@ -833,10 +870,23 @@
           extraData: {}
         });
 
-        form.reset();
-        if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
-        selectedFile = null;
-        Toast.success('ثبت‌نام ارسال شد و در انتظار تایید ✓');
+        var campForPayment = selectedCamp();
+        pendingRegistrationId = String(registrationResult && registrationResult.id || '');
+        if (campForPayment && Number(campForPayment.cost || 0) > 0) {
+          if (!pendingRegistrationId) throw new Error('ثبت‌نام ذخیره شد، اما شناسه برای ارسال رسید دریافت نشد. لطفاً با مربی هماهنگ کن.');
+          if (paymentStep) { paymentStep.hidden = false; paymentStep.classList.remove('hidden'); }
+          updateCampInfo(campForPayment, true);
+          if (paymentStatus) paymentStatus.textContent = 'اطلاعات ثبت‌نام دریافت شد؛ پس از واریز، تصویر رسید را بفرست.';
+          form.classList.add('hidden');
+          if (paymentStep) paymentStep.scrollIntoView({behavior:'smooth', block:'start'});
+          Toast.success('مرحله اول ثبت‌نام انجام شد؛ حالا رسید پرداخت را بفرست.');
+        } else {
+          form.reset();
+          if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
+          selectedFile = null;
+          updateCampInfo();
+          Toast.success('ثبت‌نام ارسال شد و در انتظار تأیید مربی است ✓');
+        }
 
       } catch (err) {
         Logger.error('ثبت‌نام:', err);
@@ -844,6 +894,42 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'ثبت‌نام';
+      }
+    });
+
+    if (receiptInput) DOM.on(receiptInput, 'change', function() {
+      receiptFile = receiptInput.files && receiptInput.files[0] || null;
+      if (!receiptFile) { if (receiptPreview) { receiptPreview.innerHTML = ''; receiptPreview.hidden = true; } return; }
+      if (['image/jpeg','image/png','image/webp'].indexOf(String(receiptFile.type || '').toLowerCase()) < 0 || receiptFile.size > CONFIG.MAX_FILE_SIZE) {
+        receiptFile = null; receiptInput.value = '';
+        if (receiptPreview) { receiptPreview.innerHTML = ''; receiptPreview.hidden = true; }
+        Toast.error('رسید باید تصویر JPG، PNG یا WebP و حداکثر ۵ مگابایت باشد'); return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (!receiptPreview) return;
+        receiptPreview.innerHTML = '<img src="' + e.target.result + '" alt="پیش‌نمایش رسید کارت‌به‌کارت"><span>رسید انتخاب‌شده</span>';
+        receiptPreview.hidden = false;
+      };
+      reader.readAsDataURL(receiptFile);
+    });
+
+    if (receiptBtn) DOM.on(receiptBtn, 'click', async function() {
+      if (!pendingRegistrationId) { Toast.error('شناسه ثبت‌نام پیدا نشد؛ ثبت‌نام را دوباره انجام بده'); return; }
+      if (!receiptFile) { Toast.error('اول تصویر رسید کارت‌به‌کارت را انتخاب کن'); return; }
+      receiptBtn.disabled = true; receiptBtn.textContent = 'در حال ارسال امن رسید...';
+      try {
+        var base64 = await RegisterForm._fileToBase64(receiptFile);
+        await Api.post({action:'uploadCampReceipt', registrationId:pendingRegistrationId, receiptBase64:base64, receiptMimeType:receiptFile.type});
+        if (paymentStatus) paymentStatus.textContent = 'رسید ثبت شد؛ اکنون منتظر تأیید مربی باشید.';
+        receiptInput.disabled = true;
+        receiptBtn.textContent = 'رسید با موفقیت ارسال شد ✓';
+        if (receiptPreview) receiptPreview.classList.add('is-submitted');
+        Toast.success('رسید ارسال شد؛ منتظر تأیید مربی باشید ✓');
+      } catch (err) {
+        Logger.error('ارسال رسید اردو:', err);
+        Toast.error(err.message || 'ارسال رسید ناموفق بود');
+        receiptBtn.disabled = false; receiptBtn.textContent = 'ثبت و ارسال رسید';
       }
     });
   }
@@ -926,7 +1012,11 @@
       var initial = String(firstName).charAt(0);
       btn.href = member ? 'profile.html' : (official && String(official.role || '').indexOf('حضور') >= 0 ? 'attendance.html' : (official && String(official.role || '').indexOf('نظارت') >= 0 ? 'supervision.html' : 'officials.html'));
       btn.setAttribute('aria-label', official && !member ? 'پنل مسئولیت' : 'پروفایل من');
-      btn.innerHTML = '<span class="header-auth__avatar">' + DOM.escape(initial) + '</span>';
+      if (member && member.profileImage) {
+        btn.innerHTML = '<span class="header-auth__avatar has-image"><img src="' + DOM.escape(member.profileImage) + '" alt="" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit"></span>';
+      } else {
+        btn.innerHTML = '<span class="header-auth__avatar">' + DOM.escape(initial) + '</span>';
+      }
     } else {
       btn.href = 'login.html';
       btn.setAttribute('aria-label', 'ورود / ثبت‌نام');
