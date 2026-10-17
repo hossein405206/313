@@ -1696,7 +1696,7 @@ function saveEvent(p) {
   if (rowObj.description.length > 3000) throw new Error('توضیحات رویداد نباید بیشتر از ۳۰۰۰ نویسه باشد');
   if (rowObj.label.length > 60) throw new Error('برچسب رویداد نباید بیشتر از ۶۰ نویسه باشد');
   if (rowObj.imageUrl.length > 2048 || rowObj.imageId.length > 256) throw new Error('اطلاعات تصویر رویداد بیش از حد طولانی است');
-  if (rowObj.date && !/^\\d{4}-\\d{2}-\\d{2}$/.test(rowObj.date)) throw new Error('تاریخ رویداد معتبر نیست');
+  if (rowObj.date && !/^\d{4}-\d{2}-\d{2}$/.test(rowObj.date)) throw new Error('تاریخ رویداد معتبر نیست');
   if (!isFinite(rowObj.sort) || rowObj.sort < 0 || rowObj.sort > 9999) throw new Error('ترتیب نمایش رویداد معتبر نیست');
 
   if (!id) {
