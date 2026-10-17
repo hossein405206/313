@@ -1100,7 +1100,11 @@ function ensureSecret() {
 }
 
 function getSecret() {
-  return PropertiesService.getScriptProperties().getProperty('AUTH_SECRET') || 'UNINITIALIZED';
+  var secret = PropertiesService.getScriptProperties().getProperty('AUTH_SECRET');
+  if (!secret || String(secret).trim().length < 32) {
+    throw new Error('کلید امنیتی سامانه تنظیم نشده است؛ مدیر باید تابع setup() را اجرا کند.');
+  }
+  return secret;
 }
 
 function b64(s) {
