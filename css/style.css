@@ -2869,3 +2869,12 @@ body{background:radial-gradient(900px 420px at 50% -160px,rgba(212,164,56,.09),t
 body, button, input, textarea, select, .nav-item, .btn-submit { font-family: var(--font-fa-ui); }
 .app-header h1, .section-title, .section-heading h2, .event-head h2, .hero-title, .auth-title, .game-hero h2 { font-family: var(--font-fa-display); }
 p, .section-subtitle, .form-help, .form-hint, .home-event-overlay p { font-family: var(--font-fa-reading); }
+
+
+/* v5.32.0 — Match the home hadith's typewriter effect to the member-login page. */
+.home-wisdom__arabic.is-typing::after{
+  content:"";display:inline-block;width:2px;height:1.05em;margin-inline-start:4px;vertical-align:-.16em;
+  background:#b7892d;animation:wisdomCursor .75s steps(1) infinite;
+}
+.home-wisdom__arabic{min-height:2.1em;overflow-wrap:anywhere;}
+@media(prefers-reduced-motion:reduce){.home-wisdom__arabic.is-typing::after{animation:none;opacity:1}}
