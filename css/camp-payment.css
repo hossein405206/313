@@ -1,0 +1,32 @@
+/* Camp registration payment stage — v5.34.0 */
+.camp-info-card{margin-top:12px;padding:15px;border-radius:18px;background:linear-gradient(145deg,#f6fbfa,#fff);border:1px solid #cfe4df;box-shadow:0 8px 22px rgba(20,85,78,.07)}
+.camp-info-card__heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;margin-bottom:5px;border-bottom:1px solid #e2eeea;color:#52716d;font-size:.8rem}
+.camp-info-card__heading strong{color:#173a37;font-size:.9rem}
+.camp-info-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:8px 0;font-size:.76rem}
+.camp-info-row span{color:#697c7a;flex-shrink:0}
+.camp-info-row strong{max-width:68%;color:#183a37;text-align:left;overflow-wrap:anywhere;line-height:1.8}
+.camp-payment-step{margin:18px 0 30px;scroll-margin-top:18px}
+.camp-payment-card{padding:22px 17px;border:1px solid #d7e4df;border-radius:25px;background:linear-gradient(160deg,#fff,#f4faf7);box-shadow:0 18px 42px rgba(19,73,66,.09)}
+.camp-payment-card__icon{width:44px;height:44px;display:grid;place-items:center;border-radius:15px;background:#e0f3e9;color:#16835b;font-size:1.5rem;font-weight:900}
+.camp-payment-eyebrow{margin:16px 0 4px;color:#16806e;font-size:.75rem;font-weight:800}
+.camp-payment-card h2{margin:0;font-size:1.3rem;color:#183b37;line-height:1.8}
+.camp-payment-intro{font-size:.84rem;line-height:2;color:#657875}
+.camp-payment-details{margin:17px 0;padding:7px 14px;border-radius:18px;background:#fff;border:1px solid #e2ece7}
+.camp-payment-details>div{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #edf1ee}
+.camp-payment-details>div:last-child{border-bottom:0}
+.camp-payment-details span{font-size:.75rem;color:#71817e;flex-shrink:0}
+.camp-payment-details strong{max-width:64%;font-size:.8rem;color:#203c38;overflow-wrap:anywhere;text-align:left;line-height:1.9}
+.camp-payment-details .camp-payment-cost strong{font-size:1.08rem;color:#087c58}
+.camp-receipt-picker{display:flex;flex-direction:column;align-items:center;gap:8px;padding:25px 16px;border:1.5px dashed #70b7a4;border-radius:18px;background:linear-gradient(145deg,#eef9f4,#fff);text-align:center;cursor:pointer}
+.camp-receipt-picker__icon{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;background:#d9f1e7;color:#07845c;font-size:1.7rem;font-weight:900}
+.camp-receipt-picker strong{color:#184a40;font-size:.9rem}
+.camp-receipt-picker small{color:#69807a;font-size:.72rem;line-height:1.9}
+.camp-receipt-picker input{max-width:100%;font:inherit;font-size:.75rem;color:#31524a}
+.camp-receipt-preview{margin-top:12px;padding:10px;border:1px solid #dce8e2;border-radius:15px;background:#fff;text-align:center}
+.camp-receipt-preview img{display:block;width:min(100%,290px);max-height:360px;object-fit:contain;margin:0 auto 8px;border-radius:10px}
+.camp-receipt-preview span{font-size:.75rem;color:#42645a}
+.camp-receipt-preview.is-submitted{border-color:#67b694;background:#f4fbf7}
+.camp-receipt-submit{width:100%;margin-top:14px;min-height:49px;background:linear-gradient(120deg,#087c58,#139b76);border-radius:14px}
+.camp-receipt-submit:disabled{opacity:.75;cursor:wait}
+.camp-payment-status{margin:13px 0 0;padding:11px 13px;border-radius:12px;background:#edf6f2;color:#24654f;font-size:.8rem;line-height:1.9}
+@media(max-width:380px){.camp-payment-card{padding:17px 12px}.camp-payment-details{padding:5px 10px}.camp-payment-details strong{max-width:60%;font-size:.73rem}}
