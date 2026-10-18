@@ -178,25 +178,26 @@
   function filterWarnings() {
     var today = todayISO();
     var now = new Date();
-    var weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // هفت روز تقویمی اخیر، شامل امروز؛ از مقایسهٔ timestamp پرهیز می‌کنیم
+    // چون تاریخ‌های ثبت‌شده فقط روز دارند و new Date('YYYY-MM-DD') به UTC تفسیر می‌شود.
+    var weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+    var weekStartISO = weekStart.getFullYear() + '-'
+      + String(weekStart.getMonth() + 1).padStart(2, '0') + '-'
+      + String(weekStart.getDate()).padStart(2, '0');
 
     return state.warnings.filter(function (w) {
       if (state.currentFilter === 'all') return true;
 
-      var d = String(w.date || '');
-      // اگه ISO بود
+      var d = String(w.date || '').trim();
+      // پشتیبانی از تاریخ ISO با یا بدون بخش ساعت
       if (d.indexOf('T') >= 0) d = d.slice(0, 10);
 
       if (state.currentFilter === 'today') {
         return d === today;
       }
       if (state.currentFilter === 'week') {
-        try {
-          var wd = new Date(d);
-          return wd >= weekAgo;
-        } catch (e) {
-          return false;
-        }
+        // با قالب YYYY-MM-DD مقایسهٔ رشته‌ای، ترتیب تقویمی درستی دارد.
+        return /^\\d{4}-\\d{2}-\\d{2}$/.test(d) && d >= weekStartISO && d <= today;
       }
       return true;
     });
