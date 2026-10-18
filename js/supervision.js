@@ -197,7 +197,7 @@
       }
       if (state.currentFilter === 'week') {
         // با قالب YYYY-MM-DD مقایسهٔ رشته‌ای، ترتیب تقویمی درستی دارد.
-        return /^\\d{4}-\\d{2}-\\d{2}$/.test(d) && d >= weekStartISO && d <= today;
+        return /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= weekStartISO && d <= today;
       }
       return true;
     });
