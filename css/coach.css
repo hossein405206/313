@@ -174,3 +174,10 @@
 .camp-admin-item .admin-actions,.camp-registration-item .admin-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:46%}
 .payment-waiting{font-size:.58rem;color:#8a6420;background:#fff4d5;border-radius:9px;padding:6px 8px}
 @media(max-width:420px){.camp-admin-item,.camp-registration-item{flex-direction:column}.camp-admin-item .admin-actions,.camp-registration-item .admin-actions{max-width:100%;width:100%;justify-content:flex-start}.attendance-trend-summary strong{font-size:1rem}}
+
+
+/* v5.35.0 — readable mobile login controls and restrained role labels */
+.coach-login .form-control{color:#fff!important;background:rgba(255,255,255,.14)!important}
+.coach-login .form-control::placeholder{color:#eef3fa!important;opacity:1!important;font-weight:600!important}
+.coach-login .form-control:focus::placeholder{color:#fff!important}
+.coach-role-badge.is-owner,.staff-role-badge.is-owner{font-weight:600!important;letter-spacing:0!important;transform:none!important}
