@@ -2,6 +2,9 @@
 var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,permissions:{},events:[],data:null};
 var PERMS=[['events','رویدادها'],['schedule','برنامه هفتگی'],['registrations','ثبت‌نام‌ها'],['reports','گزارش‌ها'],['game','جایزه بازی'],['officials','مدیریت مسئولین'],['feedback','انتقاد و پیشنهاد']];
 function api(){return window.KanoonApp&&window.KanoonApp.api}
+function sessionGet(key){try{return window.sessionStorage.getItem(key)||''}catch(e){return ''}}
+function sessionSet(key,value){try{window.sessionStorage.setItem(key,value);return true}catch(e){return false}}
+function sessionRemove(key){try{window.sessionStorage.removeItem(key)}catch(e){}}
 function normalizeDigits(v){return String(v||'').replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))}).replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))})}
 function normalizeIranMobileInput(v){var p=normalizeDigits(v).replace(/\D/g,'');if(/^00989\d{9}$/.test(p))return '0'+p.slice(4);if(/^989\d{9}$/.test(p))return '0'+p.slice(2);if(/^9\d{9}$/.test(p))return '0'+p;return p}
 function toast(m,e){var t=window.KanoonApp&&window.KanoonApp.toast;if(t)(e?t.error:t.success)(m)}
@@ -10,7 +13,7 @@ function setBusy(btn,text){if(btn){btn.disabled=true;btn.dataset.oldText=btn.tex
 function clearBusy(btn){if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'ذخیره'}}
 function scheduleDayIndex(day){return ['شنبه','یکشنبه','دوشنبه','سهشنبه','چهارشنبه','پنجشنبه','جمعه'].indexOf(String(day||'').replace(/\u200c/g,''))}
 function sortScheduleRows(list){return list.sort(function(a,b){var ai=scheduleDayIndex(a.day),bi=scheduleDayIndex(b.day);if(ai<0)ai=99;if(bi<0)bi=99;if(ai!==bi)return ai-bi;return String(a.createdAt||'').localeCompare(String(b.createdAt||''))||String(a.title||'').localeCompare(String(b.title||''),'fa')})}
-function renderCoachRoleBadge(){var badge=$('#coachRoleBadge');if(!badge)return;badge.textContent=state.isMaster?'مدیریت':'مربی';badge.classList.toggle('is-owner',state.isMaster);badge.classList.toggle('is-coach',!state.isMaster)}
+function renderCoachRoleBadge(){var badge=$('#coachRoleBadge');if(!badge)return;badge.textContent=state.isMaster?'مربی ارشد':'مربی';badge.classList.toggle('is-owner',state.isMaster);badge.classList.toggle('is-coach',!state.isMaster)}
 
 function renderPermissionChecks(root,values){
  if(!root)return;
@@ -32,31 +35,45 @@ function applyPermissions(){
  var resetPanel=$('#memberResetPanel');if(resetPanel)resetPanel.classList.toggle('hidden',!state.isMaster);
 }
 function login(){
- var f=$('#coachLoginForm');if(!f)return;
- f.addEventListener('submit',async function(e){e.preventDefault();
-  var phone=normalizeIranMobileInput($('#coachPhone').value),code=$('#coachCode').value.trim();
-  $('#coachPhone').value=phone;
+ var f=$('#coachLoginForm');
+ if(!f||f.dataset.coachLoginBound==='1')return;
+ f.dataset.coachLoginBound='1';
+ f.addEventListener('submit',async function(e){
+  e.preventDefault();
+  var phoneField=$('#coachPhone'),codeField=$('#coachCode');
+  if(!phoneField||!codeField){toast('فرم ورود کامل بارگذاری نشده است؛ صفحه را تازه‌سازی کن',1);return}
+  var phone=normalizeIranMobileInput(phoneField.value),code=String(codeField.value||'').trim();
+  phoneField.value=phone;
   if(!/^09\d{9}$/.test(phone)){toast('شماره مربی نامعتبر است',1);return}
   if(!code){toast('کد مربی را وارد کن',1);return}
-  var btn=f.querySelector('button');setBusy(btn,'در حال ورود...');
+  var btn=f.querySelector('button[type="submit"],button');
+  setBusy(btn,'در حال ورود...');
   try{
-   var r=await api().post({action:'loginCoach',phone:phone,code:code});
+   var client=api();
+   if(!client||typeof client.post!=='function')throw new Error('بخش ارتباط با سرور بارگذاری نشده است؛ صفحه را تازه‌سازی کن');
+   var r=await client.post({action:'loginCoach',phone:phone,code:code});
    var coach=r&&r.coach;
-    if(!r||!r.ok||!coach||!r.token){
-      console.error('[CoachLogin] پاسخ ناقص یا ناسازگار از سرور', {hasResponse:!!r,keys:r&&Object.keys(r),version:r&&r.version,requestId:r&&r.requestId});
-      throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ احتمالاً نسخهٔ منتشرشدهٔ Google Apps Script با سایت هماهنگ نیست. نسخهٔ وب‌اپ را بررسی و دوباره منتشر کن.');
-    }
-    state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.permissions=coach.permissions||{};
-   sessionStorage.setItem('coach_token',state.token);sessionStorage.setItem('coach_name',state.name);sessionStorage.setItem('coach_master',state.isMaster?'1':'0');sessionStorage.setItem('coach_permissions',JSON.stringify(state.permissions));
-   $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');$('#coachName').textContent=state.name;renderCoachRoleBadge();
-   applyPermissions();await load();
+   if(!r||!r.ok||!coach||!r.token){
+    console.error('[CoachLogin] پاسخ ناقص یا ناسازگار از سرور',{hasResponse:!!r,keys:r&&Object.keys(r),version:r&&r.version,requestId:r&&r.requestId});
+    throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ نسخهٔ منتشرشدهٔ Google Apps Script را بررسی کن.');
+   }
+   state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.permissions=coach.permissions||{};
+   sessionSet('coach_token',state.token);sessionSet('coach_name',state.name);sessionSet('coach_master',state.isMaster?'1':'0');sessionSet('coach_permissions',JSON.stringify(state.permissions));
+   var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
+   if(loginPanel)loginPanel.classList.add('hidden');
+   if(dashboard)dashboard.classList.remove('hidden');
+   if(nameEl)nameEl.textContent=state.name;
+   renderCoachRoleBadge();applyPermissions();
+   await load();
    if(state.isMaster)loadCoaches();
-   if(state.isMaster || state.permissions.events)loadCamps();
-   if(state.isMaster || state.permissions.officials)loadOfficials();
-   if(state.isMaster || state.permissions.feedback)loadFeedback()
-  }catch(e){toast(e.message||'شماره یا کد مربی نادرست است',1)}
-  finally{clearBusy(btn)}
- })
+   if(state.isMaster||state.permissions.events)loadCamps();
+   if(state.isMaster||state.permissions.officials)loadOfficials();
+   if(state.isMaster||state.permissions.feedback)loadFeedback();
+  }catch(err){
+   console.error('[CoachLogin] ورود ناموفق بود',err);
+   toast(err&&err.message||'ورود ناموفق بود؛ اتصال اینترنت را بررسی کن',1);
+  }finally{clearBusy(btn)}
+ });
 }
 async function load(){
  var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderAttendanceTrend(r.attendanceTrend||[]);renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events){loadActivityReports();loadCamps();}}
@@ -275,7 +292,7 @@ function setupCamps(){
  };
 }
 function setupSchedule(){var b=$('#newScheduleBtn');if(!b)return;b.onclick=function(){$('#scheduleEditor').classList.remove('hidden');$('#scheduleId').value='';$('#scheduleDay').value='';$('#scheduleTitle').value='';$('#scheduleCategory').value='حلقه'};$('#cancelScheduleBtn').onclick=function(){$('#scheduleEditor').classList.add('hidden')};$('#saveScheduleBtn').onclick=function(){var day=$('#scheduleDay').value,title=$('#scheduleTitle').value.trim(),category=$('#scheduleCategory').value;if(!day||scheduleDayIndex(day)<0||!title||['حلقه','بازی'].indexOf(category)<0){toast('روز، عنوان و دسته برنامه را کامل انتخاب کن',1);return}api().post({action:'saveSchedule',token:state.token,id:$('#scheduleId').value,day:day,title:title,category:category,time:'',location:'',sort:scheduleDayIndex(day)}).then(function(){toast('برنامه ذخیره شد ✓');$('#scheduleEditor').classList.add('hidden');loadSchedule()}).catch(function(e){toast(e.message,1)})};loadSchedule()}
-function loadCoaches(){api().post({action:'listCoaches',token:state.token}).then(function(r){var items=r.items||[],box=$('#coachList');box.innerHTML=items.map(function(x){var owner=x.role==='master',label=owner?'مدیریت':'مربی',roleClass=owner?'is-owner':'is-coach';return '<div class="admin-item coach-admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.phone)+' · '+esc(x.code)+'</small><div class="staff-role-badge '+roleClass+'">'+label+'</div><div class="permission-summary">'+PERMS.filter(function(p){return x.permissions&&x.permissions[p[0]]}).map(function(p){return '<span>'+p[1]+'</span>'}).join(' · ')+'</div></div><div class="admin-actions">'+(owner?'':'<button data-coach-edit="'+esc(x.code)+'">ویرایش</button><button data-coach-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'غیرفعال‌سازی':'فعال‌سازی')+'</button><button class="danger" data-coach-delete="'+esc(x.code)+'">حذف کامل</button>')+'</div></div>'}).join('');box.querySelectorAll('[data-coach-edit]').forEach(function(b){b.onclick=function(){editCoach(b.dataset.coachEdit,items)}});box.querySelectorAll('[data-coach-status]').forEach(function(b){b.onclick=function(){setCoachStatus(b.dataset.coachStatus,b.dataset.active==='1')}});box.querySelectorAll('[data-coach-delete]').forEach(function(b){b.onclick=function(){var item=items.find(function(x){return x.code===b.dataset.coachDelete});if(!confirm('مربی «'+(item?item.name:'')+'» به‌طور کامل حذف شود؟ این کار قابل بازگشت نیست.'))return;api().post({action:'deleteCoach',token:state.token,code:b.dataset.coachDelete}).then(function(){toast('مربی به‌طور کامل حذف شد ✓');loadCoaches()}).catch(function(e){toast(e.message,1)})}})}).catch(function(e){toast(e.message,1)})}
+function loadCoaches(){api().post({action:'listCoaches',token:state.token}).then(function(r){var items=r.items||[],box=$('#coachList');box.innerHTML=items.map(function(x){var owner=x.role==='master',label=owner?'مربی ارشد':'مربی',roleClass=owner?'is-owner':'is-coach';return '<div class="admin-item coach-admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><small>'+esc(x.phone)+' · '+esc(x.code)+'</small><div class="staff-role-badge '+roleClass+'">'+label+'</div><div class="permission-summary">'+PERMS.filter(function(p){return x.permissions&&x.permissions[p[0]]}).map(function(p){return '<span>'+p[1]+'</span>'}).join(' · ')+'</div></div><div class="admin-actions">'+(owner?'':'<button data-coach-edit="'+esc(x.code)+'">ویرایش</button><button data-coach-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'غیرفعال‌سازی':'فعال‌سازی')+'</button><button class="danger" data-coach-delete="'+esc(x.code)+'">حذف کامل</button>')+'</div></div>'}).join('');box.querySelectorAll('[data-coach-edit]').forEach(function(b){b.onclick=function(){editCoach(b.dataset.coachEdit,items)}});box.querySelectorAll('[data-coach-status]').forEach(function(b){b.onclick=function(){setCoachStatus(b.dataset.coachStatus,b.dataset.active==='1')}});box.querySelectorAll('[data-coach-delete]').forEach(function(b){b.onclick=function(){var item=items.find(function(x){return x.code===b.dataset.coachDelete});if(!confirm('مربی «'+(item?item.name:'')+'» به‌طور کامل حذف شود؟ این کار قابل بازگشت نیست.'))return;api().post({action:'deleteCoach',token:state.token,code:b.dataset.coachDelete}).then(function(){toast('مربی به‌طور کامل حذف شد ✓');loadCoaches()}).catch(function(e){toast(e.message,1)})}})}).catch(function(e){toast(e.message,1)})}
 function editCoach(code,list){var x=list.find(function(y){return y.code===code});if(!x)return;var name=prompt('نام مربی:',x.name);if(name===null)return;var phone=prompt('شماره همراه مربی:',x.phone);if(phone===null)return;var newCode=prompt('رمز ورود جدید:',x.code);if(newCode===null)return;var wrap=document.createElement('div');renderPermissionChecks(wrap,x.permissions);var txt=PERMS.map(function(p,i){return (x.permissions&&x.permissions[p[0]]?'✓ ':'')+p[1]}).join('، ');var perms={};PERMS.forEach(function(p){perms[p[0]]=confirm('دسترسی «'+p[1]+'» فعال باشد؟\nوضعیت فعلی: '+(x.permissions&&x.permissions[p[0]]?'فعال':'خاموش'))});api().post({action:'updateCoach',token:state.token,oldCode:code,name:name,phone:phone,code:newCode,permissions:perms}).then(function(){toast('اطلاعات مدیر ذخیره شد ✓');loadCoaches()}).catch(function(e){toast(e.message,1)})}
 function setCoachStatus(code,active){api().post({action:'setCoachStatus',token:state.token,code:code,active:active}).then(function(){toast(active?'مربی فعال شد ✓':'دسترسی مربی بسته شد');loadCoaches()}).catch(function(e){toast(e.message,1)})}
 function loadOfficials(){api().post({action:'listOfficialsManage',token:state.token}).then(function(r){var items=r.items||[],box=$('#officialList');box.innerHTML=items.map(function(x){return '<div class="admin-item"><div class="admin-item-main"><strong>'+esc(x.name)+' <span class="status-dot '+(x.active?'on':'off')+'"></span></strong><div class="staff-role-badge is-official">'+esc(x.role)+'</div><small>'+esc(x.code)+(x.phone?' · '+esc(x.phone):'')+'</small></div><div class="admin-actions"><button data-off-edit="'+esc(x.code)+'">ویرایش</button><button data-off-status="'+esc(x.code)+'" data-active="'+(x.active?'0':'1')+'">'+(x.active?'غیرفعال‌سازی':'فعال‌سازی')+'</button><button class="danger" data-off-delete="'+esc(x.code)+'">حذف کامل</button></div></div>'}).join('')||'<div class="empty"><p>هنوز مسئول ثبت نشده است.</p></div>'}).catch(function(e){toast(e.message,1)})}
@@ -314,10 +331,10 @@ function setupOwnCredentials(){
    state.name=response.coach.name||state.name;
    state.isMaster=!!response.coach.isMaster;
    state.permissions=response.coach.permissions||state.permissions;
-   sessionStorage.setItem('coach_token',state.token);
-   sessionStorage.setItem('coach_name',state.name);
-   sessionStorage.setItem('coach_master',state.isMaster?'1':'0');
-   sessionStorage.setItem('coach_permissions',JSON.stringify(state.permissions));
+   sessionSet('coach_token',state.token);
+   sessionSet('coach_name',state.name);
+   sessionSet('coach_master',state.isMaster?'1':'0');
+   sessionSet('coach_permissions',JSON.stringify(state.permissions));
    if(phoneInput)phoneInput.value='';
    if(codeInput)codeInput.value='';
    applyPermissions();
@@ -341,46 +358,69 @@ function setupStaff(){
     else if(edit){var code=edit.dataset.offEdit,items=[];var name=prompt('نام مسئول جدید:');if(name===null)return;var newPhone=prompt('شماره همراه مسئول (اختیاری؛ برای رنگ نقش در رکوردها):');if(newPhone===null)return;var newCode=prompt('کد جدید:');if(newCode===null)return;var role=prompt('نوع مسئولیت: حضور و غیاب - راهنمایی / حضور و غیاب - دبستان / نظارت');if(role===null)return;api().post({action:'updateOfficial',token:state.token,oldCode:code,name:name,phone:normalizeDigits(newPhone).replace(/\D/g,''),code:newCode,role:role}).then(function(){toast('مسئول ویرایش شد ✓');loadOfficials()}).catch(function(x){toast(x.message,1)})}
   });
 }
+function safeInit(name,fn){
+ try{fn()}catch(err){if(window.console&&console.error)console.error('[CoachSetup:'+name+']',err);toast('بخشی از پنل کامل بارگذاری نشد؛ صفحه را تازه‌سازی کن',1)}
+}
 function setup(){
- setupSchedule();setupStaff();setupOwnCredentials();setupActivityReports();setupRegistrationPhotoModal();setupCamps();
- var coachPhoneInput=$('#coachPhone');
- if(coachPhoneInput)coachPhoneInput.addEventListener('input',function(){coachPhoneInput.value=normalizeDigits(coachPhoneInput.value).replace(/[^0-9+]/g,'').slice(0,16)});
- var resetPhone=$('#resetMemberPhone'),resetBtn=$('#resetMemberHistoryBtn');
- if(resetPhone)resetPhone.addEventListener('input',function(){resetPhone.value=normalizeDigits(resetPhone.value).replace(/[^0-9+]/g,'').slice(0,16)});
- if(resetBtn)resetBtn.addEventListener('click',async function(){
+ // Bind login first so errors in optional widgets cannot leave the form unresponsive.
+ safeInit('login',login);
+ safeInit('schedule',setupSchedule);
+ safeInit('staff',setupStaff);
+ safeInit('own-credentials',setupOwnCredentials);
+ safeInit('activity-reports',setupActivityReports);
+ safeInit('registration-photo-modal',setupRegistrationPhotoModal);
+ safeInit('camps',setupCamps);
+ safeInit('phone-inputs',function(){
+  var coachPhoneInput=$('#coachPhone');
+  if(coachPhoneInput)coachPhoneInput.addEventListener('input',function(){coachPhoneInput.value=normalizeDigits(coachPhoneInput.value).replace(/[^0-9+]/g,'').slice(0,16)});
+  var resetPhone=$('#resetMemberPhone'),resetBtn=$('#resetMemberHistoryBtn');
+  if(resetPhone)resetPhone.addEventListener('input',function(){resetPhone.value=normalizeDigits(resetPhone.value).replace(/[^0-9+]/g,'').slice(0,16)});
+  if(resetPhone&&resetBtn)resetBtn.addEventListener('click',async function(){
    var phone=normalizeIranMobileInput(resetPhone.value);
    if(!/^09\d{9}$/.test(phone)){toast('شماره همراه معتبر ۱۱ رقمی وارد کن',1);return}
-   if(!confirm('تمام سابقه عضویت شماره '+phone+' حذف شود؟ حساب ورود مالک و تنظیمات مربی ارشد حذف نمی‌شود. این عملیات قابل بازگشت نیست.'))return;
+   if(!confirm('تمام سابقه عضویت شماره '+phone+' حذف شود؟ حساب مربی ارشد و تنظیمات مربی ارشد حذف نمی‌شود. این عملیات قابل بازگشت نیست.'))return;
    setBusy(resetBtn,'در حال پاک‌کردن...');
    try{var result=await api().post({action:'resetMemberHistory',token:state.token,phone:phone});resetPhone.value='';toast((result.message||'سابقه عضویت پاک شد')+' ✓');await load();}
-   catch(e){toast(e.message||'پاک‌کردن سابقه ناموفق بود',1)}
+   catch(err){toast(err.message||'پاک‌کردن سابقه ناموفق بود',1)}
    finally{clearBusy(resetBtn)}
+  });
  });
- var refreshFeedbackBtn=$('#refreshFeedbackBtn');
- if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
- $('#newEventBtn').onclick=function(){openEditor(null)};$('#cancelEventBtn').onclick=function(){$('#eventEditor').classList.add('hidden')};$('#saveEventBtn').onclick=saveEvent;
- $('#savePrizeBtn').onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(e){toast(e.message,1)})};
- $('#coachLogout').onclick=function(){sessionStorage.removeItem('coach_token');sessionStorage.removeItem('coach_name');sessionStorage.removeItem('coach_master');sessionStorage.removeItem('coach_permissions');location.reload()};
- state.token=sessionStorage.getItem('coach_token')||'';state.name=sessionStorage.getItem('coach_name')||'';state.isMaster=sessionStorage.getItem('coach_master')==='1';try{state.permissions=JSON.parse(sessionStorage.getItem('coach_permissions')||'{}')}catch(e){state.permissions={}};
+ safeInit('dashboard-buttons',function(){
+  var newEventBtn=$('#newEventBtn'),cancelEventBtn=$('#cancelEventBtn'),saveEventBtn=$('#saveEventBtn');
+  if(newEventBtn)newEventBtn.onclick=function(){openEditor(null)};
+  if(cancelEventBtn)cancelEventBtn.onclick=function(){$('#eventEditor').classList.add('hidden')};
+  if(saveEventBtn)saveEventBtn.onclick=saveEvent;
+  var savePrizeBtn=$('#savePrizeBtn');
+  if(savePrizeBtn)savePrizeBtn.onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(err){toast(err.message,1)})};
+  var logoutBtn=$('#coachLogout');
+  if(logoutBtn)logoutBtn.onclick=function(){['coach_token','coach_name','coach_master','coach_permissions'].forEach(sessionRemove);location.reload()};
+  var refreshFeedbackBtn=$('#refreshFeedbackBtn');
+  if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
+ });
+ state.token=sessionGet('coach_token');state.name=sessionGet('coach_name');state.isMaster=sessionGet('coach_master')==='1';
+ try{state.permissions=JSON.parse(sessionGet('coach_permissions')||'{}')}catch(err){state.permissions={}}
  if(state.token){
-  $('#coachLogin').classList.add('hidden');$('#coachDashboard').classList.remove('hidden');
-  $('#coachName').textContent=state.name;renderCoachRoleBadge();
-  applyPermissions();
-  Promise.resolve().then(function(){return api().checkBackendVersion?api().checkBackendVersion():null;}).then(function(){return load();}).then(function(){
-    if(state.isMaster)loadCoaches();
-    if(state.isMaster || state.permissions.events)loadCamps();
-    if(state.isMaster || state.permissions.officials)loadOfficials();
-    if(state.isMaster || state.permissions.feedback)loadFeedback();
-   }).catch(function(e){
-    var msg=e.message||'بارگذاری پنل ناموفق بود';
-    if(/نشست|توکن|منقضی|دسترسی مسئول|حساب مربی غیرفعال/i.test(msg)){
-      ['coach_token','coach_name','coach_master','coach_permissions'].forEach(function(k){sessionStorage.removeItem(k)});
-      state.token='';state.name='';state.isMaster=false;state.permissions={};
-      $('#coachDashboard').classList.add('hidden');$('#coachLogin').classList.remove('hidden');
-    }
-    toast(msg,1);
-   });
-  }else login();
+  var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
+  if(loginPanel)loginPanel.classList.add('hidden');
+  if(dashboard)dashboard.classList.remove('hidden');
+  if(nameEl)nameEl.textContent=state.name;
+  renderCoachRoleBadge();applyPermissions();
+  Promise.resolve().then(function(){var client=api();return client&&client.checkBackendVersion?client.checkBackendVersion():null;}).then(function(){return load()}).then(function(){
+   if(state.isMaster)loadCoaches();
+   if(state.isMaster||state.permissions.events)loadCamps();
+   if(state.isMaster||state.permissions.officials)loadOfficials();
+   if(state.isMaster||state.permissions.feedback)loadFeedback();
+  }).catch(function(err){
+   var msg=err&&err.message||'بارگذاری پنل ناموفق بود';
+   if(/نشست|توکن|منقضی|دسترسی مسئول|حساب مربی غیرفعال/i.test(msg)){
+    ['coach_token','coach_name','coach_master','coach_permissions'].forEach(sessionRemove);
+    state.token='';state.name='';state.isMaster=false;state.permissions={};
+    if(dashboard)dashboard.classList.add('hidden');
+    if(loginPanel)loginPanel.classList.remove('hidden');
+   }
+   toast(msg,1);
+  });
+ }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
