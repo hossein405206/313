@@ -46,7 +46,7 @@ function roleKey(x){var key=String(x&&x.roleKey||'unregistered');return ['member
 function roleBadgeMarkup(x){var key=roleKey(x);if(key==='owner')return '';var labels={member:'عضو حلقه',official:'مسئول',coach:'مربی',unregistered:'هنوز عضو نشده'};return '<small class="member-role-badge member-role-badge--'+key+'">'+labels[key]+'</small>'}
 function avatarMarkup(url,name){
   var initial=esc((name||'ع').charAt(0));
-  return '<span class="ranking-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'');
+  return '<span class="ranking-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" style="position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;border-radius:inherit" onerror="this.remove()">':'');
 }
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
