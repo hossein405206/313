@@ -59,21 +59,28 @@ function login(){
     console.error('[CoachLogin] پاسخ ناقص یا ناسازگار از سرور',{hasResponse:!!r,keys:r&&Object.keys(r),version:r&&r.version,requestId:r&&r.requestId});
     throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ نسخهٔ منتشرشدهٔ Google Apps Script را بررسی کن.');
    }
-   loginStatus('',false);
    state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.permissions=coach.permissions||{};
    sessionSet('coach_token',state.token);sessionSet('coach_name',state.name);sessionSet('coach_master',state.isMaster?'1':'0');sessionSet('coach_permissions',JSON.stringify(state.permissions));
    var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
-   if(loginPanel)loginPanel.classList.add('hidden');
-   if(dashboard)dashboard.classList.remove('hidden');
    if(nameEl)nameEl.textContent=state.name;
    renderCoachRoleBadge();applyPermissions();
+   // Load the dashboard before hiding the login form, so a backend failure remains visible.
    await load();
+   loginStatus('',false);
+   if(loginPanel)loginPanel.classList.add('hidden');
+   if(dashboard)dashboard.classList.remove('hidden');
    if(state.isMaster)loadCoaches();
    if(state.isMaster||state.permissions.events)loadCamps();
    if(state.isMaster||state.permissions.officials)loadOfficials();
    if(state.isMaster||state.permissions.feedback)loadFeedback();
   }catch(err){
    console.error('[CoachLogin] ورود ناموفق بود',err);
+   // Roll back a partial login if dashboard initialization failed.
+   state.token='';state.name='';state.isMaster=false;state.permissions={};state.events=[];state.data=null;
+   sessionRemove('coach_token');sessionRemove('coach_name');sessionRemove('coach_master');sessionRemove('coach_permissions');
+   var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard');
+   if(loginPanel)loginPanel.classList.remove('hidden');
+   if(dashboard)dashboard.classList.add('hidden');
    var errorText=err&&err.message||'ورود ناموفق بود؛ اتصال اینترنت را بررسی کن';
    loginStatus('خطا: '+errorText,true);
    toast(errorText,1);
