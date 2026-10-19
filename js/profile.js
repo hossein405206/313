@@ -278,6 +278,7 @@
         var session = getSession();
         if (session) session.setMember(updated, updated.token);
         renderProfile(updated);
+        if (window.KanoonApp && typeof window.KanoonApp.refreshHeaderAuth === 'function') window.KanoonApp.refreshHeaderAuth();
         toast('عکس پروفایل ذخیره شد ✓');
       } catch (err) {
         console.error('Profile photo upload:', err);
