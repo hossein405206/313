@@ -181,3 +181,11 @@
 .coach-login .form-control::placeholder{color:#eef3fa!important;opacity:1!important;font-weight:600!important}
 .coach-login .form-control:focus::placeholder{color:#fff!important}
 .coach-role-badge.is-owner,.staff-role-badge.is-owner{font-weight:600!important;letter-spacing:0!important;transform:none!important}
+
+
+/* v5.36.0 — persistent, accessible feedback for coach sign-in */
+.coach-login-status{min-height:1.4em;margin:10px 0 0;color:#e7f2ff;font-size:.92rem;line-height:1.8;overflow-wrap:anywhere}
+.coach-login-status:empty{display:none}
+.coach-login-status.is-error{color:#ffb7b7;font-weight:600}
+.coach-login-status.is-success{color:#b9f5d0}
+#coachLoginForm button[type="submit"]{touch-action:manipulation}
