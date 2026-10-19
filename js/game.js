@@ -51,7 +51,12 @@
     try{
       var registration=await api().post({action:'getRingRegistration',token:member.token});
       if(!registration.registered){location.replace('ring-registration.html?required=1');return;}
-    }catch(e){say('فعلاً امکان بارگذاری بازی وجود ندارد. لطفاً کمی بعد دوباره تلاش کن.');start.disabled=true;return;}
+    }catch(e){
+      console.error('[GameBoot] getRingRegistration failed',e);
+      var detail=e&&e.message?String(e.message):'خطای ناشناخته';
+      say('خطا در بررسی ثبت‌نام: '+detail+'؛ لطفاً نسخهٔ منتشرشدهٔ بک‌اند را بررسی کن.');
+      start.disabled=true;return;
+    }
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
     setButton('شروع بازی',false);
     best=Math.max(0,Number(member.bestScore||0));
