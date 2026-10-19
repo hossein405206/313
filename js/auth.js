@@ -94,6 +94,7 @@ function normalizeDigits(value){return String(value||'').replace(/[۰-۹]/g,func
 function validPhone(p){return /^09\d{9}$/.test(normalizeDigits(p).trim());}
 function init(){
  showWisdom();
+ if(new URLSearchParams(window.location.search).get('reason')==='session-expired')toast('نشست ورودت منقضی شده؛ دوباره با شماره همراه و گذرواژه وارد شو.','error');
  var form=$('#memberForm'), name=$('#nameInput'), phone=$('#phoneInput'), password=$('#passwordInput'), btn=$('#memberSubmit');
  if(!form||!name||!phone||!password)return;
  phone.addEventListener('input',function(){phone.value=normalizeDigits(phone.value).replace(/\D/g,'').slice(0,11);});
