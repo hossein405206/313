@@ -27,7 +27,7 @@
   function avatarMarkup(url,name,roleKey){
     var initial=esc((name||'ع').charAt(0));
     var key=['member','official','coach','owner','unregistered'].indexOf(String(roleKey||''))>=0?String(roleKey):'unregistered';
-    return '<span class="leader-avatar role-ring--'+key+'"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>';
+    return '<span class="leader-avatar role-ring--'+key+'"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" style="position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;border-radius:inherit" onerror="this.remove()">':'')+'</span>';
   }
   function renderBoard(list){
     if(!board)return;
