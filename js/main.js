@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.34.0',
+    VERSION: '5.35.0',
     BACKEND_VERSION: '4.20.0-camps-attendance'
   };
 
@@ -1067,7 +1067,8 @@
     toast: Toast,
     modal: Modal,
     session: Session,
-    validate: Validate
+    validate: Validate,
+    refreshHeaderAuth: function () { App._safe('HeaderAuthRefresh', HeaderAuth); }
   };
 
 })(window, document);
