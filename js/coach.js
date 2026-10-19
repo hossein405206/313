@@ -8,6 +8,7 @@ function sessionRemove(key){try{window.sessionStorage.removeItem(key)}catch(e){}
 function normalizeDigits(v){return String(v||'').replace(/[۰-۹]/g,function(c){return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))}).replace(/[٠-٩]/g,function(c){return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))})}
 function normalizeIranMobileInput(v){var p=normalizeDigits(v).replace(/\D/g,'');if(/^00989\d{9}$/.test(p))return '0'+p.slice(4);if(/^989\d{9}$/.test(p))return '0'+p.slice(2);if(/^9\d{9}$/.test(p))return '0'+p;return p}
 function toast(m,e){var t=window.KanoonApp&&window.KanoonApp.toast;if(t)(e?t.error:t.success)(m)}
+function loginStatus(message,isError){var el=$('#coachLoginStatus');if(!el)return;el.textContent=String(message||'');el.classList.toggle('is-error',!!isError);el.classList.toggle('is-success',!!message&&!isError)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function setBusy(btn,text){if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent=text||'در حال پردازش...'}}
 function clearBusy(btn){if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'ذخیره'}}
@@ -44,9 +45,10 @@ function login(){
   if(!phoneField||!codeField){toast('فرم ورود کامل بارگذاری نشده است؛ صفحه را تازه‌سازی کن',1);return}
   var phone=normalizeIranMobileInput(phoneField.value),code=String(codeField.value||'').trim();
   phoneField.value=phone;
-  if(!/^09\d{9}$/.test(phone)){toast('شماره مربی نامعتبر است',1);return}
-  if(!code){toast('کد مربی را وارد کن',1);return}
+  if(!/^09\d{9}$/.test(phone)){loginStatus('شماره همراه را به شکل 09xxxxxxxxx وارد کن.',true);toast('شماره مربی نامعتبر است',1);return}
+  if(!code){loginStatus('کد ورود را وارد کن.',true);toast('کد مربی را وارد کن',1);return}
   var btn=f.querySelector('button[type="submit"],button');
+  loginStatus('در حال اتصال به سرور و بررسی اطلاعات…',false);
   setBusy(btn,'در حال ورود...');
   try{
    var client=api();
@@ -57,6 +59,7 @@ function login(){
     console.error('[CoachLogin] پاسخ ناقص یا ناسازگار از سرور',{hasResponse:!!r,keys:r&&Object.keys(r),version:r&&r.version,requestId:r&&r.requestId});
     throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ نسخهٔ منتشرشدهٔ Google Apps Script را بررسی کن.');
    }
+   loginStatus('',false);
    state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.permissions=coach.permissions||{};
    sessionSet('coach_token',state.token);sessionSet('coach_name',state.name);sessionSet('coach_master',state.isMaster?'1':'0');sessionSet('coach_permissions',JSON.stringify(state.permissions));
    var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
@@ -71,7 +74,9 @@ function login(){
    if(state.isMaster||state.permissions.feedback)loadFeedback();
   }catch(err){
    console.error('[CoachLogin] ورود ناموفق بود',err);
-   toast(err&&err.message||'ورود ناموفق بود؛ اتصال اینترنت را بررسی کن',1);
+   var errorText=err&&err.message||'ورود ناموفق بود؛ اتصال اینترنت را بررسی کن';
+   loginStatus('خطا: '+errorText,true);
+   toast(errorText,1);
   }finally{clearBusy(btn)}
  });
 }
