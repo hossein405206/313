@@ -70,7 +70,6 @@ function login(){
    if(loginPanel)loginPanel.classList.add('hidden');
    if(dashboard)dashboard.classList.remove('hidden');
    if(state.isMaster)loadCoaches();
-   if(state.isMaster||state.permissions.events)loadCamps();
    if(state.isMaster||state.permissions.officials)loadOfficials();
    if(state.isMaster||state.permissions.feedback)loadFeedback();
   }catch(err){
