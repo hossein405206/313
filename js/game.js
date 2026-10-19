@@ -54,7 +54,14 @@
     }catch(e){
       console.error('[GameBoot] getRingRegistration failed',e);
       var detail=e&&e.message?String(e.message):'خطای ناشناخته';
-      say('خطا در بررسی ثبت‌نام: '+detail+'؛ لطفاً نسخهٔ منتشرشدهٔ بک‌اند را بررسی کن.');
+      // Tokens expire after a limited period. Send the member to sign in again
+      // instead of presenting an outdated-session error as a backend deployment issue.
+      if(/نشست.*(?:منقضی|معتبر نیست|نامعتبر)/.test(detail)){
+        if(app()&&app().session&&typeof app().session.clearMember==='function')app().session.clearMember();
+        location.replace('login.html?return=game.html&reason=session-expired');
+        return;
+      }
+      say('خطا در بررسی ثبت‌نام: '+detail);
       start.disabled=true;return;
     }
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
@@ -89,7 +96,7 @@
     bird={x:88,y:H*.48,vy:0,r:13,wing:0};
     scoreEl.textContent=faNum(0);
     setButton('بازی آماده است',false);
-    say('عالیه! حالا روی زمین بازی لمس کن تا پرواز شروع شود.');
+    say('بازی آماده است.');
     draw();
   }
   function beginPlaying(){
