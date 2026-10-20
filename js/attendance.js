@@ -97,13 +97,19 @@
      Render
      ══════════════════════════════════════════════════════════════════════ */
 
+  function recordKey(member) {
+    var phone = String(member && member.phone || '').trim();
+    return phone || ('member:' + String(member && member.id || 'unknown'));
+  }
+
   function renderMember(member, index) {
     var phone = String(member.phone || '');
+    var key = recordKey(member);
     var fullName = (String(member.firstName || '') + ' ' + String(member.lastName || '')).trim();
     if (!fullName) fullName = phone;
 
     var initial = fullName.charAt(0) || '؟';
-    var rec = state.records[phone] || { status: '', note: '' };
+    var rec = state.records[key] || { status: '', note: '' };
 
     var presentActive = rec.status === 'present' ? 'active' : '';
     var excusedActive = rec.status === 'excused' ? 'active' : '';
@@ -112,7 +118,7 @@
     var hasStatus = rec.status ? 'has-status' : '';
 
     return ''
-      + '<div class="att-item ' + hasStatus + '" data-phone="' + escapeHtml(phone) + '">'
+      + '<div class="att-item ' + hasStatus + '" data-phone="' + escapeHtml(phone) + '" data-record-key="' + escapeHtml(key) + '">'
       +   '<button type="button" class="att-remove" title="حذف عضو">×</button><div class="att-item__header">'
       +     '<div class="att-item__avatar">' + escapeHtml(initial) + '</div>'
       +     '<div class="att-item__name">' + escapeHtml(fullName) + '</div>'
@@ -167,6 +173,7 @@
     for (var i = 0; i < items.length; i++) {
       (function (item) {
         var phone = item.getAttribute('data-phone');
+        var key = item.getAttribute('data-record-key') || phone;
         var btnGroup = item.querySelector('.att-item__status');
         var noteInput = item.querySelector('.att-item__note');
 
@@ -178,11 +185,11 @@
             var status = btn.getAttribute('data-status');
 
             // toggle
-            var oldStatus = state.records[phone] ? state.records[phone].status : '';
+            var oldStatus = state.records[key] ? state.records[key].status : '';
             if (oldStatus === status) status = '';
 
-            if (!state.records[phone]) state.records[phone] = { status: '', note: '' };
-            state.records[phone].status = status;
+            if (!state.records[key]) state.records[key] = { status: '', note: '' };
+            state.records[key].status = status;
 
             // آپدیت UI
             var buttons = btnGroup.querySelectorAll('.att-status-btn');
@@ -199,8 +206,8 @@
         // تغییر توضیحات
         if (noteInput) {
           noteInput.addEventListener('input', function () {
-            if (!state.records[phone]) state.records[phone] = { status: '', note: '' };
-            state.records[phone].note = noteInput.value;
+            if (!state.records[key]) state.records[key] = { status: '', note: '' };
+            state.records[key].note = noteInput.value;
           });
         }
       })(items[i]);
@@ -317,9 +324,9 @@
 
     btn.addEventListener('click', function () {
       for (var i = 0; i < state.members.length; i++) {
-        var phone = String(state.members[i].phone || '');
-        if (!state.records[phone]) state.records[phone] = { status: '', note: '' };
-        state.records[phone].status = 'present';
+        var key = recordKey(state.members[i]);
+        if (!state.records[key]) state.records[key] = { status: '', note: '' };
+        state.records[key].status = 'present';
       }
       renderList();
       toast('همه حاضر شدن ✓');
@@ -352,7 +359,7 @@
       for (var i = 0; i < state.members.length; i++) {
         var m = state.members[i];
         var phone = String(m.phone || '');
-        var rec = state.records[phone];
+        var rec = state.records[recordKey(m)];
         if (!rec || !rec.status) continue;
 
         var fullName = (String(m.firstName || '') + ' ' + String(m.lastName || '')).trim() || phone;
