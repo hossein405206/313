@@ -26,6 +26,7 @@ var CFG = {
   DRIVE_FOLDER_ID: '1D0UJh3swn-wXDfn0rGORpZh9hWqO00xd',
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
+  MEMBER_TOKEN_TTL_MS: 1000 * 60 * 60 * 24 * 365 * 100,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
   MASTER_COACH_NAME: 'مربی ارشد'
 };
@@ -62,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.21.0-camps-attendance';
+var APP_VERSION = '4.22.0-member-persistent-session';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1047,7 +1048,7 @@ function issueToken(role, subject, isMaster, permissions) {
   var payload = {
     r: role,
     s: subject,
-    exp: Date.now() + CFG.TOKEN_TTL_MS,
+    exp: Date.now() + (role === 'member' ? CFG.MEMBER_TOKEN_TTL_MS : CFG.TOKEN_TTL_MS),
     n: Utilities.getUuid(),
     m: !!isMaster,
     p: permissions || (role === 'coach' ? allCoachPermissions() : {})
@@ -1069,8 +1070,18 @@ function requireToken(token, roles) {
   try { payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString()); }
   catch (e) { throw new Error('نشست نامعتبر است'); }
 
-  if (!payload.exp || Date.now() > Number(payload.exp)) throw new Error('نشست منقضی شده');
+  // Member sessions intentionally persist; staff sessions remain time-limited.
+  // Existing signed member tokens continue to work after their old 12-hour exp.
+  if (payload.r !== 'member' && (!payload.exp || Date.now() > Number(payload.exp))) throw new Error('نشست منقضی شده');
   if (roles.indexOf(payload.r) < 0) throw new Error('دسترسی کافی نیست');
+
+  // Persistent member tokens must still respect the account's current active status.
+  if (payload.r === 'member') {
+    var currentMember = findMemberByPhone(String(payload.s || ''), true);
+    if (!currentMember || !truthy(currentMember.active)) {
+      throw new Error('حساب این شماره همراه غیرفعال است؛ با مربی حلقه تماس بگیر');
+    }
+  }
 
   // لغو فوری دسترسی مسئولان و مربیان غیرفعال‌شده یا تغییرکرده.
   if (payload.r === 'attendance' || payload.r === 'supervision') {

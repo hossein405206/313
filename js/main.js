@@ -16,8 +16,9 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.41.0',
-    BACKEND_VERSION: '4.20.0-camps-attendance'
+    VERSION: '5.42.0',
+    BACKEND_VERSION: '4.22.0-member-persistent-session',
+    BACKEND_COMPATIBLE_VERSIONS: ['4.20.0-camps-attendance', '4.21.0-camps-attendance']
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -168,7 +169,7 @@
 
     checkBackendVersion: async function () {
       var result = await Api.get({ action: 'ping' });
-      if (!result || result.version !== CONFIG.BACKEND_VERSION) {
+      if (!result || (result.version !== CONFIG.BACKEND_VERSION && CONFIG.BACKEND_COMPATIBLE_VERSIONS.indexOf(result.version) < 0)) {
         var actual = result && result.version ? 'نسخه فعلی: ' + result.version : 'نسخه سرور مشخص نیست';
         throw new Error('بک‌اند سایت به‌روز نشده است (' + actual + '). فایل apps-script/Code.gs را با نسخه جدید جایگزین و Deploy را با New version منتشر کن.');
       }

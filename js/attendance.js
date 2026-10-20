@@ -161,7 +161,7 @@
 
   function attachListEvents() {
     var removeBtns = $$('.att-remove');
-    for (var rb = 0; rb < removeBtns.length; rb++) { (function(btn){ btn.addEventListener('click', async function(){ var item=btn.closest('.att-item'); var id=(state.members.find(function(m){return String(m.phone)===String(item.getAttribute('data-phone'))})||{}).id; if(!id)return; if(!confirm('این عضو از فهرست حذف شود؟'))return; var api=getAPI(); try{await api.post({action:'deleteMember',token:state.official.token,id:id}); toast('عضو حذف شد ✓'); await loadMembers();}catch(e){toast(e.message||'خطا در حذف','error');} });})(removeBtns[rb]); }
+    for (var rb = 0; rb < removeBtns.length; rb++) { (function(btn){ btn.addEventListener('click', async function(){ var item=btn.closest('.att-item'); var id=(state.members.find(function(m){return String(m.phone)===String(item.getAttribute('data-phone'))})||{}).id; if(!id)return; if(!confirm('توجه: با حذف این عضو از فهرست، حساب ورود او هم غیرفعال می‌شود و تا فعال‌سازی مجدد نمی‌تواند وارد سایت شود. ادامه می‌دهی؟'))return; var api=getAPI(); try{await api.post({action:'deleteMember',token:state.official.token,id:id}); toast('حساب عضو غیرفعال شد ✓'); await loadMembers();}catch(e){toast(e.message||'خطا در حذف','error');} });})(removeBtns[rb]); }
 
     var items = $$('.att-item');
     for (var i = 0; i < items.length; i++) {
