@@ -62,7 +62,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.20.0-camps-attendance';
+var APP_VERSION = '4.21.0-camps-attendance';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1247,15 +1247,33 @@ function verifyLoginCode() {
 /* -------------------------------------------------------------------------- */
 
 function addMember(p) {
+  // حضور و غیاب فقط به نام عضو نیاز دارد؛ ورودی قدیمی نیز برای سازگاری پشتیبانی می‌شود.
+  var fullName = String(p.name || '').trim();
   var first = String(p.firstName || '').trim();
   var last = String(p.lastName || '').trim();
   var phone = normalizeIranMobile_(p.phone || '');
 
-  if (!first || !last) throw new Error('نام و نام خانوادگی الزامی است');
-  if (first.length > 60 || last.length > 80) throw new Error('نام یا نام خانوادگی بیش از حد طولانی است');
-  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  if (fullName) {
+    var parts = fullName.split(/\s+/);
+    first = parts.shift() || '';
+    last = parts.join(' ');
+  } else {
+    fullName = (first + ' ' + last).trim();
+  }
 
-  if (findMemberByPhone(phone, true)) throw new Error('این عضو قبلاً وجود دارد');
+  if (!fullName) throw new Error('نام عضو را وارد کن');
+  if (fullName.length > 140 || first.length > 60 || last.length > 80) {
+    throw new Error('نام عضو بیش از حد طولانی است');
+  }
+  if (phone && !/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+
+  var existing = getSheetObjects('اعضا').some(function(row) {
+    if (!truthy(row.active)) return false;
+    if (phone && normalizeMemberPhone(row.phone) === phone) return true;
+    var existingName = String(row.name || ((row.firstName || '') + ' ' + (row.lastName || '')).trim()).trim();
+    return !phone && existingName.toLocaleLowerCase() === fullName.toLocaleLowerCase();
+  });
+  if (existing) throw new Error(phone ? 'این عضو قبلاً وجود دارد' : 'عضوی با این نام قبلاً ثبت شده است');
 
   var m = addMemberInternal({
     firstName: first,

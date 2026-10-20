@@ -278,9 +278,7 @@
         await api.post({
           action: 'addMember',
           token: official.token,
-          firstName: $('#memberFirst').value.trim(),
-          lastName: $('#memberLast').value.trim(),
-          phone: $('#memberPhone').value.trim()
+          name: $('#memberName').value.trim()
         });
         toast('عضو اضافه شد ✓');
         form.reset();
