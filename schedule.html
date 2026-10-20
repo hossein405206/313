@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#14243b"><title>برنامه هفتگی | حلقه شهید هادی ذوالفقاری</title><link rel="stylesheet" href="css/style.css?v=5.40.0"><style>
+<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#14243b"><title>برنامه هفتگی | حلقه شهید هادی ذوالفقاری</title><link rel="stylesheet" href="css/style.css?v=5.41.0"><style>
 .schedule-filters{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;margin-bottom:8px;scrollbar-width:none}
 .schedule-filters::-webkit-scrollbar{display:none}
 .schedule-filter{flex:0 0 auto;border:1px solid #dce5ec;border-radius:999px;background:#fff;color:#607184;padding:9px 14px;font:800 .68rem Vazirmatn;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
@@ -7,8 +7,43 @@
 .schedule-card--game{border-color:rgba(13,148,136,.2)}
 .schedule-cat-ring{background:#dbeafe!important;color:#1d4ed8!important}
 .schedule-cat-game{background:#ccfbf1!important;color:#0f766e!important}
-</style>  <link rel="stylesheet" href="css/islamic-design.css?v=5.40.0">
-</head><body><div class="app-container"><header class="app-header"><a href="index.html" class="header-back">←</a><div class="header-brand"><div><strong>مسجد امام رضا (ع)</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header><main class="page schedule-page"><div class="section-heading"><div><span>WEEKLY PLAN</span><h2>برنامه هفتگی</h2></div></div><div class="schedule-filters" role="group" aria-label="فیلتر دسته برنامه"><button type="button" class="schedule-filter is-active" data-schedule-filter="همه">همه</button><button type="button" class="schedule-filter" data-schedule-filter="حلقه">برنامه‌های حلقه</button><button type="button" class="schedule-filter" data-schedule-filter="بازی">برنامه‌های بازی</button></div><div id="scheduleList" class="schedule-list"><div class="event-loading"><span></span><p>در حال بارگذاری برنامه...</p></div></div></main><nav class="bottom-nav"></nav></div><script src="js/main.js?v=5.40.0" defer></script><script>
+
+/* v5.41.0 — بازطراحی حرفه‌ای برنامه هفتگی */
+.schedule-page{padding-top:22px}
+.schedule-page .section-heading{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px;padding:18px 18px 17px;border-radius:24px;background:linear-gradient(135deg,#182b45 0%,#243e5b 58%,#31536b 100%);border:1px solid rgba(212,164,56,.35);box-shadow:0 12px 26px rgba(15,24,40,.16);position:relative;overflow:hidden}
+.schedule-page .section-heading:after{content:"";position:absolute;left:-24px;bottom:-54px;width:150px;height:150px;border:1px solid rgba(229,197,106,.2);border-radius:50%;box-shadow:0 0 0 18px rgba(229,197,106,.035),0 0 0 36px rgba(229,197,106,.025);pointer-events:none}
+.schedule-page .section-heading span{display:inline-flex;align-items:center;gap:7px;color:#e5c56a;font-size:.62rem;font-weight:800;letter-spacing:2px;margin-bottom:5px}
+.schedule-page .section-heading h2{color:#fff9e9;font-size:1.34rem;font-weight:900;line-height:1.45;letter-spacing:-.3px}
+.schedule-filters{display:flex;gap:8px;overflow-x:auto;padding:5px 2px 12px;margin:0 -2px 10px;scrollbar-width:none;scroll-snap-type:x proximity}
+.schedule-filters::-webkit-scrollbar{display:none}
+.schedule-filter{flex:0 0 auto;scroll-snap-align:start;border:1px solid #e2d8c4;border-radius:14px;background:rgba(255,255,255,.72);color:#566477;padding:10px 15px;font:800 .75rem Vazirmatn,sans-serif;cursor:pointer;transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.schedule-filter:active{transform:scale(.97)}
+.schedule-filter:focus-visible{outline:3px solid rgba(212,164,56,.45);outline-offset:2px}
+.schedule-filter.is-active{background:linear-gradient(135deg,#1e2f4a,#304c6c);border-color:#d4a438;color:#fff7e2;box-shadow:0 6px 14px rgba(30,47,74,.18),inset 0 1px 0 rgba(255,255,255,.12)}
+.schedule-list{display:grid;gap:12px;margin-top:4px}
+.schedule-card{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 72px;align-items:stretch;gap:12px;padding:15px;border:1px solid rgba(30,47,74,.09);border-radius:21px;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(255,252,244,.94));box-shadow:0 5px 14px rgba(30,47,74,.055),0 1px 2px rgba(30,47,74,.04);overflow:hidden;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.schedule-card:before{content:"";position:absolute;inset:0 0 0 auto;width:3px;background:linear-gradient(180deg,#d4a438,#f0d98d);opacity:.9}
+.schedule-card--ring{border-color:rgba(37,99,235,.12)}
+.schedule-card--game{border-color:rgba(13,148,136,.16)}
+.schedule-card--ring:before{background:linear-gradient(180deg,#5b8bd8,#b9d3ff)}
+.schedule-card--game:before{background:linear-gradient(180deg,#0f9488,#8be2d2)}
+.schedule-card-content{grid-column:1;grid-row:1;min-width:0;align-self:center;padding:1px 0}
+.schedule-card h3{font-size:.94rem;line-height:1.85;font-weight:900;color:#1e2f4a;margin:7px 0 3px;overflow-wrap:anywhere}
+.schedule-card p{font-size:.74rem;line-height:1.8;color:#778294;margin-top:4px;display:flex;align-items:flex-start;gap:5px}
+.schedule-card p:before{content:"⌖";color:#b8882a;font-size:.9rem;line-height:1.5;flex:0 0 auto}
+.schedule-day{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:center;align-self:stretch;min-height:80px;padding:10px 7px;border-radius:15px;background:linear-gradient(160deg,#f8edcf,#f2e3b7);border:1px solid rgba(184,136,42,.19);color:#75541d;font-size:.79rem;font-weight:900;text-align:center;line-height:1.7;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.schedule-category{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:4px 8px;font-size:.65rem;font-weight:900;letter-spacing:-.1px}
+.schedule-category:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.8}
+.schedule-cat-ring{background:#eaf1ff!important;color:#2858a4!important}
+.schedule-cat-game{background:#e1f7f1!important;color:#08786c!important}
+.schedule-empty{padding:28px 18px;border:1px dashed #d7c8a7;border-radius:22px;background:rgba(255,255,255,.55);text-align:center}
+.schedule-empty strong{display:block;color:#263b55;font-size:.9rem;font-weight:900;margin-bottom:7px}
+.schedule-empty p{color:#7a8699;font-size:.77rem;line-height:1.9}
+@media(min-width:420px){.schedule-list{gap:14px}.schedule-card{padding:17px;grid-template-columns:minmax(0,1fr) 82px}.schedule-day{font-size:.83rem}.schedule-card h3{font-size:1rem}}
+@media(hover:hover){.schedule-card:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(30,47,74,.09);border-color:rgba(184,136,42,.28)}.schedule-filter:hover:not(.is-active){background:#fff;border-color:#cdb77e}}
+@media(prefers-reduced-motion:reduce){.schedule-card,.schedule-filter{transition:none}}
+</style>  <link rel="stylesheet" href="css/islamic-design.css?v=5.41.0">
+</head><body><div class="app-container"><header class="app-header"><a href="index.html" class="header-back">←</a><div class="header-brand"><div><strong>مسجد امام رضا (ع)</strong><small>حلقه شهید هادی ذوالفقاری</small></div></div></header><main class="page schedule-page"><div class="section-heading"><div><span>WEEKLY PLAN</span><h2>برنامه هفتگی</h2></div></div><div class="schedule-filters" role="group" aria-label="فیلتر دسته برنامه"><button type="button" class="schedule-filter is-active" data-schedule-filter="همه">همه</button><button type="button" class="schedule-filter" data-schedule-filter="حلقه">برنامه‌های حلقه</button><button type="button" class="schedule-filter" data-schedule-filter="بازی">برنامه‌های بازی</button></div><div id="scheduleList" class="schedule-list"><div class="event-loading"><span></span><p>در حال بارگذاری برنامه...</p></div></div></main><nav class="bottom-nav"></nav></div><script src="js/main.js?v=5.41.0" defer></script><script>
 (function(){
 'use strict';
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
