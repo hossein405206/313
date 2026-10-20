@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.38.0',
+    VERSION: '5.39.0',
     BACKEND_VERSION: '4.20.0-camps-attendance'
   };
 

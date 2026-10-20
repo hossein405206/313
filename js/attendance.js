@@ -240,9 +240,61 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   function setupMemberModal() {
-    var btn=$('#addMemberBtn'), modal=$('#memberModal'), form=$('#memberForm'); if(!btn||!modal||!form)return;
-    btn.addEventListener('click',function(){Modal.open(modal)}); modal.addEventListener('click',function(e){if(e.target===modal||e.target.hasAttribute('data-close-modal'))Modal.close(modal)});
-    form.addEventListener('submit',async function(e){e.preventDefault();var api=getAPI();try{await api.post({action:'addMember',token:state.official.token,firstName:$('#memberFirst').value.trim(),lastName:$('#memberLast').value.trim(),phone:$('#memberPhone').value.trim()});toast('عضو اضافه شد ✓');form.reset();Modal.close(modal);loadMembers()}catch(err){toast(err.message||'خطا در افزودن','error')}});
+    var btn = $('#addMemberBtn');
+    var modal = $('#memberModal');
+    var form = $('#memberForm');
+    var modalApi = window.KanoonApp && window.KanoonApp.modal;
+    if (!btn || !modal || !form || !modalApi) return;
+
+    btn.addEventListener('click', function () {
+      modalApi.open(modal);
+    });
+
+    modal.addEventListener('click', function (e) {
+      var closeButton = e.target.closest ? e.target.closest('[data-close-modal]') : null;
+      if (e.target === modal || closeButton) modalApi.close(modal);
+    });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var api = getAPI();
+      var official = state.official;
+      if (!api) {
+        toast('اتصال به سرور آماده نیست', 'error');
+        return;
+      }
+      if (!official || !official.token) {
+        toast('نشست مسئول معتبر نیست؛ دوباره وارد شو', 'error');
+        return;
+      }
+
+      var submitButton = form.querySelector('button[type="submit"], button:not([type])');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'در حال افزودن...';
+      }
+
+      try {
+        await api.post({
+          action: 'addMember',
+          token: official.token,
+          firstName: $('#memberFirst').value.trim(),
+          lastName: $('#memberLast').value.trim(),
+          phone: $('#memberPhone').value.trim()
+        });
+        toast('عضو اضافه شد ✓');
+        form.reset();
+        modalApi.close(modal);
+        await loadMembers();
+      } catch (err) {
+        toast(err.message || 'خطا در افزودن عضو', 'error');
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'افزودن';
+        }
+      }
+    });
   }
 
   function setupSearch() {

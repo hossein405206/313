@@ -2878,3 +2878,10 @@ p, .section-subtitle, .form-help, .form-hint, .home-event-overlay p { font-famil
 }
 .home-wisdom__arabic{min-height:2.1em;overflow-wrap:anywhere;}
 @media(prefers-reduced-motion:reduce){.home-wisdom__arabic.is-typing::after{animation:none;opacity:1}}
+
+
+/* v5.39.0 — اصلاح لایه‌بندی و اسکرول منوی همبرگری در صفحهٔ اصلی */
+.home-app .drawer-backdrop{z-index:1200}
+.home-app .app-drawer{z-index:1210;top:0;bottom:0;height:auto;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:calc(24px + env(safe-area-inset-top, 0px));padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
+.home-app .drawer-links{flex:0 0 auto}
+.home-app .drawer-bottom{position:static;flex:0 0 auto;margin-top:14px;padding-top:12px}
