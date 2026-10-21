@@ -351,7 +351,7 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
   if (action === 'getAttendanceForDate') {
     requireCoachPermission(p.token, 'reports');
     var requestedDate = String(p.date || '').trim();
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(requestedDate)) throw new Error('تاریخ انتخاب‌شده معتبر نیست');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) throw new Error('تاریخ انتخاب‌شده معتبر نیست');
     if (requestedDate > currentDate()) throw new Error('گزارش آینده قابل مشاهده نیست');
     return { ok:true, date:requestedDate, items:attendanceForDate(requestedDate) };
   }
