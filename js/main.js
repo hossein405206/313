@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.47.2',
+    VERSION: '5.47.3',
     BACKEND_VERSION: '4.24.0-school-schedule-attendance',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
@@ -102,14 +102,22 @@
     function format(iso){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||''));if(!m)return '';try{var j=jdn2j(g2jdn(+m[1],+m[2],+m[3]));return fa(j.jy+'/'+pad(j.jm)+'/'+pad(j.jd));}catch(e){return String(iso||'');}}
     function toISO(y,m,d){var g=j2g(y,m,d);return g.gy+'-'+pad(g.gm)+'-'+pad(g.gd);}
     function today(){var d=new Date(),j=jdn2j(g2jdn(d.getFullYear(),d.getMonth()+1,d.getDate()));return {y:j.jy,m:j.jm,d:j.jd,iso:toISO(j.jy,j.jm,j.jd)};}
+    function addDaysISO(iso,days){var p=String(iso).split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+days);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+    function configureRange(input){var t=today(),id=input.id;
+      if(id==='attendanceArchiveDate'||id==='activityReportDate'){input.max=t.iso;}
+      else if(id==='campDeadline'){input.min=t.iso;input.max=addDaysISO(t.iso,366);}
+      else if(id==='eventDate'){input.max=addDaysISO(t.iso,366);}
+      if(input.max&&input.value&&input.value>input.max)input.value=input.max;
+    }
+    function jalaliYear(iso){var m=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(String(iso||''));if(!m)return null;try{return jdn2j(g2jdn(+m[1],+m[2],+m[3])).jy;}catch(e){return null;}}
     function setup(){
-      var inputs=Array.prototype.slice.call(document.querySelectorAll('input[type="date"]:not([data-jalali-ready])'));if(!inputs.length)return;
+      var inputs=Array.prototype.slice.call(document.querySelectorAll('input[type="date"]:not([data-jalali-ready])'));if(!inputs.length)return;inputs.forEach(configureRange);
       var overlay=document.createElement('div');overlay.className='jalali-global-overlay';overlay.hidden=true;overlay.innerHTML='<section class="jalali-global-card" role="dialog" aria-modal="true" aria-label="انتخاب تاریخ شمسی"><header><div><small>تقویم شمسی</small><h3 id="jalaliGlobalTitle">سال را انتخاب کنید</h3></div><button type="button" class="jalali-global-close" aria-label="بستن">×</button></header><p class="jalali-global-summary">انتخاب مرحله‌ای سال، ماه و روز</p><div class="jalali-global-years"></div><div class="jalali-global-months" hidden></div><div class="jalali-global-days" hidden></div><footer><button type="button" class="jalali-global-back" hidden>مرحله قبل</button><button type="button" class="jalali-global-cancel">انصراف</button><button type="button" class="jalali-global-confirm" disabled>تأیید تاریخ</button></footer></section>';document.body.appendChild(overlay);
       var title=overlay.querySelector('#jalaliGlobalTitle'),summary=overlay.querySelector('.jalali-global-summary'),years=overlay.querySelector('.jalali-global-years'),mbox=overlay.querySelector('.jalali-global-months'),dbox=overlay.querySelector('.jalali-global-days'),back=overlay.querySelector('.jalali-global-back'),confirm=overlay.querySelector('.jalali-global-confirm'),active=null,stage='year',chosen=null;
       function close(){overlay.hidden=true;active=null;}overlay.querySelector('.jalali-global-close').onclick=close;overlay.querySelector('.jalali-global-cancel').onclick=close;overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
       function allowed(iso){return (!active.min||iso>=active.min)&&(!active.max||iso<=active.max);}
       function render(){years.hidden=stage!=='year';mbox.hidden=stage!=='month';dbox.hidden=stage!=='day';back.hidden=stage==='year';confirm.disabled=!(chosen&&chosen.iso&&allowed(chosen.iso));
-        if(stage==='year'){title.textContent='ابتدا سال را انتخاب کنید';summary.textContent='سال شمسی موردنظر را انتخاب کنید';years.innerHTML='';for(var y=1500;y>=1300;y--){var b=document.createElement('button');b.type='button';b.textContent=fa(y);if(chosen&&chosen.y===y)b.classList.add('selected');b.onclick=function(yy){return function(){chosen={y:yy,m:0,d:0,iso:''};stage='month';render();};}(y);years.appendChild(b);}}
+        if(stage==='year'){title.textContent='ابتدا سال را انتخاب کنید';summary.textContent='سال شمسی موردنظر را انتخاب کنید';years.innerHTML='';var minYear=active.min?jalaliYear(active.min):1300,maxYear=active.max?jalaliYear(active.max):1498;if(minYear===null)minYear=1300;if(maxYear===null)maxYear=1498;minYear=Math.max(1300,minYear);maxYear=Math.min(1498,maxYear);for(var y=maxYear;y>=minYear;y--){var b=document.createElement('button');b.type='button';b.textContent=fa(y);if(chosen&&chosen.y===y)b.classList.add('selected');b.onclick=function(yy){return function(){chosen={y:yy,m:0,d:0,iso:''};stage='month';render();};}(y);years.appendChild(b);}}
         else if(stage==='month'){title.textContent='حالا ماه را انتخاب کنید';summary.textContent='سال انتخاب‌شده: '+fa(chosen.y);mbox.innerHTML='';monthNames.forEach(function(label,i){var b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=function(){chosen.m=i+1;chosen.d=0;chosen.iso='';stage='day';render();};mbox.appendChild(b);});}
         else{title.textContent='روز را انتخاب کنید';summary.textContent=monthNames[chosen.m-1]+' '+fa(chosen.y);dbox.innerHTML='';var first=j2g(chosen.y,chosen.m,1),offset=(new Date(first.gy,first.gm-1,first.gd).getDay()+1)%7,limit=chosen.m<=6?31:(chosen.m<=11?30:(jalCal(chosen.y).leap===0?30:29));['ش','ی','د','س','چ','پ','ج'].forEach(function(w){var s=document.createElement('span');s.className='weekday';s.textContent=w;dbox.appendChild(s);});for(var z=0;z<offset;z++){var blank=document.createElement('span');blank.className='blank';dbox.appendChild(blank);}for(var d=1;d<=limit;d++){var iso=toISO(chosen.y,chosen.m,d),btn=document.createElement('button');btn.type='button';btn.textContent=fa(d);if(!allowed(iso))btn.disabled=true;if(chosen.d===d)btn.classList.add('selected');btn.onclick=function(dd,ii){return function(){chosen.d=dd;chosen.iso=ii;render();};}(d,iso);dbox.appendChild(btn);}}
       }
