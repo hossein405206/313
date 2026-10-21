@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.47.3',
+    VERSION: '5.47.4',
     BACKEND_VERSION: '4.24.0-school-schedule-attendance',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
@@ -106,7 +106,7 @@
     function configureRange(input){var t=today(),id=input.id;
       if(id==='attendanceArchiveDate'||id==='activityReportDate'){input.max=t.iso;}
       else if(id==='campDeadline'){input.min=t.iso;input.max=addYearsISO(t.iso,1);}
-      else if(id==='eventDate'){input.max=addDaysISO(t.iso,366);}
+      else if(id==='eventDate'){input.max=addYearsISO(t.iso,1);}
       if(input.max&&input.value&&input.value>input.max)input.value=input.max;
     }
     function jalaliYear(iso){var m=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(String(iso||''));if(!m)return null;try{return jdn2j(g2jdn(+m[1],+m[2],+m[3])).jy;}catch(e){return null;}}
