@@ -102,10 +102,10 @@
     function format(iso){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||''));if(!m)return '';try{var j=jdn2j(g2jdn(+m[1],+m[2],+m[3]));return fa(j.jy+'/'+pad(j.jm)+'/'+pad(j.jd));}catch(e){return String(iso||'');}}
     function toISO(y,m,d){var g=j2g(y,m,d);return g.gy+'-'+pad(g.gm)+'-'+pad(g.gd);}
     function today(){var d=new Date(),j=jdn2j(g2jdn(d.getFullYear(),d.getMonth()+1,d.getDate()));return {y:j.jy,m:j.jm,d:j.jd,iso:toISO(j.jy,j.jm,j.jd)};}
-    function addDaysISO(iso,days){var p=String(iso).split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+days);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+    function addYearsISO(iso,years){var p=String(iso).split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setFullYear(d.getFullYear()+years);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
     function configureRange(input){var t=today(),id=input.id;
       if(id==='attendanceArchiveDate'||id==='activityReportDate'){input.max=t.iso;}
-      else if(id==='campDeadline'){input.min=t.iso;input.max=addDaysISO(t.iso,366);}
+      else if(id==='campDeadline'){input.min=t.iso;input.max=addYearsISO(t.iso,1);}
       else if(id==='eventDate'){input.max=addDaysISO(t.iso,366);}
       if(input.max&&input.value&&input.value>input.max)input.value=input.max;
     }
