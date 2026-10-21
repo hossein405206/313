@@ -18,7 +18,7 @@
     DEBUG: false,
     VERSION: '5.44.0',
     BACKEND_VERSION: '4.23.0-attendance-history',
-    BACKEND_COMPATIBLE_VERSIONS: ['4.22.0-member-persistent-session']
+    BACKEND_COMPATIBLE_VERSIONS: []
   };
 
   /* ══════════════════════════════════════════════════════════════════════
