@@ -312,7 +312,7 @@ function loadSchedule(){
 function renderCamps(items){
  var box=$('#campsAdmin');if(!box)return;
  box.innerHTML=items.length?items.map(function(c){
-  var cost=Number(c.cost||0),deadline=esc(c.registrationDeadline||'مهلت مشخص نشده');
+  var cost=Number(c.cost||0),deadline=esc(c.registrationDeadline?(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(c.registrationDeadline):c.registrationDeadline):'مهلت مشخص نشده');
   return '<div class="admin-item camp-admin-item"><div class="admin-item-main"><strong>'+esc(c.title)+'</strong><small>شماره کارت: '+esc(c.cardNumber||'ثبت نشده')+' · هزینه: '+(cost?cost.toLocaleString('fa-IR')+' تومان':'بدون هزینه')+' · پایان ثبت‌نام: '+deadline+'</small></div><div class="admin-actions"><button class="danger" data-camp-delete="'+esc(c.id)+'">حذف اردو</button></div></div>';
  }).join(''):'<div class="empty"><p>اردوی فعالی ثبت نشده است.</p></div>';
  box.querySelectorAll('[data-camp-delete]').forEach(function(b){b.onclick=function(){var id=b.dataset.campDelete;if(!confirm('این اردو از فهرست ثبت‌نام برداشته شود؟'))return;api().post({action:'deleteCamp',token:state.token,id:id}).then(function(){toast('اردو از فهرست ثبت‌نام حذف شد ✓');loadCamps()}).catch(function(e){toast(e.message||'حذف اردو ناموفق بود',1)})}});
@@ -359,7 +359,7 @@ function loadFeedback(){
   box.innerHTML=items.map(function(x){
    var status=String(x.status||'جدید');
    var statusOptions=['جدید','در حال بررسی','بررسی شد'].map(function(v){return '<option value="'+esc(v)+'" '+(status===v?'selected':'')+'>'+esc(v)+'</option>'}).join('');
-   return '<article class="feedback-item"><div class="feedback-item__top"><div><strong>'+esc(x.category||'سایر')+'</strong><small>'+esc(x.name||'بدون نام')+(x.phone?' · '+esc(x.phone):'')+'</small></div><time>'+esc(x.createdAt||'')+'</time></div><p>'+esc(x.message||'')+'</p><div class="feedback-item__actions"><label>وضعیت <select class="form-control" data-feedback-status data-id="'+esc(x.id)+'">'+statusOptions+'</select></label></div></article>';
+   return '<article class="feedback-item"><div class="feedback-item__top"><div><strong>'+esc(x.category||'سایر')+'</strong><small>'+esc(x.name||'بدون نام')+(x.phone?' · '+esc(x.phone):'')+'</small></div><time>'+esc(x.createdAt?(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(x.createdAt):x.createdAt):'')+(String(x.createdAt||'').length>15?' '+esc(String(x.createdAt).slice(11,16)):'')+'</time></div><p>'+esc(x.message||'')+'</p><div class="feedback-item__actions"><label>وضعیت <select class="form-control" data-feedback-status data-id="'+esc(x.id)+'">'+statusOptions+'</select></label></div></article>';
   }).join('');
   box.querySelectorAll('[data-feedback-status]').forEach(function(sel){
    sel.addEventListener('change',function(){

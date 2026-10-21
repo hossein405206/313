@@ -782,12 +782,12 @@
         campFinalName: camp.title || '—',
         campFinalCost: Number(camp.cost || 0) > 0 ? money(camp.cost) : 'بدون هزینه',
         campFinalCard: camp.cardNumber || 'ثبت نشده',
-        campFinalDeadline: camp.registrationDeadline || 'اعلام نشده'
+        campFinalDeadline: camp.registrationDeadline ? (JalaliDate.format(camp.registrationDeadline) || camp.registrationDeadline) : 'اعلام نشده'
       } : {
         campInitialName: camp.title || '—',
         campInitialCost: Number(camp.cost || 0) > 0 ? money(camp.cost) : 'بدون هزینه',
         campInitialCard: camp.cardNumber || 'ثبت نشده',
-        campInitialDeadline: camp.registrationDeadline || 'اعلام نشده'
+        campInitialDeadline: camp.registrationDeadline ? (JalaliDate.format(camp.registrationDeadline) || camp.registrationDeadline) : 'اعلام نشده'
       };
       Object.keys(fields).forEach(function(id) { var el = DOM.qs('#' + id); if (el) el.textContent = fields[id]; });
     }
