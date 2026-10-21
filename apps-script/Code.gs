@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.24.0-school-schedule-attendance';
+var APP_VERSION = '4.25.0-jalali-date-limits';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1749,7 +1749,8 @@ function saveEvent(p) {
   if (rowObj.description.length > 3000) throw new Error('توضیحات رویداد نباید بیشتر از ۳۰۰۰ نویسه باشد');
   if (rowObj.label.length > 60) throw new Error('برچسب رویداد نباید بیشتر از ۶۰ نویسه باشد');
   if (rowObj.imageUrl.length > 2048 || rowObj.imageId.length > 256) throw new Error('اطلاعات تصویر رویداد بیش از حد طولانی است');
-  if (rowObj.date && !/^\d{4}-\d{2}-\d{2}$/.test(rowObj.date)) throw new Error('تاریخ رویداد معتبر نیست');
+  if (rowObj.date && !isValidIsoDate_(rowObj.date)) throw new Error('تاریخ رویداد معتبر نیست');
+  if (rowObj.date && rowObj.date > addYearsToIsoDate_(currentDate(), 1)) throw new Error('تاریخ رویداد حداکثر تا یک سال آینده قابل انتخاب است');
   if (!isFinite(rowObj.sort) || rowObj.sort < 0 || rowObj.sort > 9999) throw new Error('ترتیب نمایش رویداد معتبر نیست');
 
   if (!id) {
@@ -1935,7 +1936,8 @@ function saveActivityReport(p) {
   if (!title) throw new Error('عنوان گزارش اردو یا فعالیت را وارد کن');
   if (title.length > 160) throw new Error('عنوان گزارش نباید بیشتر از ۱۶۰ نویسه باشد');
   if (description.length > 6000) throw new Error('توضیحات گزارش بیش از حد طولانی است');
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('تاریخ گزارش معتبر نیست');
+  if (date && !isValidIsoDate_(date)) throw new Error('تاریخ گزارش معتبر نیست');
+  if (date && date > currentDate()) throw new Error('تاریخ گزارش فعالیت نمی‌تواند در آینده باشد');
   var ids = parseActivityImageIds(p.imageIds);
   ids = ids.filter(function(id, index){ return ids.indexOf(id) === index; });
   if (!ids.length) throw new Error('برای ثبت گزارش دست‌کم یک عکس انتخاب کن');
@@ -2063,7 +2065,10 @@ function saveCamp(p) {
   if (!isFinite(cost) || cost < 0 || cost > 10000000000) throw new Error('هزینه اردو معتبر نیست');
   if (cost > 0 && !/^\d{16,26}$/.test(cardNumber)) throw new Error('شماره کارت یا شبای مقصد را درست وارد کن');
   if (cost === 0) cardNumber = '';
-  if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) throw new Error('تاریخ پایان ثبت‌نام معتبر نیست');
+  if (!isValidIsoDate_(deadline)) throw new Error('تاریخ پایان ثبت‌نام معتبر نیست');
+  var today = currentDate();
+  if (deadline < today) throw new Error('تاریخ پایان ثبت‌نام نمی‌تواند در گذشته باشد');
+  if (deadline > addYearsToIsoDate_(today, 1)) throw new Error('مهلت ثبت‌نام اردو حداکثر تا یک سال آینده قابل تعیین است');
   if (deadline && deadline < currentDate()) throw new Error('تاریخ پایان ثبت‌نام نمی‌تواند در گذشته باشد');
   var sheet = getSheet('اردوها');
   var pos = id ? findRow(sheet, 'id', id) : 0;
@@ -2817,6 +2822,23 @@ function uid(prefix) {
 
 function nowIso() {
   return Utilities.formatDate(new Date(), CFG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
+}
+
+function isValidIsoDate_(value) {
+  var s = String(value || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  var p = s.split('-').map(Number);
+  var d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+  return d.getUTCFullYear() === p[0] && d.getUTCMonth() === p[1] - 1 && d.getUTCDate() === p[2];
+}
+
+function addYearsToIsoDate_(value, years) {
+  var p = String(value || '').split('-').map(Number);
+  var d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+  var month = d.getUTCMonth();
+  d.setUTCFullYear(d.getUTCFullYear() + years);
+  if (d.getUTCMonth() !== month) d.setUTCDate(0);
+  return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + d.getUTCDate()).slice(-2);
 }
 
 function currentDate() {
