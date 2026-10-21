@@ -645,7 +645,7 @@
         +   '</div>'
         +   '<div class="body">'
         +     '<h3>' + DOM.escape(ev.title) + '</h3>'
-        +     '<div class="meta"><span>' + DOM.escape(ev.date || '') + '</span></div>'
+        +     '<div class="meta"><span>' + DOM.escape(JalaliDate.format(ev.date) || ev.date || '') + '</span></div>'
         +   '</div>'
         + '</article>';
     }
