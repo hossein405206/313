@@ -53,7 +53,7 @@ var HEADERS = {
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
-  'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt','category'],
+  'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt','category','audience'],
   'بازخوردها': ['id','name','phone','category','message','status','createdAt'],
   'ثبت‌نام حلقه': ['id','memberId','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt'],
   'گزارش خطاها': ['timestamp','requestId','method','action','category','message','stack']
@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.23.0-attendance-history';
+var APP_VERSION = '4.24.0-school-schedule-attendance';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -178,7 +178,7 @@ function scheduleDayIndex(day){
 }
 function listSchedulePublic(){
   var rows=getSheetObjects('برنامه').filter(function(x){return String(x.active).toLowerCase()!=='false';});
-  rows=rows.map(function(x){x.category=(String(x.category||'حلقه')==='بازی')?'بازی':'حلقه';return x;});
+  rows=rows.map(function(x){x.category=(String(x.category||'حلقه')==='بازی')?'بازی':'حلقه';var a=String(x.audience||'').trim();x.audience=['راهنمایی','دبستان','هر دو'].indexOf(a)>=0?a:'هر دو';return x;});
   rows.sort(function(a,b){
     var ai=scheduleDayIndex(a.day),bi=scheduleDayIndex(b.day);
     if(ai<0)ai=99;if(bi<0)bi=99;
@@ -194,8 +194,10 @@ function saveSchedule(p){
   var sheet=getSheet('برنامه'), id=String(p.id||Utilities.getUuid()), rows=getSheetObjects('برنامه'), pos=findRowById('برنامه',id);
   var day=String(p.day||'').trim(),dayIndex=scheduleDayIndex(day);
   var category=String(p.category||'حلقه').trim();
+  var audience=String(p.audience||'راهنمایی').trim();
   if(category!=='حلقه'&&category!=='بازی')throw new Error('دسته برنامه را انتخاب کن');
-  var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),category:category};
+  if(['راهنمایی','دبستان','هر دو'].indexOf(audience)<0)throw new Error('گروه برنامه را انتخاب کن');
+  var obj={id:id,day:day,title:String(p.title||'').trim(),time:'',location:String(p.location||'').trim(),active:p.active!==false,sort:dayIndex<0?99:dayIndex,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),category:category,audience:audience};
   if(dayIndex<0||!obj.title)throw new Error('روز معتبر و عنوان برنامه را وارد کن');
   if(obj.title.length>120)throw new Error('عنوان برنامه نباید بیشتر از ۱۲۰ نویسه باشد');
   if(obj.location.length>160)throw new Error('مکان برنامه نباید بیشتر از ۱۶۰ نویسه باشد');
@@ -2351,7 +2353,7 @@ function saveAttendanceBatch(p) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    if (hasAttendanceDate(date)) throw new Error('حضور امروز قبلاً ثبت شده و دیگر قابل ثبت مجدد نیست');
+    // ثبت مجدد در همان روز مجاز است؛ رکورد هر عضو به‌روزرسانی می‌شود تا ردیف تکراری ساخته نشود.
 
     var sheet = getSheet('حضورغیاب');
     var activeMembers = getSheetObjects('اعضا').filter(function(m) { return truthy(m.active); });
@@ -2379,8 +2381,21 @@ function saveAttendanceBatch(p) {
     });
 
     if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
-    sheet.getRange(sheet.getLastRow() + 1, 1, values.length, 7).setValues(values);
-    return { ok:true, locked:true, count:values.length };
+    var existingData = sheet.getDataRange().getValues();
+    var headers = existingData.length ? existingData[0].map(String) : [];
+    var dateCol = headers.indexOf('date'), memberCol = headers.indexOf('memberId'), existingRows = {};
+    for (var er = 1; er < existingData.length; er++) {
+      if (String(existingData[er][dateCol] || '') !== date) continue;
+      var existingMemberId = String(existingData[er][memberCol] || '');
+      if (existingMemberId && existingRows[existingMemberId] === undefined) existingRows[existingMemberId] = er + 1;
+    }
+    var added = 0, updated = 0;
+    values.forEach(function(row) {
+      var rowNumber = existingRows[String(row[1])];
+      if (rowNumber) { sheet.getRange(rowNumber, 1, 1, 7).setValues([row]); updated++; }
+      else { sheet.appendRow(row); added++; }
+    });
+    return { ok:true, locked:true, count:values.length, added:added, updated:updated };
   } finally {
     lock.releaseLock();
   }

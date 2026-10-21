@@ -86,8 +86,26 @@ function login(){
   }finally{clearBusy(btn)}
  });
 }
+function buildAttendanceTrendFallback(rows){
+ var days=[],byDate={},now=new Date();
+ for(var offset=7;offset>=0;offset--){
+  var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-offset);
+  var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var item={date:key,present:0,excused:0,absent:0,recorded:false};days.push(item);byDate[key]=item;
+ }
+ (Array.isArray(rows)?rows:[]).forEach(function(row){
+  var key=String(row.date||'').slice(0,10),item=byDate[key];if(!item)return;
+  item.recorded=true;
+  if(row.status==='حاضر')item.present++;
+  else if(row.status==='موجه')item.excused++;
+  else if(row.status==='غیبت'||row.status==='غایب')item.absent++;
+ });
+ return days;
+}
 async function load(){
- var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderAttendanceTrend(r.attendanceTrend||[]);renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events){loadActivityReports();loadCamps();}}
+ var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];
+ var trend=Array.isArray(r.attendanceTrend)&&r.attendanceTrend.length?r.attendanceTrend:buildAttendanceTrendFallback(r.attendance||[]);
+ renderAttendanceTrend(trend);renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events){loadActivityReports();loadCamps();}}
 
 function renderAttendanceTrend(items){
  var chart=$('#attendanceTrendChart'),summary=$('#attendanceTrendSummary');if(!chart)return;

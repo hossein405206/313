@@ -90,7 +90,8 @@
   var state = {
     members: [],
     records: {}, // { phone: { status, note } }
-    official: null
+    official: null,
+    attendanceLocked: false
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -396,11 +397,9 @@
           records: records
         });
 
-        toast('حضور و غیاب ذخیره شد ✓');
-
-        // ریست
-        state.records = {};
-        renderList();
+        state.attendanceLocked = true;
+        toast('حضور و غیاب ذخیره شد ✓؛ در صورت نیاز می‌توانی وضعیت‌ها را اصلاح و دوباره ذخیره کنی');
+        await loadMembers();
 
       } catch (err) {
         console.error(err);
@@ -415,6 +414,22 @@
   /* ══════════════════════════════════════════════════════════════════════
      Load Members
      ══════════════════════════════════════════════════════════════════════ */
+
+  function updateAttendanceNotice() {
+    var notice = $('#attendanceSavedNotice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'attendanceSavedNotice';
+      notice.className = 'attendance-saved-notice';
+      var list = $('#attendanceList');
+      if (list && list.parentNode) list.parentNode.insertBefore(notice, list);
+    }
+    if (!notice) return;
+    notice.textContent = state.attendanceLocked
+      ? 'حضور و غیاب امروز قبلاً ثبت شده است؛ پنل همچنان در دسترس است و می‌توانی وضعیت‌ها را اصلاح و دوباره ذخیره کنی.'
+      : '';
+    notice.style.display = state.attendanceLocked ? 'block' : 'none';
+  }
 
   async function loadMembers() {
     var api = getAPI();
@@ -437,6 +452,21 @@
         token: official.token
       });
       state.members = res.items || [];
+      state.records = {};
+      state.attendanceLocked = false;
+      try {
+        var today = await api.post({ action: 'getAttendanceToday', token: official.token });
+        state.attendanceLocked = !!today.locked;
+        (today.items || []).forEach(function(saved) {
+          var member = state.members.find(function(m) { return String(m.id) === String(saved.memberId); });
+          if (!member) return;
+          var status = saved.status === 'حاضر' ? 'present' : (saved.status === 'موجه' ? 'excused' : 'absent');
+          state.records[recordKey(member)] = { status: status, note: saved.note || '' };
+        });
+      } catch (statusError) {
+        console.warn('Could not load today attendance state', statusError);
+      }
+      updateAttendanceNotice();
       renderList();
     } catch (err) {
       console.error(err);
