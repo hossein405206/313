@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.22.0-member-persistent-session';
+var APP_VERSION = '4.23.0-attendance-history';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -245,7 +245,7 @@ function isPostOnlyAuthenticatedReadAction_(action) {
   return [
     'listSystemErrors', 'listFeedback', 'listActivityReportsManage',
     'listCoaches', 'listOfficialsManage', 'getRingRegistration',
-    'getMyGameRole', 'listMembers', 'getAttendanceToday',
+    'getMyGameRole', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
     'listMonthlyAttendance', 'listWarnings', 'listRegistrations',
     'getDashboard'
   ].indexOf(String(action || '')) >= 0;
@@ -346,6 +346,14 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
       locked: hasAttendanceDate(date),
       items: attendanceForDate(date)
     };
+  }
+
+  if (action === 'getAttendanceForDate') {
+    requireCoachPermission(p.token, 'reports');
+    var requestedDate = String(p.date || '').trim();
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(requestedDate)) throw new Error('تاریخ انتخاب‌شده معتبر نیست');
+    if (requestedDate > currentDate()) throw new Error('گزارش آینده قابل مشاهده نیست');
+    return { ok:true, date:requestedDate, items:attendanceForDate(requestedDate) };
   }
 
   if (action === 'listMonthlyAttendance') {
@@ -2311,7 +2319,7 @@ function attendanceTrend_() {
   for (var offset = 7; offset >= 0; offset--) {
     var date = new Date(anchor.getTime() - offset * 86400000);
     var key = Utilities.formatDate(date, 'GMT', 'yyyy-MM-dd');
-    days.push({date:key, present:0, recorded:false});
+    days.push({date:key, present:0, excused:0, absent:0, recorded:false});
   }
   var byDate = {};
   days.forEach(function(d){byDate[d.date] = d;});
@@ -2319,7 +2327,10 @@ function attendanceTrend_() {
     var key = String(row.date || '').slice(0, 10);
     if (!byDate[key]) return;
     byDate[key].recorded = true;
-    if (String(row.status || '').trim() === 'حاضر') byDate[key].present++;
+    var status = String(row.status || '').trim();
+    if (status === 'حاضر') byDate[key].present++;
+    else if (status === 'موجه') byDate[key].excused++;
+    else if (status === 'غیبت' || status === 'غایب') byDate[key].absent++;
   });
   return days;
 }

@@ -90,24 +90,34 @@ async function load(){
  var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];renderAttendanceTrend(r.attendanceTrend||[]);renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events){loadActivityReports();loadCamps();}}
 
 function renderAttendanceTrend(items){
- var chart=$('#attendanceTrendChart'),summary=$('#attendanceTrendSummary');
- if(!chart)return;
+ var chart=$('#attendanceTrendChart'),summary=$('#attendanceTrendSummary');if(!chart)return;
  items=Array.isArray(items)?items:[];
- if(!items.length){chart.innerHTML='<p class="muted">هنوز داده‌ای از حضور و غیاب ثبت نشده است.</p>';if(summary)summary.innerHTML='<span>حاضران امروز</span><strong>— نفر</strong>';return;}
- var values=items.map(function(x){return Math.max(0,Number(x.present||0));});
- var todayValue=values.length?values[values.length-1]:0;
- var max=Math.max.apply(Math,values.concat([1]));
- var left=35,right=605,top=25,bottom=146,width=640,height=205;
- var coords=values.map(function(v,i){return {x:left+(right-left)*(values.length<=1?0:i/(values.length-1)),y:bottom-(v/max)*(bottom-top),v:v};});
- var line=coords.map(function(p,i){return (i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)}).join(' ');
- var area=line+' L '+right+' '+bottom+' L '+left+' '+bottom+' Z';
- var grid='';
- for(var g=0;g<4;g++){var y=top+(bottom-top)*g/3;grid+='<line x1="'+left+'" y1="'+y.toFixed(1)+'" x2="'+right+'" y2="'+y.toFixed(1)+'" stroke="#dce6e3" stroke-dasharray="4 5"/>';}
- var labels=coords.map(function(p,i){var label=i===coords.length-1?'امروز':(coords.length-1-i)+' روز قبل';return '<text x="'+p.x.toFixed(1)+'" y="174" text-anchor="middle" fill="'+(i===coords.length-1?'#087b66':'#7f918d')+'" font-size="'+(i===coords.length-1?'12':'10')+'" font-weight="'+(i===coords.length-1?'800':'500')+'">'+label+'</text><text x="'+p.x.toFixed(1)+'" y="'+Math.max(15,p.y-10).toFixed(1)+'" text-anchor="middle" fill="#244740" font-size="11" font-weight="800">'+p.v.toLocaleString('fa-IR')+'</text>';}).join('');
- var dots=coords.map(function(p,i){return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(i===coords.length-1?5:3.5)+'" fill="'+(i===coords.length-1?'#087b66':'#5fb6a1')+'" stroke="#fff" stroke-width="2"/>';}).join('');
- chart.innerHTML='<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="روند حضور ۸ روز اخیر" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="attendanceTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#21a58a" stop-opacity=".24"/><stop offset="100%" stop-color="#21a58a" stop-opacity=".015"/></linearGradient></defs>'+grid+'<path d="'+area+'" fill="url(#attendanceTrendFill)"/><path d="'+line+'" fill="none" stroke="#168b75" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>'+dots+labels+'</svg><p class="attendance-trend-note">فقط افرادی شمرده می‌شوند که وضعیتشان «حاضر» ثبت شده باشد.</p>';
- if(summary)summary.innerHTML='<span>حاضران امروز</span><strong>'+todayValue.toLocaleString('fa-IR')+' نفر</strong>';
+ if(!items.length){chart.innerHTML='<p class="muted">هنوز داده‌ای از حضور و غیاب ثبت نشده است.</p>';if(summary)summary.innerHTML='<span>وضعیت امروز</span><strong>—</strong>';return;}
+ var series=[{key:'present',label:'حاضر',color:'#168b75'},{key:'excused',label:'موجه',color:'#d9a323'},{key:'absent',label:'غیبت',color:'#d94a52'}];
+ var max=1;items.forEach(function(d){series.forEach(function(x){max=Math.max(max,Number(d[x.key]||0))})});
+ var left=34,right=606,top=25,bottom=143,width=640,height=214,grid='';
+ for(var g=0;g<4;g++){var gy=top+(bottom-top)*g/3;grid+='<line x1="'+left+'" y1="'+gy.toFixed(1)+'" x2="'+right+'" y2="'+gy.toFixed(1)+'" stroke="#dce6e3" stroke-dasharray="4 5"/>';}
+ var labels=items.map(function(d,i){var x=left+(right-left)*(items.length<=1?0:i/(items.length-1));var label=i===items.length-1?'امروز':(items.length-1-i)+' روز قبل';return '<text x="'+x.toFixed(1)+'" y="169" text-anchor="middle" fill="#71817b" font-size="10">'+label+'</text>'}).join('');
+ var lines=series.map(function(x){var pts=items.map(function(d,i){return {x:left+(right-left)*(items.length<=1?0:i/(items.length-1)),y:bottom-(Number(d[x.key]||0)/max)*(bottom-top)}});var path=pts.map(function(p,i){return (i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)}).join(' ');return '<path d="'+path+'" fill="none" stroke="'+x.color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+pts.map(function(p){return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="'+x.color+'" stroke="#fff" stroke-width="1.5"/>'}).join('')}).join('');
+ var legend='<div class="attendance-trend-legend">'+series.map(function(x){return '<span><i style="background:'+x.color+'"></i>'+x.label+'</span>'}).join('')+'</div>';
+ chart.innerHTML='<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="روند هشت روز اخیر حضور، موجه و غیبت" xmlns="http://www.w3.org/2000/svg">'+grid+lines+labels+'</svg>'+legend+'<p class="attendance-trend-note">نمودار امروز و ۷ روز قبل؛ سوابق قدیمی‌تر از بخش آرشیو قابل مشاهده است.</p>';
+ var d=items[items.length-1]||{};if(summary)summary.innerHTML='<span>وضعیت‌های ثبت‌شده امروز</span><strong><b style="color:#168b75">حاضر '+Number(d.present||0).toLocaleString('fa-IR')+'</b> · <b style="color:#d9a323">موجه '+Number(d.excused||0).toLocaleString('fa-IR')+'</b> · <b style="color:#d94a52">غیبت '+Number(d.absent||0).toLocaleString('fa-IR')+'</b></strong>';
 }
+function renderAttendanceArchive(items,date){
+ var box=$('#attendanceArchiveResults');if(!box)return;items=Array.isArray(items)?items:[];
+ if(!items.length){box.innerHTML='<div class="attendance-archive-empty">برای تاریخ '+esc(date)+' سابقه‌ای ثبت نشده است.</div>';return;}
+ var counts={present:0,excused:0,absent:0};items.forEach(function(r){if(r.status==='حاضر')counts.present++;else if(r.status==='موجه')counts.excused++;else if(r.status==='غیبت'||r.status==='غایب')counts.absent++});
+ box.innerHTML='<div class="attendance-archive-summary"><span class="is-present">حاضر '+counts.present.toLocaleString('fa-IR')+'</span><span class="is-excused">موجه '+counts.excused.toLocaleString('fa-IR')+'</span><span class="is-absent">غیبت '+counts.absent.toLocaleString('fa-IR')+'</span></div><div class="attendance-archive-list">'+items.map(function(r){var cls=r.status==='حاضر'?'is-present':(r.status==='موجه'?'is-excused':'is-absent');return '<article class="attendance-archive-row"><div><strong>'+esc(r.memberName||'عضو بدون نام')+'</strong>'+(r.note?'<small>'+esc(r.note)+'</small>':'')+'</div><span class="'+cls+'">'+esc(r.status||'ثبت‌نشده')+'</span></article>'}).join('')+'</div>';
+}
+async function loadAttendanceArchive(){
+ var dateInput=$('#attendanceArchiveDate'),button=$('#loadAttendanceArchive'),box=$('#attendanceArchiveResults');
+ if(!dateInput||!dateInput.value){toast('ابتدا تاریخ را انتخاب کن',1);return}
+ if(button)setBusy(button,'در حال دریافت…');if(box)box.innerHTML='<p class="muted">در حال دریافت آرشیو…</p>';
+ try{var result=await api().post({action:'getAttendanceForDate',token:state.token,date:dateInput.value});renderAttendanceArchive(result.items||[],result.date||dateInput.value)}
+ catch(err){if(box)box.innerHTML='<p class="muted">'+esc(err.message||'دریافت آرشیو ناموفق بود')+'</p>';toast(err.message||'دریافت آرشیو ناموفق بود',1)}
+ finally{if(button)clearBusy(button)}
+}
+
 function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
 async function viewRegistrationPhoto(id,button,type){
@@ -405,6 +415,7 @@ function setup(){
   if(savePrizeBtn)savePrizeBtn.onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(err){toast(err.message,1)})};
   var logoutBtn=$('#coachLogout');
   if(logoutBtn)logoutBtn.onclick=function(){['coach_token','coach_name','coach_master','coach_permissions'].forEach(sessionRemove);location.reload()};
+  var archiveBtn=$('#loadAttendanceArchive');if(archiveBtn)archiveBtn.onclick=loadAttendanceArchive;
   var refreshFeedbackBtn=$('#refreshFeedbackBtn');
   if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
  });

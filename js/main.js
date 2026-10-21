@@ -16,9 +16,9 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.43.0',
-    BACKEND_VERSION: '4.22.0-member-persistent-session',
-    BACKEND_COMPATIBLE_VERSIONS: ['4.20.0-camps-attendance', '4.21.0-camps-attendance']
+    VERSION: '5.44.0',
+    BACKEND_VERSION: '4.23.0-attendance-history',
+    BACKEND_COMPATIBLE_VERSIONS: ['4.22.0-member-persistent-session']
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -1011,8 +1011,8 @@
     if (user) {
       var firstName = user.firstName || user.name || 'کاربر';
       var initial = String(firstName).charAt(0);
-      btn.href = member ? 'profile.html' : (official && String(official.role || '').indexOf('حضور') >= 0 ? 'attendance.html' : (official && String(official.role || '').indexOf('نظارت') >= 0 ? 'supervision.html' : 'officials.html'));
-      btn.setAttribute('aria-label', official && !member ? 'پنل مسئولیت' : 'پروفایل من');
+      btn.href = 'profile.html';
+      btn.setAttribute('aria-label', 'پروفایل من');
       if (member && member.profileImage) {
         btn.innerHTML = '<span class="header-auth__avatar has-image"><img src="' + DOM.escape(member.profileImage) + '" alt="" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit"></span>';
       } else {
