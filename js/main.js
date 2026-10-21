@@ -1079,7 +1079,8 @@
       App._safe('RegisterForm', function () { RegisterForm(DOM.qs('#registerForm')); });
       App._safe('FeedbackForm', function () { FeedbackForm(DOM.qs('#feedbackForm')); });
 
-      JalaliDate.setup();\n      Logger.info('راه‌اندازی کامل ✓');
+      JalaliDate.setup();
+      Logger.info('راه‌اندازی کامل ✓');
     },
     _safe: function (name, fn) {
       try { fn(); } catch (err) { Logger.error('[' + name + ']', err); }
@@ -1100,7 +1101,8 @@
     toast: Toast,
     modal: Modal,
     session: Session,
-    validate: Validate,\n    date: JalaliDate,
+    validate: Validate,
+    date: JalaliDate,
     refreshHeaderAuth: function () { App._safe('HeaderAuthRefresh', HeaderAuth); }
   };
 
