@@ -123,7 +123,7 @@ function renderAttendanceTrend(items){
 }
 function renderAttendanceArchive(items,date){
  var box=$('#attendanceArchiveResults');if(!box)return;items=Array.isArray(items)?items:[];
- if(!items.length){box.innerHTML='<div class="attendance-archive-empty">برای تاریخ '+esc(date)+' سابقه‌ای ثبت نشده است.</div>';return;}
+ if(!items.length){box.innerHTML='<div class="attendance-archive-empty">برای تاریخ '+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(date):date)+' سابقه‌ای ثبت نشده است.</div>';return;}
  var counts={present:0,excused:0,absent:0};items.forEach(function(r){if(r.status==='حاضر')counts.present++;else if(r.status==='موجه')counts.excused++;else if(r.status==='غیبت'||r.status==='غایب')counts.absent++});
  box.innerHTML='<div class="attendance-archive-summary"><span class="is-present">حاضر '+counts.present.toLocaleString('fa-IR')+'</span><span class="is-excused">موجه '+counts.excused.toLocaleString('fa-IR')+'</span><span class="is-absent">غیبت '+counts.absent.toLocaleString('fa-IR')+'</span></div><div class="attendance-archive-list">'+items.map(function(r){var cls=r.status==='حاضر'?'is-present':(r.status==='موجه'?'is-excused':'is-absent');return '<article class="attendance-archive-row"><div><strong>'+esc(r.memberName||'عضو بدون نام')+'</strong>'+(r.note?'<small>'+esc(r.note)+'</small>':'')+'</div><span class="'+cls+'">'+esc(r.status||'ثبت‌نشده')+'</span></article>'}).join('')+'</div>';
 }
@@ -137,7 +137,7 @@ async function loadAttendanceArchive(){
 }
 
 function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
-function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
+function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(e.date):e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
 async function viewRegistrationPhoto(id,button,type){
  var modal=$('#registrationPhotoModal'),img=$('#registrationPhotoImage'),status=$('#registrationPhotoStatus');
  if(!modal||!img||!status){toast('نمایشگر عکس آماده نیست',1);return}
@@ -189,13 +189,13 @@ function setPaymentStatus(id,status,button){
  api().post({action:'setCampPaymentStatus',token:state.token,id:id,status:status}).then(function(){toast(status==='تایید پرداخت'?'پرداخت تأیید و ثبت‌نام نهایی شد ✓':'رسید رد شد');load()}).catch(function(e){toast(e.message||'تغییر وضعیت رسید ناموفق بود',1)}).finally(function(){clearBusy(button)});
 }
 function setReg(id,status){api().post({action:'setRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت ثبت شد ✓');load()}).catch(function(e){toast(e.message,1)})}
-function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
+function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(r.date):r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
 function renderWarnings(rows){
  var box=$('#warningsAdmin');
  if(!box)return;
  if(!rows.length){box.innerHTML='<p class="muted">برای ماه جاری هنوز اخطاری ثبت نشده</p>';return;}
  box.innerHTML=rows.map(function(r){
-  var date=esc(r.date), member=esc(r.memberName), reason=esc(r.reason), responsibility=esc(r.responsibility);
+  var date=esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(r.date):r.date), member=esc(r.memberName), reason=esc(r.reason), responsibility=esc(r.responsibility);
   return '<div class="report-row"><span>'+date+'</span><span>'+member+' · '+reason+'</span><span>'+responsibility+'</span></div>';
  }).join('');
 }
@@ -212,7 +212,7 @@ function renderActivityReports(items){
  box.innerHTML=items.length?items.map(function(r){
   var photos=Array.isArray(r.images)?r.images:[];
   var thumbs=photos.slice(0,4).map(function(p){return '<img src="'+esc(p.url)+'" alt="" loading="lazy">'}).join('');
-  return '<div class="admin-item activity-report-admin-item"><div class="activity-report-admin-thumbs">'+(thumbs||'<span class="activity-report-no-photo">بدون عکس</span>')+'</div><div class="admin-item-main"><strong>'+esc(r.title)+'</strong><small>'+esc(r.date||'بدون تاریخ')+' · '+photos.length.toLocaleString('fa-IR')+' عکس</small><p>'+esc(String(r.description||'').slice(0,150))+'</p></div><div class="admin-actions"><button class="danger" data-activity-report-delete="'+esc(r.id)+'">حذف گزارش</button></div></div>';
+  return '<div class="admin-item activity-report-admin-item"><div class="activity-report-admin-thumbs">'+(thumbs||'<span class="activity-report-no-photo">بدون عکس</span>')+'</div><div class="admin-item-main"><strong>'+esc(r.title)+'</strong><small>'+esc(r.date?(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(r.date):r.date):'بدون تاریخ')+' · '+photos.length.toLocaleString('fa-IR')+' عکس</small><p>'+esc(String(r.description||'').slice(0,150))+'</p></div><div class="admin-actions"><button class="danger" data-activity-report-delete="'+esc(r.id)+'">حذف گزارش</button></div></div>';
  }).join(''):'<div class="empty"><p>هنوز گزارش مستقلی ثبت نشده است.</p><small>برای نمونه، گزارش اردو را با چند عکس از دکمه «گزارش جدید» بساز.</small></div>';
  box.querySelectorAll('[data-activity-report-delete]').forEach(function(btn){btn.onclick=function(){var id=btn.getAttribute('data-activity-report-delete');if(!confirm('این گزارش از بخش فعالیت‌ها حذف شود؟'))return;btn.disabled=true;api().post({action:'deleteActivityReport',token:state.token,id:id}).then(function(){toast('گزارش حذف شد ✓');loadActivityReports()}).catch(function(e){toast(e.message||'حذف گزارش ناموفق بود',1);btn.disabled=false})}});
 }

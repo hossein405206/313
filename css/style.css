@@ -2885,3 +2885,32 @@ p, .section-subtitle, .form-help, .form-hint, .home-event-overlay p { font-famil
 .home-app .app-drawer{z-index:1210;top:0;bottom:0;height:auto;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:calc(24px + env(safe-area-inset-top, 0px));padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
 .home-app .drawer-links{flex:0 0 auto}
 .home-app .drawer-bottom{position:static;flex:0 0 auto;margin-top:14px;padding-top:12px}
+
+/* تقویم شمسی یکپارچه — طراحی مدرن و واکنش‌گرا */
+.jalali-global-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(12,25,42,.58);backdrop-filter:blur(7px)}
+.jalali-global-overlay[hidden]{display:none!important}
+.jalali-global-card{width:min(100%,440px);max-height:min(88dvh,760px);overflow:auto;padding:20px;border:1px solid rgba(255,255,255,.7);border-radius:26px;background:linear-gradient(150deg,#fff 0%,#f5faf8 100%);box-shadow:0 28px 90px rgba(4,24,38,.28);color:#20364a}
+.jalali-global-card header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid #e4ece9}
+.jalali-global-card header small{color:#0f9488;font-size:.72rem;font-weight:900}
+.jalali-global-card header h3{margin:4px 0 0;font-size:1.05rem;font-weight:900}
+.jalali-global-close{width:38px;height:38px;border:0;border-radius:13px;background:#edf4f2;color:#38545a;font-size:1.5rem;cursor:pointer}
+.jalali-global-summary{text-align:center;margin:13px 0;color:#75868a;font-size:.78rem;font-weight:800}
+.jalali-global-years,.jalali-global-months,.jalali-global-days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:2px;max-height:42dvh;overflow:auto;overscroll-behavior:contain}
+.jalali-global-months{grid-template-columns:repeat(3,minmax(0,1fr))}
+.jalali-global-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.jalali-global-years[hidden],.jalali-global-months[hidden],.jalali-global-days[hidden]{display:none!important}
+.jalali-global-years button,.jalali-global-months button,.jalali-global-days button{min-width:0;min-height:43px;padding:7px 3px;border:1px solid #e0ebe7;border-radius:12px;background:#fff;color:#2b4a4d;font:800 .8rem Vazirmatn,Tahoma,sans-serif;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.jalali-global-months button{min-height:48px}
+.jalali-global-days .weekday{display:grid;place-items:center;min-height:28px;color:#718581;font-size:.7rem;font-weight:900}
+.jalali-global-days .blank{min-height:35px}
+.jalali-global-years button:hover,.jalali-global-months button:hover,.jalali-global-days button:hover:not(:disabled){border-color:#74cdbb;background:#eaf8f3}
+.jalali-global-years button.selected,.jalali-global-months button.selected,.jalali-global-days button.selected{border-color:#0f9488;background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;box-shadow:0 5px 12px rgba(15,118,110,.2)}
+.jalali-global-days button{min-height:39px}
+.jalali-global-card button:disabled{opacity:.3;cursor:not-allowed}
+.jalali-global-card footer{display:flex;gap:8px;margin-top:16px;padding-top:13px;border-top:1px solid #e4ece9}
+.jalali-global-card footer button{flex:1;min-height:43px;border:0;border-radius:13px;background:#edf3f2;color:#40595b;font:800 .78rem Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+.jalali-global-card footer .jalali-global-confirm{background:linear-gradient(135deg,#0f766e,#0f9488);color:white;box-shadow:0 6px 16px rgba(15,118,110,.2)}
+.jalali-global-card footer .jalali-global-confirm:disabled{box-shadow:none;opacity:.4}
+.jalali-global-input{cursor:pointer!important;background-color:#fff!important;padding-left:42px!important}
+.jalali-global-icon{display:none}
+@media(max-width:480px){.jalali-global-overlay{align-items:flex-end;padding:8px}.jalali-global-card{width:100%;max-height:86dvh;border-radius:25px 25px 16px 16px;padding:17px}.jalali-global-years,.jalali-global-months{gap:6px}.jalali-global-years button,.jalali-global-months button{min-height:42px;font-size:.76rem}.jalali-global-days button{min-height:37px}}

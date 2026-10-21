@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.46.0',
+    VERSION: '5.47.0',
     BACKEND_VERSION: '4.24.0-school-schedule-attendance',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
@@ -1047,7 +1047,7 @@
       App._safe('RegisterForm', function () { RegisterForm(DOM.qs('#registerForm')); });
       App._safe('FeedbackForm', function () { FeedbackForm(DOM.qs('#feedbackForm')); });
 
-      Logger.info('راه‌اندازی کامل ✓');
+      JalaliDate.setup();\n      Logger.info('راه‌اندازی کامل ✓');
     },
     _safe: function (name, fn) {
       try { fn(); } catch (err) { Logger.error('[' + name + ']', err); }
@@ -1068,7 +1068,7 @@
     toast: Toast,
     modal: Modal,
     session: Session,
-    validate: Validate,
+    validate: Validate,\n    date: JalaliDate,
     refreshHeaderAuth: function () { App._safe('HeaderAuthRefresh', HeaderAuth); }
   };
 

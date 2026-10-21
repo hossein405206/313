@@ -168,7 +168,7 @@
       +     '</div>'
       +     '<div class="sup-item__title">'
       +       '<span class="sup-item__name">' + escapeHtml(name) + '</span>'
-      +       '<span class="sup-item__date">' + escapeHtml(date) + '</span>'
+      +       '<span class="sup-item__date">' + escapeHtml(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(date):date) + '</span>'
       +     '</div>'
       +   '</div>'
       +   '<div class="sup-item__text">' + escapeHtml(desc) + '</div>'
