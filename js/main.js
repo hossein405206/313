@@ -109,7 +109,7 @@
       else if(id==='eventDate'){input.max=addYearsISO(t.iso,1);}
       if(input.max&&input.value&&input.value>input.max)input.value=input.max;
     }
-    function jalaliYear(iso){var m=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(String(iso||''));if(!m)return null;try{return jdn2j(g2jdn(+m[1],+m[2],+m[3])).jy;}catch(e){return null;}}
+    function jalaliYear(iso){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||''));if(!m)return null;try{return jdn2j(g2jdn(+m[1],+m[2],+m[3])).jy;}catch(e){return null;}}
     function setup(){
       var inputs=Array.prototype.slice.call(document.querySelectorAll('input[type="date"]:not([data-jalali-ready])'));if(!inputs.length)return;inputs.forEach(configureRange);
       var overlay=document.createElement('div');overlay.className='jalali-global-overlay';overlay.hidden=true;overlay.innerHTML='<section class="jalali-global-card" role="dialog" aria-modal="true" aria-label="انتخاب تاریخ شمسی"><header><div><small>تقویم شمسی</small><h3 id="jalaliGlobalTitle">سال را انتخاب کنید</h3></div><button type="button" class="jalali-global-close" aria-label="بستن">×</button></header><p class="jalali-global-summary">انتخاب مرحله‌ای سال، ماه و روز</p><div class="jalali-global-years"></div><div class="jalali-global-months" hidden></div><div class="jalali-global-days" hidden></div><footer><button type="button" class="jalali-global-back" hidden>مرحله قبل</button><button type="button" class="jalali-global-cancel">انصراف</button><button type="button" class="jalali-global-confirm" disabled>تأیید تاریخ</button></footer></section>';document.body.appendChild(overlay);
