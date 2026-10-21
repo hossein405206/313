@@ -92,7 +92,7 @@
   /* تقویم شمسی یکپارچه: نمایش شمسی، مقدار ISO برای سازگاری با سرور */
   var JalaliDate = (function () {
     var monthNames=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
-    function div(a,b){return Math.floor(a/b)} function mod(a,b){return a-div(a,b)*b}
+    function div(a,b){return Math.trunc(a/b)} function mod(a,b){return a-div(a,b)*b}
     function g2jdn(gy,gm,gd){var d=div((gy+div(gm-8,6)+100100)*1461,4)+div(153*mod(gm+9,12)+2,5)+gd-34840408;return d-div(div(gy+100100+div(gm-8,6),100)*3,4)+752;}
     function jdn2g(jdn){var j=4*jdn+139361631;j+=div(div(4*jdn+183187720,146097)*3,4)*4-3908;var i=div(mod(j,1461),4)*5+308,gd=div(mod(i,153),5)+1,gm=mod(div(i,153),12)+1,gy=div(j,1461)-100100+div(8-gm,6);return {gy:gy,gm:gm,gd:gd};}
     function jalCal(jy){var breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178],bl=breaks.length,gy=jy+621,leapJ=-14,jp=breaks[0],jm,jump,leapG,march,n;if(jy<jp||jy>=breaks[bl-1])throw new Error('سال شمسی نامعتبر است');for(var i=1;i<bl;i++){jm=breaks[i];jump=jm-jp;if(jy<jm)break;leapJ+=div(jump,33)*8+div(mod(jump,33),4);jp=jm;}n=jy-jp;leapJ+=div(n,33)*8+div(mod(n,33)+3,4);if(mod(jump,33)===4&&jump-n===4)leapJ++;leapG=div(gy,4)-div((div(gy,100)+1)*3,4)-150;march=20+leapJ-leapG;if(jump-n<6)n=n-jump+div(jump+4,33)*33;var leap=mod(mod(n+1,33)-1,4);if(leap===-1)leap=4;return {leap:leap,gy:gy,march:march};}
