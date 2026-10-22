@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.47.5',
+    VERSION: '5.47.6',
     BACKEND_VERSION: '4.24.0-school-schedule-attendance',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
@@ -104,9 +104,11 @@
     function today(){var d=new Date(),j=jdn2j(g2jdn(d.getFullYear(),d.getMonth()+1,d.getDate()));return {y:j.jy,m:j.jm,d:j.jd,iso:toISO(j.jy,j.jm,j.jd)};}
     function addYearsISO(iso,years){var p=String(iso).split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setFullYear(d.getFullYear()+years);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
     function configureRange(input){var t=today(),id=input.id;
-      if(id==='attendanceArchiveDate'||id==='activityReportDate'){input.max=t.iso;}
-      else if(id==='campDeadline'){input.min=t.iso;input.max=addYearsISO(t.iso,1);}
+      /* پیش‌فرض: تاریخ‌های گزارش و سوابق فقط تا امروز؛ سقف تقویم در همه حالت‌ها سال ۱۴۹۸ است. */
+      input.max=t.iso;
+      if(id==='campDeadline'){input.min=t.iso;input.max=addYearsISO(t.iso,1);}
       else if(id==='eventDate'){input.max=addYearsISO(t.iso,1);}
+      if(input.min&&input.value&&input.value<input.min)input.value=input.min;
       if(input.max&&input.value&&input.value>input.max)input.value=input.max;
     }
     function jalaliYear(iso){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||''));if(!m)return null;try{return jdn2j(g2jdn(+m[1],+m[2],+m[3])).jy;}catch(e){return null;}}
