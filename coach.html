@@ -16,6 +16,14 @@
 <section id="coachDashboard" class="hidden">
 <div class="coach-top"><div><h2>داشبورد حلقه</h2><p id="coachName">—</p></div><span id="coachRoleBadge" class="coach-role-badge">—</span><button id="coachLogout" class="btn-secondary">خروج</button></div>
 <section class="coach-panel attendance-trend-panel" id="attendanceTrendPanel"><div class="panel-head"><div><h3>آمار حضور مسجد</h3><small class="panel-subtitle">امروز و ۷ روز گذشته · بر اساس ثبت مسئول حضور و غیاب</small></div></div><div id="attendanceTrendSummary" class="attendance-trend-summary"><span>حاضرین امروز</span><strong>— نفر</strong></div><div id="attendanceTrendChart" class="attendance-trend-chart" role="img" aria-label="نمودار تعداد حاضران امروز و هفت روز گذشته"></div></section><section class="coach-panel attendance-archive-panel" id="attendanceArchivePanel" data-permission="reports"><div class="panel-head"><div><h3>آرشیو تاریخی حضوریاب</h3><small class="panel-subtitle">تاریخ دلخواه را انتخاب کن؛ سوابق روزهای گذشته نگهداری می‌شوند.</small></div></div><div class="attendance-archive-controls"><label for="attendanceArchiveDate">تاریخ گزارش</label><input id="attendanceArchiveDate" class="form-control" type="date" ><button id="loadAttendanceArchive" type="button" class="btn-submit">مشاهده گزارش</button></div><div id="attendanceArchiveResults" aria-live="polite"><p class="muted">برای مشاهده سوابق، تاریخ را انتخاب کن.</p></div></section>
+<section class="coach-panel attendance-member-history-panel coach-permission-section" id="coachAttendanceMemberHistorySection" data-permission="reports">
+<div class="panel-head"><div><h3>سوابق کامل حضور و غیاب اعضا</h3><small class="panel-subtitle">نام عضو را جست‌وجو کن تا شمارش حاضر، موجه و غیبت و سوابق هر تاریخ را ببینی.</small></div></div>
+<form id="attendanceMemberHistoryForm" class="attendance-member-history-controls">
+<label for="attendanceMemberSearch">نام عضو<input id="attendanceMemberSearch" class="form-control" type="search" minlength="2" maxlength="100" autocomplete="off" placeholder="بخشی از نام را وارد کن" required></label>
+<button id="searchAttendanceMemberBtn" type="submit" class="btn-submit">جست‌وجوی سوابق</button>
+</form>
+<div id="attendanceMemberHistoryResults" class="attendance-member-history-results" aria-live="polite"><p class="muted">برای دیدن آمار و تاریخچه، نام عضو را جست‌وجو کن.</p></div>
+</section>
 <div class="coach-stats" id="coachStats"></div>
 
 <section class="coach-panel coach-account-panel" id="coachAccountPanel">
@@ -33,7 +41,7 @@
 <a class="coach-quick-link" data-permission="events" href="#coachActivityReportsSection"><span>۲</span><strong>گزارش فعالیت</strong><small>گالری چندعکسی اردو</small></a>
 <a class="coach-quick-link" data-permission="schedule" href="#coachScheduleSection"><span>۳</span><strong>برنامه هفتگی</strong><small>مرتب از شنبه تا جمعه</small></a>
 <a class="coach-quick-link" data-permission="registrations" href="#coachRegistrationsSection"><span>۴</span><strong>ثبت‌نام‌ها</strong><small>درخواست‌ها</small></a>
-<a class="coach-quick-link" data-permission="reports" href="#coachAttendanceReportsSection"><span>۵</span><strong>گزارش‌ها</strong><small>حضور و غیاب</small></a>
+<a class="coach-quick-link" data-permission="reports" href="#coachAttendanceReportsSection"><span>۵</span><strong>گزارش‌ها</strong><small>حضور و غیاب</small></a><a class="coach-quick-link" data-permission="reports" href="#coachAttendanceMemberHistorySection"><span>۹</span><strong>سوابق اعضا</strong><small>جست‌وجوی حضور و غیاب کامل</small></a>
 <a class="coach-quick-link" data-permission="officials" href="#officialStaffPanel"><span>۶</span><strong>مسئولین</strong><small>کدهای ورود</small></a>
 <a class="coach-quick-link" data-permission="feedback" href="#feedbackSection"><span>۷</span><strong>بازخوردها</strong><small>پیام اعضا</small></a>
 <a class="coach-quick-link" data-permission="game" href="#coachGameSection"><span>۸</span><strong>بازی</strong><small>جایزه هفتگی</small></a>
