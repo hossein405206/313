@@ -2387,7 +2387,7 @@ function attendanceDateKey_(value) {
     return Utilities.formatDate(value, CFG.TIMEZONE, 'yyyy-MM-dd');
   }
   var text = String(value == null ? '' : value).trim();
-  var iso = /^(\\d{4}-\\d{2}-\\d{2})/.exec(text);
+  var iso = /^(\d{4}-\d{2}-\d{2})/.exec(text);
   if (iso) return iso[1];
   if (!text) return '';
   var parsed = new Date(text);
