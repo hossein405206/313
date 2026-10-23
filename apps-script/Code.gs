@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.26.0-attendance-chart-date-normalization';
+var APP_VERSION = '4.27.0-attendance-archive-recorded-dates';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -348,6 +348,16 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
       locked: hasAttendanceDate(date),
       items: attendanceForDate(date)
     };
+  }
+
+  if (action === 'getAttendanceArchiveDates') {
+    requireCoachPermission(p.token, 'reports');
+    var dates = {};
+    getSheetObjects('حضورغیاب').forEach(function(row){
+      var key = attendanceDateKey_(row.date);
+      if (key && key <= currentDate()) dates[key] = true;
+    });
+    return { ok:true, dates:Object.keys(dates).sort() };
   }
 
   if (action === 'getAttendanceForDate') {
