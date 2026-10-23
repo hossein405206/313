@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.27.0-attendance-archive-recorded-dates';
+var APP_VERSION = '4.28.0-attendance-upsert-normalized-date';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -2411,11 +2411,14 @@ function saveAttendanceBatch(p) {
     if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
     var existingData = sheet.getDataRange().getValues();
     var headers = existingData.length ? existingData[0].map(String) : [];
-    var dateCol = headers.indexOf('date'), memberCol = headers.indexOf('memberId'), existingRows = {};
+    var dateCol = headers.indexOf('date'), memberCol = headers.indexOf('memberId'), existingRows = {}, duplicateRows = [];
+    // Compare normalized dates: Sheets may return a Date object, not the ISO string sent by the client.
     for (var er = 1; er < existingData.length; er++) {
-      if (String(existingData[er][dateCol] || '') !== date) continue;
-      var existingMemberId = String(existingData[er][memberCol] || '');
-      if (existingMemberId && existingRows[existingMemberId] === undefined) existingRows[existingMemberId] = er + 1;
+      if (attendanceDateKey_(existingData[er][dateCol]) !== date) continue;
+      var existingMemberId = String(existingData[er][memberCol] || '').trim();
+      if (!existingMemberId) continue;
+      if (existingRows[existingMemberId] === undefined) existingRows[existingMemberId] = er + 1;
+      else duplicateRows.push(er + 1);
     }
     var added = 0, updated = 0;
     values.forEach(function(row) {
@@ -2423,7 +2426,9 @@ function saveAttendanceBatch(p) {
       if (rowNumber) { sheet.getRange(rowNumber, 1, 1, 7).setValues([row]); updated++; }
       else { sheet.appendRow(row); added++; }
     });
-    return { ok:true, locked:true, count:values.length, added:added, updated:updated };
+    // Remove any duplicate legacy rows for this date/member, keeping the first row updated above.
+    duplicateRows.sort(function(a,b){return b-a;}).forEach(function(rowNumber){sheet.deleteRow(rowNumber);});
+    return { ok:true, locked:true, count:values.length, added:added, updated:updated, duplicatesRemoved:duplicateRows.length };
   } finally {
     lock.releaseLock();
   }
