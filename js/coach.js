@@ -142,6 +142,47 @@ async function loadAttendanceArchive(){
  finally{if(button)clearBusy(button)}
 }
 
+function attendanceHistoryDateLabel(date){
+ if(!date)return '—';
+ try{return window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(date):date}catch(e){return date}
+}
+function renderAttendanceMemberHistory(result){
+ var box=$('#attendanceMemberHistoryResults');if(!box)return;
+ var items=Array.isArray(result&&result.items)?result.items:[];
+ if(!items.length){
+  box.innerHTML='<div class="attendance-member-history-empty">عضوی با این نام در سوابق حضور و غیاب پیدا نشد.</div>';
+  return;
+ }
+ var globalRange=result.firstRecordedDate
+  ? '<p class="attendance-member-history-range">بازهٔ کلی سوابق سامانه: از <strong>'+esc(attendanceHistoryDateLabel(result.firstRecordedDate))+'</strong> تا <strong>'+esc(attendanceHistoryDateLabel(result.asOfDate))+'</strong></p>'
+  : '';
+ var limitNote=result.truncated?'<p class="attendance-member-history-limit">بیش از '+Number(items.length).toLocaleString('fa-IR')+' نتیجه پیدا شد؛ برای نتیجه دقیق‌تر، نام کامل‌تری وارد کن.</p>':'';
+ var cards=items.map(function(item){
+  var counts=item.counts||{},history=Array.isArray(item.history)?item.history:[];
+  var rows=history.map(function(entry){
+   var status=String(entry.status||'ثبت‌نشده'),cls=status==='حاضر'?'is-present':(status==='موجه'?'is-excused':((status==='غیبت'||status==='غایب')?'is-absent':''));
+   return '<div class="attendance-member-history-row"><time>'+esc(attendanceHistoryDateLabel(entry.date))+'</time><span class="'+cls+'">'+esc(status)+'</span></div>';
+  }).join('');
+  return '<article class="attendance-member-history-card"><header class="attendance-member-history-card-head"><div><strong>'+esc(item.memberName||'عضو بدون نام')+'</strong><small>اولین ثبت این عضو: '+esc(attendanceHistoryDateLabel(item.firstDate))+' · آخرین ثبت: '+esc(attendanceHistoryDateLabel(item.lastDate))+' · مجموع '+Number(item.recordCount||history.length).toLocaleString('fa-IR')+' جلسه ثبت‌شده</small></div><div class="attendance-member-history-counts"><span class="is-present">حاضر '+Number(counts.present||0).toLocaleString('fa-IR')+'</span><span class="is-excused">موجه '+Number(counts.excused||0).toLocaleString('fa-IR')+'</span><span class="is-absent">غیبت '+Number(counts.absent||0).toLocaleString('fa-IR')+'</span></div></header><details class="attendance-member-history-details"><summary>نمایش تاریخچهٔ همهٔ جلسات</summary><div class="attendance-member-history-list">'+rows+'</div></details></article>';
+ }).join('');
+ box.innerHTML=globalRange+limitNote+'<p class="attendance-member-history-result-count">'+Number(result.totalMatches||items.length).toLocaleString('fa-IR')+' عضو پیدا شد.</p>'+cards;
+}
+async function searchAttendanceMemberHistory(){
+ var input=$('#attendanceMemberSearch'),button=$('#searchAttendanceMemberBtn'),box=$('#attendanceMemberHistoryResults');
+ var query=String(input&&input.value||'').trim();
+ if(query.length<2){toast('برای جست‌وجو دست‌کم دو نویسه از نام را وارد کن',1);if(input)input.focus();return}
+ if(button)setBusy(button,'در حال جست‌وجو…');
+ if(box)box.innerHTML='<p class="muted">در حال دریافت سوابق کامل حضور و غیاب…</p>';
+ try{
+  var result=await api().post({action:'getAttendanceMemberHistory',token:state.token,query:query});
+  renderAttendanceMemberHistory(result);
+ }catch(err){
+  var message=err&&err.message||'جست‌وجوی سوابق ناموفق بود';
+  if(box)box.innerHTML='<div class="attendance-member-history-empty">'+esc(message)+'<small>اگر این عملیات در نسخهٔ سرور شناخته نشد، فایل جدید Apps Script باید منتشر شود.</small></div>';
+  toast(message,1);
+ }finally{if(button)clearBusy(button)}
+}
+
 function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(e.date):e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
 async function viewRegistrationPhoto(id,button,type){
@@ -456,6 +497,7 @@ function setup(){
   var logoutBtn=$('#coachLogout');
   if(logoutBtn)logoutBtn.onclick=function(){['coach_token','coach_name','coach_master','coach_permissions'].forEach(sessionRemove);location.reload()};
   var archiveBtn=$('#loadAttendanceArchive');if(archiveBtn)archiveBtn.onclick=loadAttendanceArchive;
+  var memberHistoryForm=$('#attendanceMemberHistoryForm');if(memberHistoryForm)memberHistoryForm.addEventListener('submit',function(e){e.preventDefault();searchAttendanceMemberHistory()});
   var refreshFeedbackBtn=$('#refreshFeedbackBtn');
   if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
  });
