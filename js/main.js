@@ -18,7 +18,7 @@
     DEBUG: false,
     VERSION: '5.47.7',
     BACKEND_VERSION: '4.26.0-attendance-chart-date-normalization',
-    BACKEND_COMPATIBLE_VERSIONS: []
+    BACKEND_COMPATIBLE_VERSIONS: ['4.25.0-jalali-date-limits']
   };
 
   /* ══════════════════════════════════════════════════════════════════════
