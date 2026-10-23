@@ -456,6 +456,7 @@ function setup(){
  state.token=sessionGet('coach_token');state.name=sessionGet('coach_name');state.isMaster=sessionGet('coach_master')==='1';
  try{state.permissions=JSON.parse(sessionGet('coach_permissions')||'{}')}catch(err){state.permissions={}}
  if(state.token){
+  var archiveDateInput=$('#attendanceArchiveDate');if(archiveDateInput){api().post({action:'getAttendanceArchiveDates',token:state.token}).then(function(r){archiveDateInput.setAttribute('data-available-dates',JSON.stringify(r.dates||[]));}).catch(function(){archiveDateInput.setAttribute('data-available-dates','[]');});}
   var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
   if(loginPanel)loginPanel.classList.add('hidden');
   if(dashboard)dashboard.classList.remove('hidden');
