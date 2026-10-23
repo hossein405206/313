@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.25.0-jalali-date-limits';
+var APP_VERSION = '4.26.0-attendance-chart-date-normalization';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -2290,9 +2290,22 @@ function reactivateMember(phone) {
 /* Attendance                                                                 */
 /* -------------------------------------------------------------------------- */
 
+function attendanceDateKey_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, CFG.TIMEZONE, 'yyyy-MM-dd');
+  }
+  var text = String(value == null ? '' : value).trim();
+  var iso = /^(\\d{4}-\\d{2}-\\d{2})/.exec(text);
+  if (iso) return iso[1];
+  if (!text) return '';
+  var parsed = new Date(text);
+  if (isNaN(parsed.getTime())) return '';
+  return Utilities.formatDate(parsed, CFG.TIMEZONE, 'yyyy-MM-dd');
+}
+
 function attendanceForDate(date) {
   return getSheetObjects('حضورغیاب')
-    .filter(function(r){ return String(r.date) === String(date); })
+    .filter(function(r){ return attendanceDateKey_(r.date) === String(date); })
     .map(function(r){
       return {
         memberId: r.memberId,
@@ -2305,11 +2318,11 @@ function attendanceForDate(date) {
 
 function attendanceForMonth(month) {
   return getSheetObjects('حضورغیاب')
-    .filter(function(r){ return String(r.date).indexOf(month) === 0; })
+    .filter(function(r){ return attendanceDateKey_(r.date).indexOf(month) === 0; })
     .sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); })
     .map(function(r){
       return {
-        date: r.date,
+        date: attendanceDateKey_(r.date),
         memberId: r.memberId,
         memberName: r.memberName,
         status: r.status,
@@ -2331,7 +2344,7 @@ function attendanceTrend_() {
   var byDate = {};
   days.forEach(function(d){byDate[d.date] = d;});
   getSheetObjects('حضورغیاب').forEach(function(row) {
-    var key = String(row.date || '').slice(0, 10);
+    var key = attendanceDateKey_(row.date);
     if (!byDate[key]) return;
     byDate[key].recorded = true;
     var status = String(row.status || '').trim();
@@ -2344,7 +2357,7 @@ function attendanceTrend_() {
 
 function hasAttendanceDate(date) {
   var rows = getSheetObjects('حضورغیاب');
-  return rows.some(function(r){ return String(r.date) === String(date); });
+  return rows.some(function(r){ return attendanceDateKey_(r.date) === String(date); });
 }
 
 function saveAttendanceBatch(p) {
