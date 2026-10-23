@@ -17,7 +17,7 @@
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
     VERSION: '5.47.6',
-    BACKEND_VERSION: '4.24.0-school-schedule-attendance',
+    BACKEND_VERSION: '4.25.0-jalali-date-limits',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
