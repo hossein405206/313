@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.28.0-attendance-upsert-normalized-date';
+var APP_VERSION = '4.29.0-attendance-member-history';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -248,7 +248,7 @@ function isPostOnlyAuthenticatedReadAction_(action) {
     'listSystemErrors', 'listFeedback', 'listActivityReportsManage',
     'listCoaches', 'listOfficialsManage', 'getRingRegistration',
     'getMyGameRole', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
-    'listMonthlyAttendance', 'listWarnings', 'listRegistrations',
+    'getAttendanceMemberHistory', 'listMonthlyAttendance', 'listWarnings', 'listRegistrations',
     'getDashboard'
   ].indexOf(String(action || '')) >= 0;
 }
@@ -366,6 +366,88 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) throw new Error('تاریخ انتخاب‌شده معتبر نیست');
     if (requestedDate > currentDate()) throw new Error('گزارش آینده قابل مشاهده نیست');
     return { ok:true, date:requestedDate, items:attendanceForDate(requestedDate) };
+  }
+
+  if (action === 'getAttendanceMemberHistory') {
+    requireCoachPermission(p.token, 'reports');
+    var searchQuery = normalizeAttendanceSearchText_(p.query);
+    if (searchQuery.length < 2) throw new Error('برای جست‌وجو دست‌کم دو نویسه از نام عضو وارد کن');
+    var asOfDate = currentDate();
+    var attendanceRows = getSheetObjects('حضورغیاب');
+    var firstRecordedDate = '';
+    var byMemberAndDate = {};
+    attendanceRows.forEach(function(row) {
+      var date = attendanceDateKey_(row.date);
+      if (!date || date > asOfDate) return;
+      if (!firstRecordedDate || date < firstRecordedDate) firstRecordedDate = date;
+      var memberId = String(row.memberId == null ? '' : row.memberId).trim();
+      var memberName = String(row.memberName || '').trim();
+      var identity = memberId ? 'id:' + memberId : 'name:' + normalizeAttendanceSearchText_(memberName);
+      if (identity === 'name:') return;
+      // Use only one row per member/day; later duplicate rows replace earlier values.
+      byMemberAndDate[identity + '|' + date] = {
+        identity: identity,
+        memberId: memberId,
+        memberName: memberName,
+        date: date,
+        status: String(row.status || '').trim()
+      };
+    });
+
+    var grouped = {};
+    Object.keys(byMemberAndDate).forEach(function(key) {
+      var row = byMemberAndDate[key];
+      var item = grouped[row.identity];
+      if (!item) {
+        item = grouped[row.identity] = {
+          memberId: row.memberId,
+          memberName: row.memberName || 'عضو بدون نام',
+          latestNameDate: row.date,
+          nameVariants: {},
+          history: []
+        };
+      }
+      var normalizedName = normalizeAttendanceSearchText_(row.memberName);
+      if (normalizedName) item.nameVariants[normalizedName] = true;
+      if (row.memberName && row.date >= item.latestNameDate) {
+        item.memberName = row.memberName;
+        item.latestNameDate = row.date;
+      }
+      item.history.push({date: row.date, status: row.status || 'ثبت‌نشده'});
+    });
+
+    var matches = [];
+    Object.keys(grouped).forEach(function(key) {
+      var item = grouped[key];
+      var found = Object.keys(item.nameVariants).some(function(name) {
+        return name.indexOf(searchQuery) >= 0;
+      });
+      if (!found) return;
+      item.history.sort(function(a, b) { return a.date.localeCompare(b.date); });
+      item.counts = {present: 0, excused: 0, absent: 0};
+      item.history.forEach(function(entry) {
+        if (entry.status === 'حاضر') item.counts.present++;
+        else if (entry.status === 'موجه') item.counts.excused++;
+        else if (entry.status === 'غیبت' || entry.status === 'غایب') item.counts.absent++;
+      });
+      item.firstDate = item.history.length ? item.history[0].date : '';
+      item.lastDate = item.history.length ? item.history[item.history.length - 1].date : '';
+      item.recordCount = item.history.length;
+      delete item.nameVariants;
+      delete item.latestNameDate;
+      matches.push(item);
+    });
+    matches.sort(function(a, b) {
+      return String(a.memberName || '').localeCompare(String(b.memberName || ''), 'fa');
+    });
+    return {
+      ok: true,
+      firstRecordedDate: firstRecordedDate,
+      asOfDate: asOfDate,
+      totalMatches: matches.length,
+      truncated: matches.length > 30,
+      items: matches.slice(0, 30)
+    };
   }
 
   if (action === 'listMonthlyAttendance') {
@@ -2324,6 +2406,18 @@ function attendanceForDate(date) {
         note: r.note
       };
     });
+}
+
+function normalizeAttendanceSearchText_(value) {
+  return String(value == null ? '' : value).toLowerCase()
+    .replace(/[۰-۹]/g, function(c) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)); })
+    .replace(/[٠-٩]/g, function(c) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)); })
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[يى]/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/[\u200c\u200e\u200f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function attendanceForMonth(month) {
