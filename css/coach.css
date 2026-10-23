@@ -199,3 +199,33 @@
 .attendance-trend-chart svg{display:block!important;width:100%;min-width:320px;height:auto;min-height:180px}
 .schedule-admin-category{display:inline-flex;margin:4px 0;padding:3px 7px;border-radius:8px;font-size:.68rem;font-weight:800}
 .attendance-saved-notice{margin:12px 0;padding:12px 14px;border-radius:12px;background:#e7f5ef;color:#17634f;font-size:.82rem;line-height:1.9}
+
+
+/* Member attendance history search */
+.attendance-member-history-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px;padding:13px;margin-bottom:12px;border:1px solid rgba(23,43,65,.08);border-radius:15px;background:#f8f7f2}
+.attendance-member-history-controls label{display:block;min-width:0;color:#536073;font-size:.65rem;font-weight:800}
+.attendance-member-history-controls input{margin-top:6px}
+.attendance-member-history-controls .btn-submit{min-width:140px;white-space:nowrap}
+.attendance-member-history-results{display:grid;gap:10px;min-width:0}
+.attendance-member-history-range,.attendance-member-history-result-count{margin:0;color:#69778a;font-size:.62rem;line-height:1.9}
+.attendance-member-history-range strong{color:#263c56}
+.attendance-member-history-limit{margin:0;padding:9px 11px;border-radius:10px;background:#fff4d8;color:#78571c;font-size:.61rem;line-height:1.8}
+.attendance-member-history-card{min-width:0;padding:13px;border:1px solid rgba(23,43,65,.09);border-radius:15px;background:linear-gradient(150deg,#fff,#fcfbf7)}
+.attendance-member-history-card-head{display:grid;gap:10px}
+.attendance-member-history-card-head>div:first-child{min-width:0}
+.attendance-member-history-card-head strong{display:block;color:#1f344e;font-size:.8rem;overflow-wrap:anywhere}
+.attendance-member-history-card-head small{display:block;margin-top:5px;color:#798597;font-size:.57rem;line-height:1.9}
+.attendance-member-history-counts{display:flex;flex-wrap:wrap;gap:6px}
+.attendance-member-history-counts span{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:#f0f3f5;font-size:.61rem;font-weight:800}
+.attendance-member-history-counts .is-present{background:#e5f5ee;color:#176e55}
+.attendance-member-history-counts .is-excused{background:#fff3d4;color:#876213}
+.attendance-member-history-counts .is-absent{background:#fae8e9;color:#a3333c}
+.attendance-member-history-details{margin-top:11px;border-top:1px solid #ece8de;padding-top:9px}
+.attendance-member-history-details summary{cursor:pointer;color:#344c68;font-size:.63rem;font-weight:800}
+.attendance-member-history-list{display:grid;gap:1px;margin-top:8px;max-height:360px;overflow:auto;border:1px solid #eee9df;border-radius:10px;background:#f6f4ee}
+.attendance-member-history-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:#fff;font-size:.63rem}
+.attendance-member-history-row time{direction:rtl;color:#68768a;font-variant-numeric:tabular-nums}
+.attendance-member-history-row span{font-weight:800}
+.attendance-member-history-empty{padding:15px;border-radius:12px;background:#f7f5ef;color:#57677b;font-size:.65rem;line-height:1.9}
+.attendance-member-history-empty small{display:block;margin-top:5px;color:#8792a1;font-size:.58rem}
+@media(max-width:420px){.attendance-member-history-controls{grid-template-columns:1fr}.attendance-member-history-controls .btn-submit{width:100%;min-width:0}.attendance-member-history-card{padding:11px}.attendance-member-history-counts{gap:5px}.attendance-member-history-counts span{font-size:.58rem;padding:5px 7px}}
