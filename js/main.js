@@ -16,9 +16,9 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.47.9',
-    BACKEND_VERSION: '4.27.0-attendance-archive-recorded-dates',
-    BACKEND_COMPATIBLE_VERSIONS: ['4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
+    VERSION: '5.48.0',
+    BACKEND_VERSION: '4.28.0-attendance-upsert-normalized-date',
+    BACKEND_COMPATIBLE_VERSIONS: ['4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
   };
 
   /* ══════════════════════════════════════════════════════════════════════
