@@ -125,7 +125,7 @@
     box.innerHTML=items.map(function(item){
       var owned=(wallet.owned||[]).indexOf(item.id)>=0;
       var equipped=(shopCategory==='hat'?wallet.equippedHat:wallet.equippedOutfit)===item.id;
-      var glyph=item.id==='hat_soldier'?'🪖':item.id==='hat_police'?'👮':item.id==='hat_winter'?'🧢':item.id==='hat_crown'?'👑':item.id==='hat_party'?'🎉':item.id==='outfit_scout'?'🦺':item.id==='outfit_winter'?'🧥':'✨';
+      var glyphMap={hat_soldier:'🪖',hat_police:'👮',hat_winter:'🧢',hat_crown:'👑',hat_party:'🎉',hat_cowboy:'🤠',hat_tophat:'🎩',hat_chef:'👨‍🍳',hat_pirate:'🏴‍☠️',hat_wizard:'🧙',hat_grad:'🎓',hat_beanie:'🧶',hat_headphones:'🎧',hat_royal:'💎',hat_halo:'😇',hat_flower:'🌸',hat_ninja:'🥷',hat_astronaut:'🧑‍🚀',hat_detective:'🕵️',hat_rainbow:'🌈',outfit_scout:'🦺',outfit_winter:'🧥',outfit_royal:'✨',outfit_hoodie:'👕',outfit_sport:'🏅',outfit_astronaut:'🚀',outfit_ninja:'🥷',outfit_firefighter:'🚒',outfit_pirate:'🏴‍☠️',outfit_tuxedo:'🤵',outfit_rainbow:'🌈',outfit_galaxy:'🌌',outfit_gold:'🥇'};var glyph=glyphMap[item.id]||'✨';
       var action=owned?'equip':'buy',label=equipped?'روی پرنده است':(owned?'پوشیدن':'خرید · '+faNum(item.price)+' سکه');
       return '<article class="cosmetic-card '+(equipped?'is-equipped':'')+'"><div class="cosmetic-card__preview" aria-hidden="true">'+glyph+'</div><div class="cosmetic-card__info"><strong>'+esc(item.name)+'</strong><small>'+(owned?'خریداری‌شده':'قیمت: '+faNum(item.price)+' سکه')+'</small></div><button type="button" data-cosmetic-action="'+action+'" data-cosmetic-id="'+esc(item.id)+'" data-cosmetic-slot="'+shopCategory+'" '+(equipped?'disabled':'')+'>'+label+'</button></article>';
     }).join('');
