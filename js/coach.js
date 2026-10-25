@@ -396,6 +396,8 @@ function setupCamps(){
   if(Number(cost||0)>0&&!/^\d{16,26}$/.test(cardNumber)){toast('شماره کارت یا شبا را درست وارد کن',1);$('#campCardNumber').focus();return}
   setBusy(save,'در حال ثبت اردو...');
   try{
+   var backendVersion=await api().get({action:'ping'});
+   if(!backendVersion||backendVersion.version!=='4.30.0-camp-capacity-official-role')throw new Error('برای ذخیرهٔ ظرفیت، ابتدا نسخهٔ جدید فایل Apps Script باید منتشر شود.');
    await api().post({action:'saveCamp',token:state.token,title:title,cardNumber:cardNumber,cost:cost||0,registrationDeadline:registrationDeadline,capacity:Number(capacity)});
    toast('اردو با ظرفیت مشخص‌شده ثبت شد ✓');
    $('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';$('#campCapacity').value='';
