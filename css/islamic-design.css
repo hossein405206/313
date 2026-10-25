@@ -901,3 +901,10 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-identity-banner img{width:78%;max-width:445px;height:clamp(118px,25vw,220px);object-fit:cover;object-position:center 35%;margin-inline:auto}
 @media(min-width:600px){.home-identity-banner{padding-top:3px;padding-bottom:1px}.home-identity-banner img{width:70%;max-width:620px;height:clamp(165px,21vw,270px);object-position:center 35%}}
 @media(max-width:360px){.home-identity-banner{padding-top:1px;padding-bottom:1px}.home-identity-banner img{width:84%;height:clamp(104px,32vw,130px);object-position:center 35%}}
+
+
+/* v5.66.0 — Compact the supplied identity artwork further. */
+.home-identity-banner{padding-top:1px!important;padding-bottom:1px!important}
+.home-identity-banner img{width:65%!important;max-width:365px!important;height:clamp(92px,19vw,168px)!important;object-fit:cover!important;object-position:center 34%!important}
+@media(min-width:600px){.home-identity-banner img{width:58%!important;max-width:475px!important;height:clamp(125px,17vw,218px)!important}}
+@media(max-width:360px){.home-identity-banner img{width:72%!important;max-width:270px!important;height:clamp(82px,24vw,106px)!important}}
