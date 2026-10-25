@@ -107,6 +107,15 @@ function init(){
   btn.disabled=true;btn.textContent='در حال بررسی...';
   try{
    var res=await service.post({action:'memberAuth',name:n,phone:p,password:pass});
+   if(res&&res.pendingApproval){
+    $('#welcomeTitle').textContent='درخواست عضویت ثبت شد';
+    $('#welcomeSubtitle').textContent=res.message||'حساب پس از بررسی حضوری مسئول حلقه فعال می‌شود.';
+    var profileLink=document.querySelector('.auth-actions a[href="profile.html"]');
+    if(profileLink)profileLink.hidden=true;
+    document.querySelectorAll('.auth-step').forEach(function(step){step.classList.toggle('active',step.getAttribute('data-step')==='2')});
+    password.value='';window.scrollTo(0,0);return;
+   }
+   var profileLink=document.querySelector('.auth-actions a[href="profile.html"]');if(profileLink)profileLink.hidden=false;
    if(window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.setMember(res.member,res.token);
    var returnTo = new URLSearchParams(window.location.search).get('return') || '';
    if (/^[a-z0-9-]+\.html$/i.test(returnTo)) {
