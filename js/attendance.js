@@ -91,7 +91,8 @@
     members: [],
     records: {}, // { phone: { status, note } }
     official: null,
-    attendanceLocked: false
+    attendanceLocked: false,
+    pendingMembers: []
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -475,6 +476,71 @@
   }
 
   /* ══════════════════════════════════════════════════════════════════════
+     Pending member approvals
+     ══════════════════════════════════════════════════════════════════════ */
+
+  function setupPendingApprovals() {
+    var refresh = $('#refreshPendingMembers');
+    if (refresh) refresh.addEventListener('click', loadPendingMembers);
+    loadPendingMembers();
+  }
+
+  async function loadPendingMembers() {
+    var status = $('#pendingMembersStatus'), list = $('#pendingMembersList'), api = getAPI();
+    if (!status || !list) return;
+    if (!api || !state.official || !state.official.token) {
+      status.textContent = 'برای مشاهدهٔ درخواست‌ها باید با کد مسئول حضور و غیاب وارد شوی.';
+      list.textContent = '';
+      return;
+    }
+    status.textContent = 'در حال دریافت درخواست‌ها…';
+    list.textContent = '';
+    try {
+      var result = await api.post({action:'listPendingMembers', token:state.official.token});
+      state.pendingMembers = result.items || [];
+      if (!state.pendingMembers.length) {
+        status.textContent = 'در حال حاضر درخواست تأییدنشده‌ای وجود ندارد.';
+        return;
+      }
+      status.textContent = 'برای هر درخواست، اطلاعات فرد را حضوری بررسی کن و سپس تأیید یا رد را انتخاب کن.';
+      state.pendingMembers.forEach(function(member) {
+        var card = document.createElement('article'); card.className = 'pending-member-card';
+        var info = document.createElement('div'); info.className = 'pending-member-card__info';
+        var name = document.createElement('strong'); name.textContent = member.name || 'بدون نام';
+        var phone = document.createElement('span'); phone.textContent = member.phone || 'شماره ثبت نشده';
+        var date = document.createElement('small'); date.textContent = member.createdAt ? ('ثبت درخواست: ' + String(member.createdAt).slice(0,10)) : 'تاریخ ثبت نامشخص';
+        info.appendChild(name); info.appendChild(phone); info.appendChild(date);
+        var actions = document.createElement('div'); actions.className = 'pending-member-card__actions';
+        var approve = document.createElement('button'); approve.type = 'button'; approve.className = 'pending-approve'; approve.textContent = 'تأیید حضوری';
+        approve.addEventListener('click', function(){ reviewPendingMember_(member, 'approve', approve); });
+        var reject = document.createElement('button'); reject.type = 'button'; reject.className = 'pending-reject'; reject.textContent = 'رد درخواست';
+        reject.addEventListener('click', function(){ reviewPendingMember_(member, 'reject', reject); });
+        actions.appendChild(approve); actions.appendChild(reject); card.appendChild(info); card.appendChild(actions); list.appendChild(card);
+      });
+    } catch (err) {
+      status.textContent = err.message || 'دریافت درخواست‌ها ناموفق بود.';
+    }
+  }
+
+  async function reviewPendingMember_(member, action, button) {
+    if (action === 'approve' && !confirm('تأیید می‌کنی که هویت این فرد را حضوری بررسی کرده‌ای؟')) return;
+    if (action === 'reject' && !confirm('درخواست عضویت این فرد رد شود؟ در صورت تلاش دوباره، درخواست تازه‌ای برای بررسی ثبت می‌کند.')) return;
+    var api = getAPI(); if (!api || !state.official || !state.official.token) return;
+    var card = button.closest('.pending-member-card');
+    var buttons = card ? card.querySelectorAll('button') : [button];
+    Array.prototype.forEach.call(buttons, function(b){b.disabled=true;});
+    try {
+      await api.post({action:action==='approve'?'approveMember':'rejectPendingMember',token:state.official.token,id:member.id});
+      toast(action==='approve'?'حساب عضو تأیید و فعال شد.':'درخواست عضویت رد شد.');
+      await loadPendingMembers();
+      await loadMembers();
+    } catch (err) {
+      toast(err.message || 'ثبت تصمیم ناموفق بود.','error');
+      Array.prototype.forEach.call(buttons, function(b){b.disabled=false;});
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
      Init
      ══════════════════════════════════════════════════════════════════════ */
 
@@ -498,6 +564,7 @@
     if (nameEl) nameEl.textContent = state.official.name || 'مسئول';
 
     setupSearch();
+    setupPendingApprovals();
     setupMemberModal();
     setupMarkAll();
     setupSave();
