@@ -29,20 +29,31 @@
     var key=['member','official','coach','owner','unregistered'].indexOf(String(roleKey||''))>=0?String(roleKey):'unregistered';
     return '<span class="leader-avatar role-ring--'+key+'"><span class="leader-avatar__fallback">'+initial+'</span>'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" style="position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;border-radius:inherit" onerror="this.remove()">':'')+'</span>';
   }
-  function renderBoard(list){
-    if(!board)return;
-    board.innerHTML=list.length?list.map(function(x,i){
-      var me=member&&String(x.memberId)===String(member.id);
-      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
-    }).join(''):'<div class="empty"><p>هنوز رکوردی برای این هفته ثبت نشده</p></div>';
+  function leaderboardEntry(x,rank,placeClass){
+    var me=member&&String(x.memberId)===String(member.id);
+    return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+faNum(rank)+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
   }
-  function renderAllTimeBoard(list){
-    if(!allTimeBoard)return;
-    allTimeBoard.innerHTML=list.length?list.map(function(x,i){
-      var me=member&&String(x.memberId)===String(member.id);
-      return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+(i+1).toLocaleString('fa-IR')+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
-    }).join(''):'<div class="empty"><p>هنوز رکورد تاریخی ثبت نشده</p></div>';
+  function podiumEntry(x,rank){
+    var place=rank===1?'first':rank===2?'second':'third';
+    var me=member&&String(x.memberId)===String(member.id);
+    var crown=rank===1?'<span class="podium-crown" aria-label="رتبه اول">♛</span>':'';
+    return '<article class="podium-card podium-card--'+place+(me?' is-me':'')+'">'+crown+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<div class="podium-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+'</div>'+memberBadgeMarkup(x)+'<div class="podium-score">'+faNum(x.score)+' <small>امتیاز</small></div><div class="podium-step"><strong>'+faNum(rank)+'</strong></div></article>';
   }
+  function renderLeaderboard(target,list,emptyText){
+    if(!target)return;
+    if(!list.length){target.innerHTML='<div class="empty"><p>'+emptyText+'</p></div>';return;}
+    var top=list.slice(0,3);
+    var podium='';
+    if(top.length===3){
+      podium='<div class="leaderboard-podium" aria-label="سه نفر برتر">'+podiumEntry(top[1],2)+podiumEntry(top[0],1)+podiumEntry(top[2],3)+'</div>';
+    }else{
+      podium='<div class="leaderboard-podium leaderboard-podium--incomplete">'+top.map(function(x,i){return podiumEntry(x,i+1);}).join('')+'</div>';
+    }
+    var rest=list.slice(3).map(function(x,i){return leaderboardEntry(x,i+4);}).join('');
+    target.innerHTML=podium+(rest?'<div class="leaderboard-rest">'+rest+'</div>':'');
+  }
+  function renderBoard(list){renderLeaderboard(board,list,'هنوز رکوردی برای این هفته ثبت نشده');}
+  function renderAllTimeBoard(list){renderLeaderboard(allTimeBoard,list,'هنوز رکورد تاریخی ثبت نشده');}
   async function boot(){
     if(!app()||!app().session||!api())return setTimeout(boot,80);
     member=app().session.getMember();
