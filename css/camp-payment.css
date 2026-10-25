@@ -1,4 +1,4 @@
-/* Camp registration payment stage — v5.34.0 */
+/* Camp registration payment stage and capacity progress — v5.50.0 */
 .camp-info-card{margin-top:12px;padding:15px;border-radius:18px;background:linear-gradient(145deg,#f6fbfa,#fff);border:1px solid #cfe4df;box-shadow:0 8px 22px rgba(20,85,78,.07)}
 .camp-info-card__heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;margin-bottom:5px;border-bottom:1px solid #e2eeea;color:#52716d;font-size:.8rem}
 .camp-info-card__heading strong{color:#173a37;font-size:.9rem}
@@ -30,3 +30,12 @@
 .camp-receipt-submit:disabled{opacity:.75;cursor:wait}
 .camp-payment-status{margin:13px 0 0;padding:11px 13px;border-radius:12px;background:#edf6f2;color:#24654f;font-size:.8rem;line-height:1.9}
 @media(max-width:380px){.camp-payment-card{padding:17px 12px}.camp-payment-details{padding:5px 10px}.camp-payment-details strong{max-width:60%;font-size:.73rem}}
+
+/* Camp capacity / registration progress */
+.camp-capacity{margin-top:12px;padding:13px 12px 11px;border-radius:14px;background:#eef7f4;border:1px solid #d5e8e1}
+.camp-capacity__label{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:.76rem;line-height:1.8}
+.camp-capacity__label span{color:#52716d;flex-shrink:0}
+.camp-capacity__label strong{color:#173a37;text-align:left;font-size:.76rem}
+.camp-capacity__track{height:9px;overflow:hidden;border-radius:99px;background:#dce8e3}
+.camp-capacity__bar{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#118667,#42b883);transition:width .25s ease}
+.camp-capacity__bar.is-full{background:#d97739}
