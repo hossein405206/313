@@ -817,3 +817,47 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-identity-banner img{display:block;width:90%;max-width:520px;height:auto;aspect-ratio:1672/941;object-fit:contain;object-position:right center;margin-inline-start:0;margin-inline-end:auto}
 @media(min-width:600px){.home-identity-banner{padding:16px 5%}.home-identity-banner img{width:82%;max-width:720px}}
 @media(max-width:360px){.home-identity-banner{padding:10px 4%}.home-identity-banner img{width:94%}}
+
+
+/* v5.58.0 — Shared design-system finishing layer across all pages. */
+:root{
+  --focus-ring:0 0 0 3px rgba(196,154,58,.30);
+  --focus-outline:#8a641e;
+  --surface-border:rgba(32,57,87,.10);
+  --surface-shadow:0 8px 24px rgba(18,34,54,.07);
+}
+/* Keep media and form controls within narrow mobile layouts. */
+.app-container img,.app-container video,.app-container canvas{max-width:100%}
+.app-container input,.app-container textarea,.app-container select{min-width:0;max-width:100%}
+/* A single, high-contrast keyboard focus language for links and controls. */
+.app-container a:focus-visible,
+.app-container button:focus-visible,
+.app-container input:focus-visible,
+.app-container textarea:focus-visible,
+.app-container select:focus-visible,
+.app-container [role="button"]:focus-visible,
+.app-container [tabindex]:focus-visible{
+  outline:2px solid var(--focus-outline);
+  outline-offset:3px;
+  box-shadow:var(--focus-ring);
+}
+/* Make disabled actions visually consistent and clearly non-interactive. */
+.app-container button:disabled,
+.app-container input:disabled,
+.app-container select:disabled,
+.app-container textarea:disabled,
+.app-container [aria-disabled="true"]{
+  cursor:not-allowed;
+  opacity:.58;
+}
+/* Respect the operating system's reduced-motion preference across pages. */
+@media(prefers-reduced-motion:reduce){
+  .app-container *,
+  .app-container *::before,
+  .app-container *::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
