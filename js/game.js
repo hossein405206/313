@@ -8,7 +8,7 @@
   var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
-  var best=0,weeklyBest=0,submitting=false;
+  var best=0,weeklyBest=0,submitting=false,runId='',wallet=null,shopCategory='hat';
   function app(){return window.KanoonApp;}
   function api(){return app()&&app().api;}
   function toast(text,error){var t=app()&&app().toast;if(t)(error?t.error:t.success)(text);}
@@ -79,6 +79,7 @@
     }
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
     setButton('شروع بازی',false);
+    await loadWallet();
     best=Math.max(0,Number(member.bestScore||0));
     bestEl.textContent=faNum(best);
     await load();
@@ -113,11 +114,35 @@
       return false;
     }
   }
+  function loadWallet(){
+    return api().post({action:'getGameWallet',token:member.token}).then(function(r){wallet=r.wallet||null;renderWallet();}).catch(function(e){console.warn('[GameWallet]',e);var box=document.getElementById('gameCosmetics');if(box)box.textContent='کمد تزئینات فعلاً در دسترس نیست.';});
+  }
+  function renderWallet(){
+    var coins=document.getElementById('gameCoins'),box=document.getElementById('gameCosmetics');
+    if(coins)coins.textContent=faNum(wallet&&wallet.coins||0);
+    if(!box||!wallet)return;
+    var items=(wallet.catalog||[]).filter(function(x){return x.category===shopCategory;});
+    box.innerHTML=items.map(function(item){
+      var owned=(wallet.owned||[]).indexOf(item.id)>=0;
+      var equipped=(shopCategory==='hat'?wallet.equippedHat:wallet.equippedOutfit)===item.id;
+      var glyph=item.id==='hat_soldier'?'🪖':item.id==='hat_police'?'👮':item.id==='hat_winter'?'🧢':item.id==='hat_crown'?'👑':item.id==='hat_party'?'🎉':item.id==='outfit_scout'?'🦺':item.id==='outfit_winter'?'🧥':'✨';
+      var action=owned?'equip':'buy',label=equipped?'روی پرنده است':(owned?'پوشیدن':'خرید · '+faNum(item.price)+' سکه');
+      return '<article class="cosmetic-card '+(equipped?'is-equipped':'')+'"><div class="cosmetic-card__preview" aria-hidden="true">'+glyph+'</div><div class="cosmetic-card__info"><strong>'+esc(item.name)+'</strong><small>'+(owned?'خریداری‌شده':'قیمت: '+faNum(item.price)+' سکه')+'</small></div><button type="button" data-cosmetic-action="'+action+'" data-cosmetic-id="'+esc(item.id)+'" data-cosmetic-slot="'+shopCategory+'" '+(equipped?'disabled':'')+'>'+label+'</button></article>';
+    }).join('');
+    box.querySelectorAll('[data-cosmetic-action]').forEach(function(btn){btn.addEventListener('click',async function(){
+      btn.disabled=true;var action=btn.dataset.cosmeticAction;
+      try{var result=await api().post({action:action==='buy'?'buyGameCosmetic':'equipGameCosmetic',token:member.token,id:btn.dataset.cosmeticId,slot:btn.dataset.cosmeticSlot});wallet=result.wallet;renderWallet();toast(action==='buy'?'خرید انجام شد!':'ظاهر پرنده تغییر کرد!');}
+      catch(e){toast(e.message||'انجام عملیات ناموفق بود',true);btn.disabled=false;}
+    });});
+  }
+  document.querySelectorAll('[data-shop-category]').forEach(function(btn){btn.addEventListener('click',function(){
+    shopCategory=btn.dataset.shopCategory;document.querySelectorAll('[data-shop-category]').forEach(function(b){var active=b===btn;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});renderWallet();
+  });});
   function startReady(){
     if(state==='playing'||submitting)return;
     if(raf)cancelAnimationFrame(raf);
     raf=0;lastFrame=0;
-    state='ready';score=0;worldTime=0;pipes=[];particles=[];
+    state='ready';score=0;worldTime=0;pipes=[];particles=[];runId='run_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
     bird={x:88,y:H*.48,vy:0,r:13,wing:0};
     scoreEl.textContent=faNum(0);
     setButton('بازی آماده است',false);
@@ -214,7 +239,15 @@
     ctx.shadowColor='transparent';ctx.fillStyle='#d89b2b';ctx.beginPath();ctx.ellipse(-5,6,10,5,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(8,-6,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#26313b';ctx.beginPath();ctx.arc(9,-6,2.2,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#e97b2e';ctx.beginPath();ctx.moveTo(14,-2);ctx.lineTo(28,3);ctx.lineTo(14,8);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#f0b52e';ctx.beginPath();ctx.ellipse(-9,-3,9,5,-.35+bird.wing*.45,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle='#f0b52e';ctx.beginPath();ctx.ellipse(-9,-3,9,5,-.35+bird.wing*.45,0,Math.PI*2);ctx.fill();
+    var hat=wallet&&wallet.equippedHat||'';
+    ctx.shadowColor='transparent';
+    if(hat==='hat_soldier'){ctx.fillStyle='#526747';rr(-14,-18,24,8,3);ctx.fill();ctx.fillRect(-12,-12,20,3);}
+    else if(hat==='hat_police'){ctx.fillStyle='#233e70';rr(-14,-19,23,9,3);ctx.fill();ctx.fillStyle='#f1c84d';ctx.fillRect(-5,-16,5,4);ctx.fillRect(-15,-12,27,3);}
+    else if(hat==='hat_winter'){ctx.fillStyle='#d64c50';ctx.beginPath();ctx.arc(-1,-12,12,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(-14,-13,27,4);ctx.beginPath();ctx.arc(-1,-24,3,0,Math.PI*2);ctx.fill();}
+    else if(hat==='hat_crown'){ctx.fillStyle='#f4c84c';ctx.beginPath();ctx.moveTo(-14,-12);ctx.lineTo(-13,-22);ctx.lineTo(-6,-16);ctx.lineTo(0,-25);ctx.lineTo(6,-16);ctx.lineTo(13,-22);ctx.lineTo(14,-12);ctx.closePath();ctx.fill();}
+    else if(hat==='hat_party'){ctx.fillStyle='#ef8f4b';ctx.beginPath();ctx.moveTo(-12,-13);ctx.lineTo(-3,-30);ctx.lineTo(8,-13);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0a1';ctx.beginPath();ctx.arc(-3,-30,2,0,Math.PI*2);ctx.fill();}
+    ctx.restore();
   }
   function draw(){
     ctx.clearRect(0,0,W,H);
@@ -253,7 +286,8 @@
     if(submitting||!member||!member.token)return;
     submitting=true;setButton('در حال بررسی رکورد…',true);
     try{
-      var response=await api().post({action:'submitGameScore',token:member.token,score:score});
+      var response=await api().post({action:'submitGameScore',token:member.token,score:score,runId:runId});
+      if(response.wallet){wallet=response.wallet;renderWallet();}
       renderBoard(response.leaderboard||[]);
       renderAllTimeBoard(response.allTimeLeaderboard||[]);
       var savedLifetime=Number(response.lifetimeBest||member.bestScore||0);
