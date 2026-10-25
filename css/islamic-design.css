@@ -887,3 +887,10 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
   .home-identity-banner{padding-top:2px;padding-bottom:1px}
   .home-identity-banner img{width:94%;height:clamp(145px,42vw,170px)}
 }
+
+
+/* v5.63.0 — Smaller, tighter-cropped home identity typography. */
+.home-identity-banner{padding-top:3px;padding-bottom:2px}
+.home-identity-banner img{width:82%;max-width:470px;height:clamp(125px,27vw,235px);object-fit:cover;object-position:center 43%;margin-inline:auto}
+@media(min-width:600px){.home-identity-banner{padding-top:4px;padding-bottom:2px}.home-identity-banner img{width:74%;max-width:650px;height:clamp(180px,23vw,290px);object-position:center 43%}}
+@media(max-width:360px){.home-identity-banner{padding-top:2px;padding-bottom:1px}.home-identity-banner img{width:88%;height:clamp(112px,35vw,140px);object-position:center 43%}}
