@@ -432,3 +432,23 @@
     font-size: 0.82rem;
   }
   }
+
+
+/* Pending member approval panel */
+.pending-members-panel{margin:18px 0 22px;padding:16px;border:1px solid rgba(32,57,87,.14);border-radius:18px;background:var(--surface,#fff);box-shadow:0 8px 24px rgba(18,34,54,.05)}
+.pending-members-panel__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.pending-members-panel__head h2{margin:0;font-size:1rem;color:var(--text-primary,#203957)}
+.pending-members-panel__head p{margin:5px 0 0;font-size:.8rem;line-height:1.8;color:var(--text-secondary,#687386)}
+.pending-refresh,.pending-approve,.pending-reject{border:1px solid rgba(32,57,87,.15);border-radius:10px;padding:9px 12px;font:inherit;font-size:.8rem;cursor:pointer}
+.pending-refresh{white-space:nowrap;background:#fff;color:#203957}
+.pending-members-status{font-size:.82rem;line-height:1.9;color:var(--text-secondary,#687386);margin:10px 0}
+.pending-members-list{display:grid;gap:10px}
+.pending-member-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid rgba(32,57,87,.1);border-radius:14px;background:rgba(246,248,251,.8)}
+.pending-member-card__info{display:grid;gap:4px;min-width:0}
+.pending-member-card__info strong{font-size:.9rem;overflow-wrap:anywhere}
+.pending-member-card__info span,.pending-member-card__info small{font-size:.78rem;color:var(--text-secondary,#687386);overflow-wrap:anywhere}
+.pending-member-card__actions{display:flex;flex-wrap:wrap;gap:7px;flex-shrink:0}
+.pending-approve{background:#e8f5ee;color:#17643a;border-color:#c3e4d0}
+.pending-reject{background:#fff;color:#8a3b36;border-color:#ead0cd}
+.pending-members-panel button:disabled{opacity:.55;cursor:wait}
+@media(max-width:520px){.pending-member-card{align-items:stretch;flex-direction:column}.pending-member-card__actions{display:grid;grid-template-columns:1fr 1fr}.pending-member-card__actions button{width:100%}}
