@@ -71,21 +71,33 @@
     await load();
     draw();
   }
-  async function load(){
+  async function load(attempt){
+    attempt=Number(attempt||0);
     try{
       var r=await api().get({action:'getGameData'});
+      if(!r||r.ok===false)throw new Error(r&&r.error||'دریافت جدول ناموفق بود');
       weekKey=String(r.weekKey||'');
       prize.textContent=r.prize||'به بیشترین رکورد هفته جایزه داده می‌شود';
-      renderBoard(r.leaderboard||[]);
-      renderAllTimeBoard(r.allTimeLeaderboard||[]);
+      renderBoard(Array.isArray(r.leaderboard)?r.leaderboard:[]);
+      renderAllTimeBoard(Array.isArray(r.allTimeLeaderboard)?r.allTimeLeaderboard:[]);
       var weeklyMine=(r.leaderboard||[]).find(function(x){return member&&String(x.memberId)===String(member.id);});
       weeklyBest=weeklyMine?Math.max(0,Number(weeklyMine.score||0)):0;
       var mine=(r.allTimeLeaderboard||[]).find(function(x){return member&&String(x.memberId)===String(member.id);});
       if(mine)best=Math.max(best,Number(mine.score||0));
       best=Math.max(best,Number(member.bestScore||0));
       bestEl.textContent=faNum(best);
+      return true;
     }catch(e){
-      say('فعلاً دریافت رکوردها ممکن نیست. لطفاً کمی بعد دوباره تلاش کن.');
+      console.warn('[GameLeaderboard] initial load failed',e);
+      if(attempt<2){
+        say('در حال بارگذاری جدول رکوردها…');
+        await new Promise(function(resolve){setTimeout(resolve,700*(attempt+1));});
+        return load(attempt+1);
+      }
+      renderBoard([]);
+      renderAllTimeBoard([]);
+      say('دریافت جدول رکوردها موقتاً ناموفق بود؛ برای تلاش دوباره صفحه را تازه‌سازی کن.');
+      return false;
     }
   }
   function startReady(){
