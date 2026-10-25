@@ -861,3 +861,8 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
     transition-duration:.01ms!important;
   }
 }
+
+/* v5.61.0 — Center the ring identity calligraphy on every screen size. */
+.home-identity-banner{justify-content:center;text-align:center}
+.home-identity-banner img{margin-inline:auto;object-position:center center}
+@media(min-width:600px){.home-identity-banner img{margin-inline:auto}}
