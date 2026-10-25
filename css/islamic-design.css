@@ -915,3 +915,125 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-identity-banner img{width:54%!important;max-width:300px!important;height:clamp(76px,16vw,112px)!important;object-fit:cover!important;object-position:center 72%!important}
 @media(min-width:600px){.home-identity-banner img{width:50%!important;max-width:340px!important;height:clamp(90px,15vw,132px)!important;object-position:center 72%!important}}
 @media(max-width:360px){.home-identity-banner img{width:62%!important;max-width:230px!important;height:clamp(68px,20vw,86px)!important;object-position:center 72%!important}}
+
+
+/* v5.69.0 — Internal-page polish inspired by clear, restrained mobile design systems.
+   Keep the site's teal/navy/gold identity; improve hierarchy, spacing, and touch feedback. */
+:root{
+  --ui-radius-card:20px;
+  --ui-border-soft:rgba(24,53,74,.09);
+  --ui-shadow-soft:0 8px 24px rgba(22,43,60,.055);
+  --ui-shadow-hover:0 12px 30px rgba(22,43,60,.09);
+}
+.app-container:not(.home-app) .app-header{
+  min-height:64px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) clamp(16px,4vw,24px) 12px;
+  border-bottom:1px solid rgba(26,56,75,.07);
+}
+.app-container:not(.home-app) .app-header h1{
+  letter-spacing:-.025em;
+  font-size:clamp(1.04rem,3.7vw,1.28rem);
+  font-weight:850;
+}
+.app-container:not(.home-app) .page{
+  padding-inline:clamp(15px,4vw,24px);
+  padding-top:clamp(18px,4vw,28px);
+  padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));
+}
+.app-container:not(.home-app) .header-back,
+.app-container:not(.home-app) .header-logout{
+  display:grid;place-items:center;
+  width:42px;height:42px;min-width:42px;
+  border-radius:14px;
+  border:1px solid var(--ui-border-soft);
+  background:linear-gradient(145deg,#fff,#f5f8f8);
+  color:#24445a;
+  transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.app-container:not(.home-app) .header-back:active,
+.app-container:not(.home-app) .header-logout:active{transform:scale(.96)}
+.app-container:not(.home-app) .header-back svg,
+.app-container:not(.home-app) .header-logout svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.app-container:not(.home-app) .section-title,
+.app-container:not(.home-app) .section-heading h2,
+.app-container:not(.home-app) .activities-section-heading h2{
+  letter-spacing:-.02em;
+}
+.app-container:not(.home-app) :is(.profile-hero,.profile-stats,.profile-info,.profile-actions,.att-summary,.att-stats,.pending-members-panel,.official-gate,.feedback-hero,.auth-hero,.auth-card,.coach-login,.activity-report-card,.activity-event-card,.camp-payment-card){
+  border-radius:var(--ui-radius-card);
+}
+.app-container:not(.home-app) :is(.profile-stats,.profile-info,.att-summary,.att-stats,.pending-members-panel,.official-gate,.feedback-hero,.coach-login,.activity-report-card,.activity-event-card){
+  box-shadow:var(--ui-shadow-soft);
+}
+.app-container:not(.home-app) :is(.form-control,input[type="text"],input[type="tel"],input[type="search"],input[type="email"],input[type="password"],textarea,select){
+  min-height:46px;
+  border-radius:13px;
+  border-color:rgba(35,67,86,.16);
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.app-container:not(.home-app) :is(.form-control,input,textarea,select):focus-visible{
+  outline:none;
+  border-color:#17877b;
+  box-shadow:0 0 0 3px rgba(23,135,123,.13);
+}
+.app-container:not(.home-app) :is(.btn-submit,.att-btn-all,.att-save-btn,.pending-refresh,.pending-approve,.pending-reject){
+  min-height:44px;
+  border-radius:14px;
+  font-weight:800;
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+.app-container:not(.home-app) :is(.btn-submit,.att-btn-all,.att-save-btn):active{transform:scale(.985)}
+.app-container:not(.home-app) :is(.info-row,.pstat,.att-stat,.att-summary__date,.att-summary__official){
+  transition:background .18s ease,border-color .18s ease;
+}
+.profile-page .profile-hero{
+  padding:24px 18px 22px;
+  background:radial-gradient(circle at 88% 0%,rgba(220,190,112,.19),transparent 38%),linear-gradient(145deg,#fff 0%,#f4f9f7 100%);
+  border:1px solid rgba(28,79,78,.09);
+  box-shadow:0 14px 32px rgba(24,58,64,.075);
+}
+.profile-page .profile-stats{gap:10px;margin-top:14px}
+.profile-page .pstat{
+  border:1px solid rgba(29,69,82,.08);
+  border-radius:16px;
+  background:linear-gradient(150deg,#fff,#f8fbfa);
+  padding:14px 10px;
+}
+.profile-page .pstat__num{letter-spacing:-.035em}
+.profile-page .profile-info{padding:19px;border:1px solid rgba(29,69,82,.08);background:#fff}
+.profile-page .info-row{padding:13px 0;border-bottom:1px solid rgba(29,69,82,.07)}
+.profile-page .info-row:last-child{border-bottom:0}
+.profile-page .info-row__icon{
+  width:40px;height:40px;flex:0 0 40px;
+  display:grid;place-items:center;border-radius:13px;
+  background:linear-gradient(145deg,#e7f4ef,#d9eee7);color:#176e63;
+}
+.profile-page .info-row__icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.attendance-page .att-summary,.att-summary{border:1px solid rgba(29,69,82,.08);box-shadow:var(--ui-shadow-soft)}
+.attendance-page .att-stat,.att-stat{border:1px solid rgba(29,69,82,.07);border-radius:16px}
+.pending-members-panel{border:1px solid rgba(29,69,82,.09);padding:16px;background:linear-gradient(150deg,#fff,#f8fbfa)}
+.pending-member-card{border-radius:15px!important;background:#fff!important;box-shadow:0 3px 12px rgba(22,43,60,.035)}
+.activities-app .activities-intro{border-radius:22px;overflow:hidden}
+.activities-app .activity-report-card,.activities-app .activity-event-card{border:1px solid rgba(29,69,82,.09);overflow:hidden;transition:transform .18s ease,box-shadow .18s ease}
+.activities-app .activity-report-card:active,.activities-app .activity-event-card:active{transform:scale(.995)}
+.feedback-page .feedback-hero{border:1px solid rgba(29,69,82,.08);box-shadow:var(--ui-shadow-soft)}
+.app-container:not(.home-app) .bottom-nav{
+  padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid rgba(23,55,73,.08);
+  box-shadow:0 -8px 24px rgba(18,43,59,.045);
+  backdrop-filter:blur(18px);
+}
+.app-container:not(.home-app) .nav-item{min-height:54px}
+.app-container:not(.home-app) .nav-item span{font-weight:750;letter-spacing:-.01em}
+@media(min-width:760px){
+  .app-container:not(.home-app) .page{max-width:900px;margin-inline:auto}
+  .profile-page .profile-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:390px){
+  .app-container:not(.home-app) .page{padding-inline:13px}
+  .profile-page .pstat{padding:12px 7px}
+  .profile-page .pstat__label{font-size:.7rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-container:not(.home-app) *{scroll-behavior:auto!important;transition:none!important}
+}
