@@ -894,3 +894,10 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-identity-banner img{width:82%;max-width:470px;height:clamp(125px,27vw,235px);object-fit:cover;object-position:center 43%;margin-inline:auto}
 @media(min-width:600px){.home-identity-banner{padding-top:4px;padding-bottom:2px}.home-identity-banner img{width:74%;max-width:650px;height:clamp(180px,23vw,290px);object-position:center 43%}}
 @media(max-width:360px){.home-identity-banner{padding-top:2px;padding-bottom:1px}.home-identity-banner img{width:88%;height:clamp(112px,35vw,140px);object-position:center 43%}}
+
+
+/* v5.64.0 — Slightly smaller typography with a higher crop edge. */
+.home-identity-banner{padding-top:2px;padding-bottom:1px}
+.home-identity-banner img{width:78%;max-width:445px;height:clamp(118px,25vw,220px);object-fit:cover;object-position:center 35%;margin-inline:auto}
+@media(min-width:600px){.home-identity-banner{padding-top:3px;padding-bottom:1px}.home-identity-banner img{width:70%;max-width:620px;height:clamp(165px,21vw,270px);object-position:center 35%}}
+@media(max-width:360px){.home-identity-banner{padding-top:1px;padding-bottom:1px}.home-identity-banner img{width:84%;height:clamp(104px,32vw,130px);object-position:center 35%}}
