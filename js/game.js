@@ -79,10 +79,10 @@
     }
     playerNameEl.textContent=member.nickname||member.name||'عضو حلقه';
     setButton('شروع بازی',false);
-    await loadWallet();
     best=Math.max(0,Number(member.bestScore||0));
     bestEl.textContent=faNum(best);
-    await load();
+    // Fetch the wallet and leaderboards together; these requests do not depend on one another.
+    await Promise.all([loadWallet(),load()]);
     draw();
   }
   async function load(attempt){
@@ -108,9 +108,11 @@
         await new Promise(function(resolve){setTimeout(resolve,700*(attempt+1));});
         return load(attempt+1);
       }
-      renderBoard([]);
-      renderAllTimeBoard([]);
-      say('دریافت جدول رکوردها موقتاً ناموفق بود؛ برای تلاش دوباره صفحه را تازه‌سازی کن.');
+      if(board)board.innerHTML='<div class="empty"><p>رکوردهای هفتگی بارگذاری نشدند.</p><button type="button" id="retryWeeklyBoard" class="records-retry">تلاش دوباره</button></div>';
+      if(allTimeBoard)allTimeBoard.innerHTML='<div class="empty"><p>جدول تاریخی فعلاً در دسترس نیست.</p></div>';
+      var retry=document.getElementById('retryWeeklyBoard');
+      if(retry)retry.addEventListener('click',function(){retry.disabled=true;retry.textContent='در حال دریافت…';load();});
+      say('دریافت جدول رکوردها ناموفق بود؛ می‌توانی دوباره تلاش کنی.');
       return false;
     }
   }
@@ -350,5 +352,7 @@
     if(state==='idle'||state==='over')startReady();
     else if(state==='ready')say('حالا روی زمین بازی لمس کن تا پرواز شروع شود.');
   });
+  var shopShortcut=document.getElementById('openBirdWardrobe');
+  if(shopShortcut)shopShortcut.addEventListener('click',function(){var wardrobe=document.getElementById('gameWalletTitle');if(wardrobe){wardrobe.scrollIntoView({behavior:'smooth',block:'start'});wardrobe.setAttribute('tabindex','-1');wardrobe.focus({preventScroll:true});}});
   scoreEl.textContent=faNum(0);bestEl.textContent=faNum(0);draw();boot();
 })();
