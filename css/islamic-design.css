@@ -908,3 +908,10 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-identity-banner img{width:65%!important;max-width:365px!important;height:clamp(92px,19vw,168px)!important;object-fit:cover!important;object-position:center 34%!important}
 @media(min-width:600px){.home-identity-banner img{width:58%!important;max-width:475px!important;height:clamp(125px,17vw,218px)!important}}
 @media(max-width:360px){.home-identity-banner img{width:72%!important;max-width:270px!important;height:clamp(82px,24vw,106px)!important}}
+
+
+/* v5.67.0 — Smaller identity artwork with more cropping from the top edge. */
+.home-identity-banner{padding-top:0!important;padding-bottom:1px!important}
+.home-identity-banner img{width:54%!important;max-width:300px!important;height:clamp(76px,16vw,112px)!important;object-fit:cover!important;object-position:center 72%!important}
+@media(min-width:600px){.home-identity-banner img{width:50%!important;max-width:340px!important;height:clamp(90px,15vw,132px)!important;object-position:center 72%!important}}
+@media(max-width:360px){.home-identity-banner img{width:62%!important;max-width:230px!important;height:clamp(68px,20vw,86px)!important;object-position:center 72%!important}}
