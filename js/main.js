@@ -874,7 +874,7 @@
           for (var i = 0; i < camps.length; i++) {
             var costLabel = Number(camps[i].cost || 0) > 0 ? ' · ' + money(camps[i].cost) : ' · بدون هزینه';
             var capacity = Number(camps[i].capacity || 0), count = Number(camps[i].registrationCount || 0);
-            var capacityLabel = capacity > 0 ? ' · ثبت‌نام ' + count.toLocaleString('fa-IR') + '/' + capacity.toLocaleString('fa-IR') : '';
+            var capacityLabel = capacity > 0 ? ' · ثبت‌نام ' + count.toLocaleString('fa-IR') + '/' + capacity.toLocaleString('fa-IR') : ' · ظرفیت تعیین نشده';
             var fullLabel = capacity > 0 && count >= capacity ? ' · ظرفیت تکمیل' : '';
             html += '<option value="' + DOM.escape(camps[i].id) + '">' + DOM.escape(camps[i].title) + DOM.escape(costLabel + capacityLabel + fullLabel) + '</option>';
           }
@@ -917,7 +917,10 @@
       if (!Validate.iranMobile(data.fatherPhone)) { Toast.error('شماره پدر نامعتبر'); return; }
 
       var campBeforeSubmit = selectedCamp();
-      if (campBeforeSubmit && Number(campBeforeSubmit.capacity || 0) > 0 && Number(campBeforeSubmit.registrationCount || 0) >= Number(campBeforeSubmit.capacity || 0)) {
+      if (campBeforeSubmit && Number(campBeforeSubmit.capacity || 0) < 1) {
+        Toast.error('ظرفیت این اردو هنوز تعیین نشده است؛ اردو دیگری انتخاب کن یا بعداً دوباره تلاش کن'); return;
+      }
+      if (campBeforeSubmit && Number(campBeforeSubmit.registrationCount || 0) >= Number(campBeforeSubmit.capacity || 0)) {
         Toast.error('ظرفیت این اردو تکمیل شده است؛ اردو دیگری انتخاب کن'); return;
       }
 
