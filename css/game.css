@@ -89,3 +89,23 @@
 .leaderboard-podium--incomplete{grid-template-columns:repeat(3,minmax(0,1fr))}
 .leaderboard-podium--incomplete .podium-card{grid-column:auto}
 @media(max-width:360px){.leaderboard-podium{gap:5px;padding-inline:1px}.podium-card{padding-inline:3px}.podium-card .member-role-badge{font-size:.43rem}.podium-score{padding:5px 2px}.podium-step{height:76px}.podium-card--first .podium-step{height:120px}.podium-card--second .podium-step{height:88px}.podium-card--third .podium-step{height:66px}.podium-player-name{font-size:.56rem}}
+
+
+/* v5.66.0 — Smaller identity typography on the home page. */
+.home-identity-banner{padding-top:1px!important;padding-bottom:1px!important}
+.home-identity-banner img{width:65%!important;max-width:365px!important;height:clamp(92px,19vw,168px)!important;object-fit:cover!important;object-position:center 34%!important}
+@media(min-width:600px){
+  .home-identity-banner{padding-top:2px!important;padding-bottom:1px!important}
+  .home-identity-banner img{width:58%!important;max-width:475px!important;height:clamp(125px,17vw,218px)!important;object-position:center 34%!important}
+}
+@media(max-width:360px){
+  .home-identity-banner img{width:72%!important;max-width:270px!important;height:clamp(82px,24vw,106px)!important;object-position:center 34%!important}
+}
+
+/* v5.66.0 — Podium styles are reserved for the all-time board only. */
+.leaderboard:not(.leaderboard--alltime) .leaderboard-podium,
+.leaderboard:not(.leaderboard--alltime) .podium-card{display:none!important}
+.leaderboard:not(.leaderboard--alltime) .leader-row:first-child,
+.leaderboard:not(.leaderboard--alltime) .leader-row:nth-child(2),
+.leaderboard:not(.leaderboard--alltime) .leader-row:nth-child(3){background:#fff!important;border-color:rgba(23,35,56,.075)!important}
+.leaderboard:not(.leaderboard--alltime) .leader-row.me{background:#fffaf0!important}
