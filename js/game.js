@@ -233,6 +233,10 @@
   function drawBird(){
     ctx.save();ctx.translate(bird.x,bird.y);
     ctx.rotate(state==='playing'?Math.max(-.45,Math.min(.75,bird.vy*.0012)):0);
+    var outfit=wallet&&wallet.equippedOutfit||'';
+    if(outfit==='outfit_scout'){ctx.fillStyle='#4d8064';rr(-14,-1,28,22,7);ctx.fill();ctx.fillStyle='#d9e7c9';ctx.fillRect(-5,2,10,3);}
+    else if(outfit==='outfit_winter'){ctx.fillStyle='#d8edf0';rr(-15,-2,30,23,8);ctx.fill();ctx.fillStyle='#5b9eaf';ctx.fillRect(-3,1,6,14);ctx.fillStyle='#fff';ctx.fillRect(-12,6,4,4);}
+    else if(outfit==='outfit_royal'){ctx.fillStyle='#7146a3';rr(-15,-2,30,23,8);ctx.fill();ctx.fillStyle='#f4ce62';ctx.fillRect(-3,0,6,15);ctx.fillStyle='#f4ce62';ctx.beginPath();ctx.arc(-9,4,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(9,4,2,0,Math.PI*2);ctx.fill();}
     ctx.shadowColor='rgba(38,53,70,.24)';ctx.shadowBlur=8;ctx.shadowOffsetY=3;
     var body=ctx.createLinearGradient(-17,-14,15,14);body.addColorStop(0,'#ffe978');body.addColorStop(.55,'#f5c843');body.addColorStop(1,'#e5a72f');
     ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,17,13,0,0,Math.PI*2);ctx.fill();
