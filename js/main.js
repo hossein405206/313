@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.49.0',
-    BACKEND_VERSION: '4.29.0-attendance-member-history',
+    VERSION: '5.50.0',
+    BACKEND_VERSION: '4.30.0-camp-capacity-official-role',
     BACKEND_COMPATIBLE_VERSIONS: ['4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
   };
 
@@ -605,6 +605,9 @@
         if (expectedRole === 'supervision' && String(official.role || '').indexOf('نظارت') < 0) {
           throw new Error('این کد برای مسئول حضور و غیاب است؛ کد مسئول نظارت را وارد کن');
         }
+        if (expectedRole === 'camp' && String(official.role || '').trim() !== 'مسئول اردو') {
+          throw new Error('این کد برای مسئول اردو نیست؛ کد مسئول اردو را وارد کن');
+        }
         Session.setOfficial(official, res.token);
 
         Toast.success('خوش آمدی، ' + (official.name || 'مسئول'));
@@ -617,6 +620,8 @@
             location.href = 'attendance.html';
           } else if (role.indexOf('نظارت') >= 0) {
             location.href = 'supervision.html';
+          } else if (role.indexOf('اردو') >= 0) {
+            location.href = 'coach.html';
           } else {
             location.href = 'index.html';
             Toast.show('پنل این مسئولیت هنوز آماده نیست', 'error');
@@ -800,6 +805,23 @@
         campInitialDeadline: camp.registrationDeadline ? (JalaliDate.format(camp.registrationDeadline) || camp.registrationDeadline) : 'اعلام نشده'
       };
       Object.keys(fields).forEach(function(id) { var el = DOM.qs('#' + id); if (el) el.textContent = fields[id]; });
+      var capacity = Number(camp.capacity || 0);
+      var count = Number(camp.registrationCount || 0);
+      var capacityBlock = DOM.qs('#campCapacityBlock');
+      var capacityText = DOM.qs('#campCapacityText');
+      var capacityTrack = DOM.qs('#campCapacityTrack');
+      var capacityBar = DOM.qs('#campCapacityBar');
+      if (capacityBlock) capacityBlock.hidden = false;
+      if (capacityText) capacityText.textContent = capacity > 0
+        ? (count.toLocaleString('fa-IR') + ' از ' + capacity.toLocaleString('fa-IR') + ' نفر ثبت‌نام کرده‌اند')
+        : (count.toLocaleString('fa-IR') + ' نفر ثبت‌نام کرده‌اند · ظرفیت تعیین نشده');
+      if (capacityTrack) capacityTrack.hidden = capacity <= 0;
+      if (capacityBar) {
+        var percent = capacity > 0 ? Math.max(0, Math.min(100, Math.round(count * 100 / capacity))) : 0;
+        capacityBar.style.width = percent + '%';
+        capacityBar.setAttribute('aria-valuenow', String(percent));
+        capacityBar.classList.toggle('is-full', capacity > 0 && count >= capacity);
+      }
     }
 
     function handleFile(file) {
@@ -851,7 +873,10 @@
           var html = '<option value="">انتخاب کن...</option>';
           for (var i = 0; i < camps.length; i++) {
             var costLabel = Number(camps[i].cost || 0) > 0 ? ' · ' + money(camps[i].cost) : ' · بدون هزینه';
-            html += '<option value="' + DOM.escape(camps[i].id) + '">' + DOM.escape(camps[i].title) + DOM.escape(costLabel) + '</option>';
+            var capacity = Number(camps[i].capacity || 0), count = Number(camps[i].registrationCount || 0);
+            var capacityLabel = capacity > 0 ? ' · ثبت‌نام ' + count.toLocaleString('fa-IR') + '/' + capacity.toLocaleString('fa-IR') : '';
+            var fullLabel = capacity > 0 && count >= capacity ? ' · ظرفیت تکمیل' : '';
+            html += '<option value="' + DOM.escape(camps[i].id) + '">' + DOM.escape(camps[i].title) + DOM.escape(costLabel + capacityLabel + fullLabel) + '</option>';
           }
           campSelect.innerHTML = html;
           updateCampInfo();
@@ -891,11 +916,20 @@
       if (!Validate.iranMobile(data.phone))       { Toast.error('شماره همراه خودت نامعتبر'); return; }
       if (!Validate.iranMobile(data.fatherPhone)) { Toast.error('شماره پدر نامعتبر'); return; }
 
+      var campBeforeSubmit = selectedCamp();
+      if (campBeforeSubmit && Number(campBeforeSubmit.capacity || 0) > 0 && Number(campBeforeSubmit.registrationCount || 0) >= Number(campBeforeSubmit.capacity || 0)) {
+        Toast.error('ظرفیت این اردو تکمیل شده است؛ اردو دیگری انتخاب کن'); return;
+      }
+
       var btn = form.querySelector('button[type="submit"]');
       btn.disabled = true;
       btn.textContent = 'در حال ارسال...';
 
       try {
+        var backendVersion = await Api.get({ action: 'ping' });
+        if (!backendVersion || backendVersion.version !== CONFIG.BACKEND_VERSION) {
+          throw new Error('برای ثبت امن ظرفیت اردو، مربی باید ابتدا نسخهٔ جدید فایل Apps Script را منتشر کند. فعلاً ثبت‌نام ارسال نشد.');
+        }
         var photoBase64 = '';
         if (selectedFile) photoBase64 = await RegisterForm._fileToBase64(selectedFile);
 
@@ -914,6 +948,11 @@
         });
 
         var campForPayment = selectedCamp();
+        if (campForPayment) {
+          campForPayment.registrationCount = Number(campForPayment.registrationCount || 0) + 1;
+          campForPayment.isFull = Number(campForPayment.capacity || 0) > 0 && campForPayment.registrationCount >= Number(campForPayment.capacity || 0);
+          updateCampInfo(campForPayment);
+        }
         pendingRegistrationId = String(registrationResult && registrationResult.id || '');
         if (campForPayment && Number(campForPayment.cost || 0) > 0) {
           if (!pendingRegistrationId) throw new Error('ثبت‌نام ذخیره شد، اما شناسه برای ارسال رسید دریافت نشد. لطفاً با مربی هماهنگ کن.');
