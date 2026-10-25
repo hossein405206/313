@@ -812,8 +812,8 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 }
 
 
-/* v5.54.0 — Compact homepage identity artwork; keep the PNG ratio and transparent canvas. */
-.home-identity-banner{margin:7px var(--gutter) 10px;padding:5px;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;border:1px solid rgba(196,154,58,.22);border-radius:16px;background:radial-gradient(160px 70px at 100% 0,rgba(196,154,58,.09),transparent 75%),linear-gradient(145deg,#fffdf7,#f5eddd)}
-.home-identity-banner img{display:block;width:65%;max-width:280px;height:auto;aspect-ratio:1672/941;object-fit:contain;object-position:center}
-@media(min-width:600px){.home-identity-banner{margin:8px var(--gutter) 12px;padding:6px}.home-identity-banner img{width:52%;max-width:340px}}
-@media(max-width:360px){.home-identity-banner{margin-inline:10px;padding:4px;border-radius:14px}.home-identity-banner img{width:65%}}
+/* v5.55.0 — Reduce identity artwork to one-third of its current display size. */
+.home-identity-banner{margin:5px var(--gutter) 7px;padding:3px;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;border:1px solid rgba(196,154,58,.18);border-radius:12px;background:radial-gradient(160px 70px at 100% 0,rgba(196,154,58,.07),transparent 75%),linear-gradient(145deg,#fffdf7,#f5eddd)}
+.home-identity-banner img{display:block;width:21.67%;max-width:94px;height:auto;aspect-ratio:1672/941;object-fit:contain;object-position:center}
+@media(min-width:600px){.home-identity-banner{margin:6px var(--gutter) 8px;padding:4px}.home-identity-banner img{width:17.33%;max-width:114px}}
+@media(max-width:360px){.home-identity-banner{margin-inline:10px;padding:3px;border-radius:10px}.home-identity-banner img{width:21.67%}}
