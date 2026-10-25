@@ -3146,9 +3146,9 @@ function currentMonth() {
 
 function currentWeekKey() {
   var d = localDateOnly(new Date());
-  var day = d.getDay(); // Sunday=0
-  // هفته‌ی بازی از جمعه شروع می‌شود
-  var delta = (day + 2) % 7;
+  var day = d.getDay(); // Sunday=0, Saturday=6
+  // هفته‌ی بازی از شنبه شروع می‌شود و جمعه پایان می‌یابد.
+  var delta = (day + 1) % 7;
   d.setDate(d.getDate() - delta);
   return Utilities.formatDate(d, CFG.TIMEZONE, 'yyyy-MM-dd');
 }
@@ -3157,7 +3157,7 @@ function previousWeekKey() {
   var d = localDateOnly(new Date());
   d.setDate(d.getDate() - 7);
   var day = d.getDay();
-  var delta = (day + 2) % 7;
+  var delta = (day + 1) % 7;
   d.setDate(d.getDate() - delta);
   return Utilities.formatDate(d, CFG.TIMEZONE, 'yyyy-MM-dd');
 }
