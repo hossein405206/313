@@ -85,7 +85,7 @@
     bestEl.textContent=faNum(best);
     // Render the playfield immediately; fetch wallet and leaderboards without blocking the first paint.
     draw();
-    Promise.all([loadWallet(),load()]).then(function(){draw();});
+    loadWallet().then(function(){draw();});
   }
   async function load(attempt){
     attempt=Number(attempt||0);
