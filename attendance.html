@@ -53,6 +53,13 @@
         </div>
       </section>
 
+      <!-- ═══ درخواست‌های عضویت در انتظار تأیید ═══ -->
+      <section class="pending-members-panel" id="pendingMembersPanel" aria-labelledby="pendingMembersTitle">
+        <div class="pending-members-panel__head"><div><h2 id="pendingMembersTitle">درخواست‌های عضویت</h2><p>حساب‌های جدید پس از بررسی حضوری تأیید می‌شوند.</p></div><button type="button" id="refreshPendingMembers" class="pending-refresh">بروزرسانی</button></div>
+        <p id="pendingMembersStatus" class="pending-members-status" role="status">در حال دریافت درخواست‌ها…</p>
+        <div id="pendingMembersList" class="pending-members-list"></div>
+      </section>
+
       <!-- ═══ نوار ابزار ═══ -->
       <div class="att-toolbar"><button type="button" class="att-btn-all" id="addMemberBtn">＋ افزودن عضو</button>
         <input
