@@ -110,6 +110,8 @@ function init(){
    if(res&&res.pendingApproval){
     $('#welcomeTitle').textContent='درخواست عضویت ثبت شد';
     $('#welcomeSubtitle').textContent=res.message||'حساب پس از بررسی حضوری مسئول حلقه فعال می‌شود.';
+    var resultIcon=document.querySelector('.auth-hero__icon--success span');
+    if(resultIcon)resultIcon.textContent='…';
     var profileLink=document.querySelector('.auth-actions a[href="profile.html"]');
     if(profileLink)profileLink.hidden=true;
     document.querySelectorAll('.auth-step').forEach(function(step){step.classList.toggle('active',step.getAttribute('data-step')==='2')});
