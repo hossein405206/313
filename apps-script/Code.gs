@@ -48,7 +48,7 @@ var HEADERS = {
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
-  'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline'],
+  'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','receiptPhotoUrl','paymentStatus'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.29.0-attendance-member-history';
+var APP_VERSION = '4.30.0-camp-capacity-official-role';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -639,7 +639,7 @@ function handlePost(p) {
   if (action === 'verifyOfficialCode') {
     var official = verifyOfficialCode(normalizeIranDigits(String(p.code || '').trim()).toUpperCase());
     if (!official) throw new Error('کد مسئولیت نامعتبر است');
-    return { ok:true, official:officialPublic(official), token:issueToken(official.roleCode, official.code) };
+    return { ok:true, official:officialPublic(official), token:issueToken(official.roleCode, official.code, false, official.roleCode === 'camp' ? {events:true} : {}) };
   }
 
   if (action === 'feedback') { return submitFeedback(p); }
@@ -656,7 +656,8 @@ function officialDefaultCodePrefix_(code) {
   var defaults = {
     'ATT-GUIDE-CHANGE-ME': 'ATT-GUIDE',
     'ATT-ELEMENTARY-CHANGE-ME': 'ATT-ELEMENTARY',
-    'SUP-CHANGE-ME': 'SUP'
+    'SUP-CHANGE-ME': 'SUP',
+    'CAMP-CHANGE-ME': 'CAMP'
   };
   return defaults[target] || '';
 }
@@ -1040,15 +1041,16 @@ function updateCoachCode(p) {
 function ensureOfficialRoles() {
   var sheet = getSheet('مسئولین');
   var rows = getSheetObjects('مسئولین');
-  var roles = ['حضور و غیاب - راهنمایی', 'حضور و غیاب - دبستان', 'نظارت'];
+  var roles = ['حضور و غیاب - راهنمایی', 'حضور و غیاب - دبستان', 'نظارت', 'مسئول اردو'];
   var generated = [];
   roles.forEach(function(role) {
     var exists = rows.some(function(r) {
       return truthy(r.active) && String(r.role || '') === role;
     });
     if (!exists) {
-      var prefix = role.indexOf('راهنمایی') >= 0 ? 'ATT-GUIDE' :
-        (role.indexOf('دبستان') >= 0 ? 'ATT-ELEMENTARY' : 'SUP');
+      var prefix = role === 'مسئول اردو' ? 'CAMP' :
+        (role.indexOf('راهنمایی') >= 0 ? 'ATT-GUIDE' :
+        (role.indexOf('دبستان') >= 0 ? 'ATT-ELEMENTARY' : 'SUP'));
       var code = generateOfficialAccessCode_(prefix);
       var name = 'مسئول ' + role;
       sheet.appendRow([code, name, role, true, nowIso()]);
@@ -1077,7 +1079,7 @@ function addOfficial(p) {
   if(phone&&!/^09\d{9}$/.test(phone))throw new Error('شماره همراه مسئول باید ۱۱ رقم و با ۰۹ شروع شود');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(code.length>64)throw new Error('کد مسئولیت بیش از حد طولانی است');
-  if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
+  if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت','مسئول اردو'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
   getSheet('مسئولین').appendRow(rowToArray('مسئولین',{code:code,name:name,role:role,active:true,createdAt:nowIso(),phone:phone})); return {ok:true};
 }
@@ -1091,7 +1093,7 @@ function updateOfficial(p) {
   if(phone&&!/^09\d{9}$/.test(phone))throw new Error('شماره همراه مسئول باید ۱۱ رقم و با ۰۹ شروع شود');
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(code.length>64)throw new Error('کد مسئولیت بیش از حد طولانی است');
-  if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
+  if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت','مسئول اردو'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var rows=getSheetObjects('مسئولین');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
   if(rows.some(function(r){return truthy(r.active) && String(r.role||'')===role && String(r.code||'').trim()!==oldCode;}))throw new Error('برای این نوع مسئولیت مسئول فعال دیگری وجود دارد؛ ابتدا او را غیرفعال کن');
@@ -1130,12 +1132,15 @@ function deleteOfficial(p){
   return {ok:true,deleted:true};
 }
 function requireCoachPermission(token, permission) {
-  var auth=requireToken(token,['coach']); if(auth.isMaster)return auth;
-  if(!auth.permissions || auth.permissions[permission] !== true) throw new Error('دسترسی این بخش برای شما فعال نیست');
+  var auth = requireToken(token, ['coach', 'camp']);
+  if (auth.isMaster) return auth;
+  if (auth.role === 'camp' && permission !== 'events') throw new Error('مسئول اردو فقط به مدیریت اردوها دسترسی دارد');
+  if (!auth.permissions || auth.permissions[permission] !== true) throw new Error('دسترسی این بخش برای شما فعال نیست');
   return auth;
 }
 
 function normalizeRole(role) {
+  if (role.indexOf('اردو') >= 0) return 'camp';
   if (role.indexOf('حضور') >= 0) return 'attendance';
   if (role.indexOf('نظارت') >= 0) return 'supervision';
   throw new Error('نقش مسئول معتبر نیست');
@@ -1186,7 +1191,7 @@ function requireToken(token, roles) {
   }
 
   // لغو فوری دسترسی مسئولان و مربیان غیرفعال‌شده یا تغییرکرده.
-  if (payload.r === 'attendance' || payload.r === 'supervision') {
+  if (payload.r === 'attendance' || payload.r === 'supervision' || payload.r === 'camp') {
     var currentOfficial = verifyOfficialCode(String(payload.s || '').toUpperCase());
     if (!currentOfficial || currentOfficial.roleCode !== payload.r) {
       throw new Error('دسترسی مسئول غیرفعال شده یا تغییر کرده است؛ دوباره وارد شو');
@@ -2123,7 +2128,23 @@ function setFeedbackStatus(p) {
 /* Camps / Registrations                                                      */
 /* -------------------------------------------------------------------------- */
 
+function campRegistrationCounts_() {
+  var counts = {};
+  getSheetObjects('ثبت‌نام‌ها').forEach(function(row) {
+    var campId = String(row.campId || '').trim();
+    var status = String(row.status || '').trim();
+    if (!campId || status === 'رد شد' || status === 'لغو شد') return;
+    counts[campId] = (counts[campId] || 0) + 1;
+  });
+  return counts;
+}
+
+function campRegistrationCount_(campId) {
+  return Number(campRegistrationCounts_()[String(campId || '').trim()] || 0);
+}
+
 function listCamps() {
+  var registrationCounts = campRegistrationCounts_();
   var sheet = getSheet('اردوها');
   var rows = getSheetObjects('اردوها');
   var today = currentDate();
@@ -2136,47 +2157,65 @@ function listCamps() {
     }
   });
   return rows.filter(function(r){ return String(r.status) === 'active'; }).map(function(r) {
+    var id = String(r.id || '');
+    var capacity = Number(r.capacity || 0);
+    var registrationCount = Number(registrationCounts[id] || 0);
     return {
-      id:String(r.id || ''), title:String(r.title || ''), status:String(r.status || ''),
+      id:id, title:String(r.title || ''), status:String(r.status || ''),
       cardNumber:String(r.cardNumber || ''), cost:Number(r.cost || 0),
-      registrationDeadline:String(r.registrationDeadline || '')
+      registrationDeadline:String(r.registrationDeadline || ''),
+      capacity:capacity, registrationCount:registrationCount,
+      isFull:capacity > 0 && registrationCount >= capacity
     };
   });
 }
 
 function saveCamp(p) {
   requireCoachPermission(p.token, 'events');
-  var title = String(p.title || '').trim();
-  var cardNumber = normalizeIranDigits(String(p.cardNumber || '')).replace(/[\s-]/g, '');
-  var costText = normalizeIranDigits(String(p.cost == null ? '' : p.cost)).replace(/[\s,،٬]/g, '');
-  var cost = Number(costText || 0);
-  var deadline = String(p.registrationDeadline || '').trim();
-  var id = String(p.id || '').trim();
-  if (!title) throw new Error('نام اردو را وارد کن');
-  if (title.length > 140) throw new Error('نام اردو نباید بیش از ۱۴۰ نویسه باشد');
-  if (!isFinite(cost) || cost < 0 || cost > 10000000000) throw new Error('هزینه اردو معتبر نیست');
-  if (cost > 0 && !/^\d{16,26}$/.test(cardNumber)) throw new Error('شماره کارت یا شبای مقصد را درست وارد کن');
-  if (cost === 0) cardNumber = '';
-  if (!isValidIsoDate_(deadline)) throw new Error('تاریخ پایان ثبت‌نام معتبر نیست');
-  var today = currentDate();
-  if (deadline < today) throw new Error('تاریخ پایان ثبت‌نام نمی‌تواند در گذشته باشد');
-  if (deadline > addYearsToIsoDate_(today, 1)) throw new Error('مهلت ثبت‌نام اردو حداکثر تا یک سال آینده قابل تعیین است');
-  if (deadline && deadline < currentDate()) throw new Error('تاریخ پایان ثبت‌نام نمی‌تواند در گذشته باشد');
-  var sheet = getSheet('اردوها');
-  var pos = id ? findRow(sheet, 'id', id) : 0;
-  if (id && !pos) throw new Error('اردو برای ویرایش پیدا نشد');
-  var existing = pos ? getSheetObjects('اردوها').filter(function(r){return String(r.id) === id;})[0] : null;
-  var camp = {
-    id:id || uid('CAMP'), title:title, status:'active',
-    createdAt:String(existing && existing.createdAt || nowIso()),
-    cardNumber:cardNumber, cost:cost, registrationDeadline:deadline
-  };
-  var values = rowToArray('اردوها', camp);
-  if (pos) sheet.getRange(pos, 1, 1, values.length).setValues([values]);
-  else sheet.appendRow(values);
-  return {ok:true, item:camp};
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var title = String(p.title || '').trim();
+    var cardNumber = normalizeIranDigits(String(p.cardNumber || '')).replace(/[\s-]/g, '');
+    var costText = normalizeIranDigits(String(p.cost == null ? '' : p.cost)).replace(/[\s,،٬]/g, '');
+    var cost = Number(costText || 0);
+    var capacityText = normalizeIranDigits(String(p.capacity == null ? '' : p.capacity)).replace(/[\s,،٬]/g, '');
+    var capacity = capacityText === '' ? null : Number(capacityText);
+    var deadline = String(p.registrationDeadline || '').trim();
+    var id = String(p.id || '').trim();
+    if (!title) throw new Error('نام اردو را وارد کن');
+    if (title.length > 140) throw new Error('نام اردو نباید بیش از ۱۴۰ نویسه باشد');
+    if (!isFinite(cost) || cost < 0 || cost > 10000000000) throw new Error('هزینه اردو معتبر نیست');
+    if (cost > 0 && !/^\d{16,26}$/.test(cardNumber)) throw new Error('شماره کارت یا شبای مقصد را درست وارد کن');
+    if (cost === 0) cardNumber = '';
+    if (!isValidIsoDate_(deadline)) throw new Error('تاریخ پایان ثبت‌نام معتبر نیست');
+    var today = currentDate();
+    if (deadline < today) throw new Error('تاریخ پایان ثبت‌نام نمی‌تواند در گذشته باشد');
+    if (deadline > addYearsToIsoDate_(today, 1)) throw new Error('مهلت ثبت‌نام اردو حداکثر تا یک سال آینده قابل تعیین است');
+    var sheet = getSheet('اردوها');
+    var pos = id ? findRow(sheet, 'id', id) : 0;
+    if (id && !pos) throw new Error('اردو برای ویرایش پیدا نشد');
+    var existing = pos ? getSheetObjects('اردوها').filter(function(r){return String(r.id) === id;})[0] : null;
+    if (capacity === null) capacity = existing ? Number(existing.capacity || 0) : 0;
+    if (!isFinite(capacity) || Math.floor(capacity) !== capacity || capacity < 0 || capacity > 100000) {
+      throw new Error('ظرفیت باید یک عدد صحیح بین ۱ تا ۱۰۰٬۰۰۰ نفر باشد');
+    }
+    if (!existing && capacity < 1) throw new Error('ظرفیت اردو را به تعداد نفرات وارد کن');
+    var registrationCount = existing ? campRegistrationCount_(id) : 0;
+    if (capacity > 0 && registrationCount > capacity) throw new Error('ظرفیت جدید از تعداد ثبت‌نام‌های فعلی کمتر است');
+    var camp = {
+      id:id || uid('CAMP'), title:title, status:'active',
+      createdAt:String(existing && existing.createdAt || nowIso()),
+      cardNumber:cardNumber, cost:cost, registrationDeadline:deadline, capacity:capacity
+    };
+    var values = rowToArray('اردوها', camp);
+    if (pos) sheet.getRange(pos, 1, 1, values.length).setValues([values]);
+    else sheet.appendRow(values);
+    return {ok:true, item:camp};
+  } finally {
+    lock.releaseLock();
+  }
 }
-
 function deleteCamp(p) {
   requireCoachPermission(p.token, 'events');
   var id = String(p.id || '').trim();
@@ -2235,54 +2274,63 @@ function setCampPaymentStatus(p) {
 }
 
 function registerCamp(p) {
-  var campId = String(p.campId || '').trim();
-  var activeCamp = listCamps().filter(function(camp){ return String(camp.id) === campId; })[0];
-  var firstName = String(p.firstName || '').trim();
-  var lastName = String(p.lastName || '').trim();
-  var fatherName = String(p.fatherName || '').trim();
-  var phone = normalizeIranMobile_(p.phone || '');
-  var fatherPhone = normalizeIranMobile_(p.fatherPhone || '');
-  var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\s+/g, '');
-  if (!campId) throw new Error('اردو انتخاب نشده');
-  if (!activeCamp) throw new Error('این اردو دیگر فعال نیست یا مهلت ثبت‌نام آن تمام شده؛ صفحه را تازه‌سازی کن');
-  if (!firstName || !lastName || !fatherName) throw new Error('اطلاعات ناقص است');
-  if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
-  if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
-  if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var campId = String(p.campId || '').trim();
+    var activeCamp = listCamps().filter(function(camp){ return String(camp.id) === campId; })[0];
+    var firstName = String(p.firstName || '').trim();
+    var lastName = String(p.lastName || '').trim();
+    var fatherName = String(p.fatherName || '').trim();
+    var phone = normalizeIranMobile_(p.phone || '');
+    var fatherPhone = normalizeIranMobile_(p.fatherPhone || '');
+    var nationalCode = normalizeIranDigits(String(p.nationalCode || '')).replace(/\s+/g, '');
+    if (!campId) throw new Error('اردو انتخاب نشده');
+    if (!activeCamp) throw new Error('این اردو دیگر فعال نیست یا مهلت ثبت‌نام آن تمام شده؛ صفحه را تازه‌سازی کن');
+    if (!firstName || !lastName || !fatherName) throw new Error('اطلاعات ناقص است');
+    if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+    if (!/^09\d{9}$/.test(fatherPhone)) throw new Error('شماره همراه پدر نامعتبر است');
+    if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
 
-  if (!p.photoBase64) throw new Error('عکس رضایت‌نامه پدر الزامی است');
+    var capacity = Number(activeCamp.capacity || 0);
+    var registrationCount = campRegistrationCount_(campId);
+    if (capacity > 0 && registrationCount >= capacity) throw new Error('ظرفیت این اردو تکمیل شده است؛ ثبت‌نام جدید پذیرفته نمی‌شود');
+    if (!p.photoBase64) throw new Error('عکس رضایت‌نامه پدر الزامی است');
 
-  var photoUrl = '';
-  if (p.photoBase64) {
     var uploaded = uploadConsentPhotoPrivate(
       String(p.photoBase64),
       String(p.photoMimeType || 'image/jpeg'),
       'registration-' + Date.now()
     );
-    photoUrl = uploaded.url;
+    var row = {
+      id: uid('REG'),
+      campId: campId,
+      firstName: firstName,
+      lastName: lastName,
+      fatherName: fatherName,
+      fatherPhone: fatherPhone,
+      phone: phone,
+      nationalCode: nationalCode,
+      photoUrl: uploaded.url,
+      status: 'در انتظار تایید',
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      receiptPhotoUrl: '',
+      paymentStatus: Number(activeCamp.cost || 0) > 0 ? 'منتظر ارسال رسید' : 'پرداخت لازم نیست'
+    };
+    getSheet('ثبت‌نام‌ها').appendRow(rowToArray('ثبت‌نام‌ها', row));
+    return {
+      ok:true, id:row.id, status:row.status,
+      camp:{
+        id:activeCamp.id, title:activeCamp.title, cardNumber:activeCamp.cardNumber,
+        cost:activeCamp.cost, registrationDeadline:activeCamp.registrationDeadline,
+        capacity:capacity, registrationCount:registrationCount + 1
+      }
+    };
+  } finally {
+    lock.releaseLock();
   }
-
-  var sheet = getSheet('ثبت‌نام‌ها');
-  var row = {
-    id: uid('REG'),
-    campId: campId,
-    firstName: firstName,
-    lastName: lastName,
-    fatherName: fatherName,
-    fatherPhone: fatherPhone,
-    phone: phone,
-    nationalCode: nationalCode,
-    photoUrl: photoUrl,
-    status: 'در انتظار تایید',
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-    receiptPhotoUrl: '',
-    paymentStatus: Number(activeCamp.cost || 0) > 0 ? 'منتظر ارسال رسید' : 'پرداخت لازم نیست'
-  };
-  sheet.appendRow(rowToArray('ثبت‌نام‌ها', row));
-  return { ok: true, id: row.id, status: row.status, camp:{id:activeCamp.id,title:activeCamp.title,cardNumber:activeCamp.cardNumber,cost:activeCamp.cost,registrationDeadline:activeCamp.registrationDeadline} };
 }
-
 function getRegistrationPhoto(p) {
   requireCoachPermission(p.token, 'registrations');
   var registrationId = String(p.id || '').trim();
