@@ -113,7 +113,7 @@
             <small>فرمت JPG یا PNG — حداکثر ۵ مگابایت</small>
           </div>
           <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
-          <p class="consent-form-help" style="font-size:0.82rem; margin:8px 0 0; color:var(--text-muted, #64748b);">برای دریافت متن رضایت نامه <a href="https://eitaa.com/shbibian" target="_blank" rel="noopener noreferrer" style="color:#1683e8; text-decoration:none;">اینجا کلیک کنید</a></p>
+          <p class="consent-form-help" style="font-size:0.82rem; margin:8px 0 0; color:var(--text-muted, #64748b);">برای دریافت متن رضایت نامه <a id="consentTextLink" href="#" target="_blank" rel="noopener noreferrer" style="color:#1683e8; text-decoration:none;">اینجا کلیک کنید</a></p>
           <div class="upload-preview" id="uploadPreview"></div>
         </div>
 
@@ -165,6 +165,16 @@
     (function () {
       'use strict';
 
+      async function loadConsentTextLink() {
+        var link=document.getElementById('consentTextLink');
+        if(!link || !window.KanoonApp || !window.KanoonApp.api){if(link)setTimeout(loadConsentTextLink,100);return;}
+        try{
+          var result=await window.KanoonApp.api.get({action:'getCampConsentUrl'});
+          var url=String(result&&result.url||'').trim();
+          if(/^https?:\/\//i.test(url)){link.href=url;link.setAttribute('aria-disabled','false');}
+          else{link.href='#';link.setAttribute('aria-disabled','true');link.title='هنوز لینکی ثبت نشده است';link.addEventListener('click',function(e){e.preventDefault();alert('متن رضایت‌نامه هنوز توسط مسئول اردو تنظیم نشده است.');});}
+        }catch(e){link.href='#';link.setAttribute('aria-disabled','true');}
+      }
       async function autoFill() {
         if (!window.KanoonApp || !window.KanoonApp.session || !window.KanoonApp.api) {
           setTimeout(autoFill, 100);
@@ -219,8 +229,10 @@
 
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', autoFill);
+        document.addEventListener('DOMContentLoaded', loadConsentTextLink);
       } else {
         autoFill();
+        loadConsentTextLink();
       }
 
     })();
