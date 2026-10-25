@@ -500,18 +500,7 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
 
   if (action === 'getDashboard') { var dashAuth=requireToken(p.token,['coach']); var dash=dashboardData(dashAuth); dash.isMaster=!!dashAuth.isMaster; dash.permissions=dashAuth.isMaster?allCoachPermissions():dashAuth.permissions; return dash; }
 
-  if (action === 'getGameData') {
-    var week = currentWeekKey();
-    var prize = getSetting('gamePrize') || CFG.DEFAULT_GAME_PRIZE;
-    return {
-      ok: true,
-      weekKey: week,
-      prize: prize,
-      leaderboard: leaderboardForWeek(week),
-      previousWinner: previousWinner(),
-      allTimeLeaderboard: allTimeLeaderboard()
-    };
-  }
+  if (action === 'getGameData') return gameDataSnapshot_();
   if (action === 'getCampConsentUrl') return {ok:true,url:getSetting('campConsentUrl')};
 
   return { ok: false, error: 'عملیات شناخته نشد: ' + action };
@@ -3049,6 +3038,42 @@ function gameRoleMap_(members, registeredPhones){
   });
   return byId;
 }
+
+function gameDataSnapshot_() {
+  // Reduce repeated Google Sheets reads: weekly, previous-winner, and all-time
+  // data are built from one snapshot of each relevant sheet.
+  var week=currentWeekKey(),prevWeek=previousWeekKey();
+  var members=getSheetObjects('اعضا'),memberById={};
+  members.forEach(function(m){memberById[String(m.id||'')]=m;});
+  var registeredPhones=registeredRingPhones_();
+  var roles=gameRoleMap_(members,registeredPhones);
+  var games=getSheetObjects('بازی');
+  function rowsForWeek_(key) {
+    return games.filter(function(r){return normalizeGameWeekKey_(r.weekKey)===normalizeGameWeekKey_(key);})
+      .map(function(r){
+        var id=String(r.memberId||''),m=memberById[id]||{};
+        var role=roles[id]||{roleKey:'unregistered',roleLabel:'عضو نشده'};
+        return {memberId:id,playerName:String(r.playerName||m.nickname||m.name||'عضو'),
+          score:Number(r.score||0),profileImage:String(m.profileImage||''),
+          registered:!!registeredPhones[normalizeMemberPhone(m.phone)],
+          roleKey:role.roleKey,roleLabel:role.roleLabel};
+      }).sort(function(a,b){return b.score-a.score;});
+  }
+  var weekly=rowsForWeek_(week).slice(0,10);
+  var previous=rowsForWeek_(prevWeek);
+  var lifetime=members.filter(function(m){return truthy(m.active)&&Number(m.bestScore||0)>0;})
+    .map(function(m){
+      var id=String(m.id||''),role=roles[id]||{roleKey:'unregistered',roleLabel:'عضو نشده'};
+      return {memberId:id,playerName:String(m.nickname||m.name||'عضو'),score:Number(m.bestScore||0),
+        profileImage:String(m.profileImage||''),registered:!!registeredPhones[normalizeMemberPhone(m.phone)],
+        roleKey:role.roleKey,roleLabel:role.roleLabel};
+    }).sort(function(a,b){return b.score-a.score;}).slice(0,10);
+  return {ok:true,weekKey:week,prize:getSetting('gamePrize')||CFG.DEFAULT_GAME_PRIZE,
+    leaderboard:weekly,
+    previousWinner:previous.length?{weekKey:prevWeek,playerName:previous[0].playerName,score:previous[0].score}:null,
+    allTimeLeaderboard:lifetime};
+}
+
 function leaderboardForWeek(week) {
   var members=getSheetObjects('اعضا'),memberById={};
   members.forEach(function(m){memberById[String(m.id||'')]=m;});
