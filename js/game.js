@@ -218,15 +218,15 @@
     if(state!=='playing')return;
     state='over';if(raf)cancelAnimationFrame(raf);raf=0;lastFrame=0;
     setButton('دوباره بازی کن',false);
-    if(score>weeklyBest)say('رکورد هفتگی جدید! در حال ذخیره '+faNum(score)+'…');
-    else say('این دور از رکورد هفتگی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');
+    say('در حال بررسی و ثبت رکورد این دور…');
     draw();
-    if(score>weeklyBest)submitScore();
+    // تصمیم نهایی دربارهٔ رکورد شخصی را سرور می‌گیرد؛ رتبه‌بندی فقط ۱۰ نفر را نشان می‌دهد.
+    // به رکورد محلیِ جدول تکیه نکن، چون ممکن است رکورد قبلی بازیکن خارج از ۱۰ نفر باشد.
+    submitScore();
   }
   async function submitScore(){
     if(submitting||!member||!member.token)return;
-    if(score<=weeklyBest){say('این دور از رکورد هفتگی‌ات بیشتر نشد؛ رکورد جدیدی ذخیره نشد.');setButton('دوباره بازی کن',false);return;}
-    submitting=true;setButton('در حال ذخیره رکورد…',true);
+    submitting=true;setButton('در حال بررسی رکورد…',true);
     try{
       var response=await api().post({action:'submitGameScore',token:member.token,score:score});
       renderBoard(response.leaderboard||[]);
@@ -240,9 +240,15 @@
       if(response.saved){
         best=Math.max(best,score);
         bestEl.textContent=faNum(best);
-        say('رکورد جدید '+faNum(score)+' ثبت شد و در جدول این هفته قرار گرفت. آفرین! 💙');
+        var inWeeklyTop=(response.leaderboard||[]).some(function(x){return member&&String(x.memberId)===String(member.id);});
+        var inAllTimeTop=(response.allTimeLeaderboard||[]).some(function(x){return member&&String(x.memberId)===String(member.id);});
+        var note='رکورد هفتگی جدید '+faNum(score)+' ذخیره شد.';
+        note+=inWeeklyTop?' در ۱۰ نفر برتر این هفته هستی.':' برای نمایش در جدول هفتگی باید وارد ۱۰ نفر برتر شوی.';
+        if(score>Number(response.lifetimeBest||0)) note+=' رکورد تاریخی‌ات هم به‌روزرسانی شد.';
+        else if(inAllTimeTop) note+=' در جدول تاریخی هم دیده می‌شوی.';
+        say(note+' آفرین! 💙');
       }else{
-        say('رکورد جدیدتری ثبت نشد؛ بهترین رکورد هفتگی شما '+faNum(weeklyBest)+' است.');
+        say('رکورد این دور از بهترین رکورد هفتگی‌ات بیشتر نشد؛ رکورد ثبت‌شده‌ات '+faNum(weeklyBest)+' است.');
       }
     }catch(e){
       say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
