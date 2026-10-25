@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.33.0-member-approval';
+var APP_VERSION = '4.34.0-receipt-upload-guard';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
