@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.30.0-camp-capacity-official-role';
+var APP_VERSION = '4.31.0-official-role-limits';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1070,6 +1070,17 @@ function listOfficialRecords() {
   ensureOfficialPhoneColumn_();
   return getSheetObjects('مسئولین').map(function(r){return {code:String(r.code||''),name:String(r.name||''),role:String(r.role||''),active:truthy(r.active),createdAt:r.createdAt||'',phone:String(r.phone||'')};});
 }
+function officialActiveLimit_(role) {
+  return String(role||'').indexOf('نظارت')>=0 ? 5 : 1;
+}
+function assertOfficialActiveLimit_(rows, role, excludedCode) {
+  var target=String(role||''),excluded=normalizeIranDigits(String(excludedCode||'').trim()).toUpperCase();
+  var count=(rows||[]).filter(function(r){
+    return truthy(r.active) && String(r.role||'')===target && normalizeIranDigits(String(r.code||'').trim()).toUpperCase()!==excluded;
+  }).length;
+  if(count>=officialActiveLimit_(target)) throw new Error('امکان افزودن مسئول دیگری برای این مسئولیت وجود ندارد');
+}
+
 function addOfficial(p) {
   requireCoachPermission(p.token, 'officials');
   ensureOfficialPhoneColumn_();
@@ -1080,7 +1091,7 @@ function addOfficial(p) {
   if(code.length<8)throw new Error('کد مسئولیت باید دست‌کم ۸ نویسه داشته باشد');
   if(code.length>64)throw new Error('کد مسئولیت بیش از حد طولانی است');
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت','مسئول اردو'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
-  var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); if(existingOfficials.some(function(r){return truthy(r.active)&&String(r.role||'')===role;}))throw new Error('برای این نوع مسئولیت یک مسئول فعال از قبل وجود دارد؛ همان را ویرایش یا غیرفعال کن');
+  var existingOfficials=getSheetObjects('مسئولین'); if(existingOfficials.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase();}))throw new Error('این کد قبلاً استفاده شده'); assertOfficialActiveLimit_(existingOfficials,role,'');
   getSheet('مسئولین').appendRow(rowToArray('مسئولین',{code:code,name:name,role:role,active:true,createdAt:nowIso(),phone:phone})); return {ok:true};
 }
 function updateOfficial(p) {
@@ -1096,7 +1107,8 @@ function updateOfficial(p) {
   if(['حضور و غیاب - راهنمایی','حضور و غیاب - دبستان','نظارت','مسئول اردو'].indexOf(role)<0)throw new Error('نوع مسئولیت نامعتبر است');
   var rows=getSheetObjects('مسئولین');
   if(rows.some(function(r){return String(r.code||'').trim().toUpperCase()===code.toUpperCase() && String(r.code||'').trim()!==oldCode;}))throw new Error('این کد قبلاً استفاده شده');
-  if(rows.some(function(r){return truthy(r.active) && String(r.role||'')===role && String(r.code||'').trim()!==oldCode;}))throw new Error('برای این نوع مسئولیت مسئول فعال دیگری وجود دارد؛ ابتدا او را غیرفعال کن');
+  var currentOfficial=rows.filter(function(r){return normalizeIranDigits(String(r.code||'').trim()).toUpperCase()===normalizeIranDigits(oldCode).toUpperCase();})[0];
+  if(currentOfficial && truthy(currentOfficial.active)) assertOfficialActiveLimit_(rows,role,oldCode);
   var sheet=getSheet('مسئولین'), headers=sheet.getDataRange().getValues()[0].map(String), vals=sheet.getRange(pos,1,1,headers.length).getValues()[0];
   vals[headers.indexOf('code')]=code;vals[headers.indexOf('name')]=name;vals[headers.indexOf('role')]=role;vals[headers.indexOf('phone')]=phone;
   sheet.getRange(pos,1,1,headers.length).setValues([vals]); return {ok:true};
@@ -1115,9 +1127,7 @@ function setOfficialStatus(p) {
   if(makeActive){
     var targetRole=String(vals[2]||'');
     var rows=getSheetObjects('مسئولین');
-    if(rows.some(function(r){return truthy(r.active) && String(r.role||'')===targetRole && String(r.code||'').trim().toUpperCase()!==code;})){
-      throw new Error('برای این نوع مسئولیت، مسئول فعال دیگری وجود دارد');
-    }
+    assertOfficialActiveLimit_(rows,targetRole,code);
   }
   vals[3]=makeActive; sheet.getRange(pos,1,1,5).setValues([vals]); return {ok:true,active:truthy(vals[3])};
 }
