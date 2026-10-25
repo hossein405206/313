@@ -45,7 +45,7 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt','phone'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage','approvalStatus','approvedAt','approvedBy'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
   'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.32.0-legacy-account-guard';
+var APP_VERSION = '4.33.0-member-approval';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -519,6 +519,12 @@ function handlePost(p) {
   if (isPostOnlyAuthenticatedReadAction_(action)) return handleGet(p, true);
 
   if (action === 'memberAuth') { return memberAuth(p); }
+  if (action === 'approveMember') return approvePendingMember_(p);
+  if (action === 'rejectPendingMember') return rejectPendingMember_(p);
+  if (action === 'listPendingMembers') {
+    requireToken(p.token, ['attendance']);
+    return {ok:true, items:listPendingMembers_()};
+  }
   if (action === 'saveRingRegistration') return saveRingRegistration(p);
   if (action === 'registerMember') { throw new Error('برای ثبت‌نام و ورود از فرم شماره همراه و گذرواژه استفاده کن'); }
   if (action === 'loginCoach') { return loginCoach(p); }
@@ -1195,6 +1201,9 @@ function requireToken(token, roles) {
   // Persistent member tokens must still respect the account's current active status.
   if (payload.r === 'member') {
     var currentMember = findMemberByPhone(String(payload.s || ''), true);
+    if (currentMember && String(currentMember.approvalStatus || '').toLowerCase() === 'pending') {
+      throw new Error('حساب ساخته شده و در انتظار تأیید حضوری مسئول حلقه است؛ پس از تأیید می‌توانی وارد شوی.');
+    }
     if (!currentMember || !truthy(currentMember.active)) {
       throw new Error('حساب این شماره همراه غیرفعال است؛ با مربی حلقه تماس بگیر');
     }
@@ -1296,6 +1305,22 @@ function memberAuth(p) {
   var isExisting = !!existing;
 
   if (existing) {
+    var currentApprovalStatus = String(existing.approvalStatus || '').toLowerCase();
+    if (currentApprovalStatus === 'pending') {
+      var pendingHash = String(existing.passwordHash || '');
+      var pendingSalt = String(existing.passwordSalt || '');
+      if (!pendingHash || !pendingSalt || memberPasswordHash(password, pendingSalt) !== pendingHash) {
+        throw new Error('شماره همراه یا گذرواژه اشتباه است');
+      }
+      return {ok:true, pendingApproval:true, message:'درخواست ساخت حساب ثبت شده و منتظر تأیید حضوری مسئول حلقه است. پس از تأیید می‌توانی با همین شماره و گذرواژه وارد شوی.'};
+    }
+    if (currentApprovalStatus === 'rejected') {
+      // درخواست ردشده می‌تواند با تأیید حضوری مجدد ثبت شود؛ رکورد قبلی برای جلوگیری از تکرار حفظ می‌شود.
+      var retrySalt = Utilities.getUuid() + '-' + Utilities.getUuid();
+      var retryHash = memberPasswordHash(password, retrySalt);
+      updateRejectedMemberForRetry_(existing, fullName, retrySalt, retryHash);
+      return {ok:true, pendingApproval:true, message:'درخواست تازه ثبت شد و پس از بررسی حضوری مسئول حلقه قابل استفاده خواهد بود.'};
+    }
     if (!truthy(existing.active)) throw new Error('حساب این شماره همراه غیرفعال است؛ با مربی حلقه تماس بگیر');
 
     var storedHash = String(existing.passwordHash || '');
@@ -1346,7 +1371,10 @@ function memberAuth(p) {
     phone: phone,
     nickname: '',
     profileCompleted: false,
-    active: true,
+    active: false,
+    approvalStatus: 'pending',
+    approvedAt: '',
+    approvedBy: '',
     passwordSalt: salt,
     passwordHash: hash,
     profileImage: ''
@@ -1354,10 +1382,8 @@ function memberAuth(p) {
 
   return {
     ok: true,
-    member: publicMember(member),
-    token: issueToken('member', phone),
-    existing: false,
-    passwordInitialized: true
+    pendingApproval: true,
+    message: 'درخواست ساخت حساب ثبت شد. برای فعال‌شدن حساب باید مسئول حلقه هویتت را حضوری بررسی و درخواست را تأیید کند.'
   };
 }
 
@@ -1433,7 +1459,10 @@ function addMemberInternal(o) {
     createdAt: nowIso(),
     passwordSalt: o.passwordSalt || '',
     passwordHash: o.passwordHash || '',
-    profileImage: o.profileImage || ''
+    profileImage: o.profileImage || '',
+    approvalStatus: o.approvalStatus || 'approved',
+    approvedAt: o.approvedAt || '',
+    approvedBy: o.approvedBy || ''
   };
   sheet.appendRow(rowToArray('اعضا', row));
   return row;
@@ -1606,9 +1635,82 @@ function deleteMember(id) {
 
 function listActiveMembers() {
   return getSheetObjects('اعضا')
-    .filter(function(r){ return truthy(r.active); })
+    .filter(function(r){ return truthy(r.active) && String(r.approvalStatus || '').toLowerCase() !== 'pending'; })
     .sort(function(a,b){ return String(a.name).localeCompare(String(b.name), 'fa'); })
     .map(publicMember);
+}
+
+function listPendingMembers_() {
+  return getSheetObjects('اعضا')
+    .filter(function(r){ return !truthy(r.active) && String(r.approvalStatus || '').toLowerCase() === 'pending'; })
+    .sort(function(a,b){ return String(a.createdAt || '').localeCompare(String(b.createdAt || '')); })
+    .map(function(r){ return {id:String(r.id || ''),name:String(r.name || ((r.firstName || '')+' '+(r.lastName || '')).trim()),phone:String(r.phone || ''),createdAt:String(r.createdAt || '')}; });
+}
+
+function approvePendingMember_(p) {
+  var auth = requireToken(String(p.token || ''), ['attendance']);
+  var id = String(p.id || '').trim();
+  if (!id) throw new Error('حساب موردنظر معتبر نیست');
+  var sheet = getSheet('اعضا');
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) throw new Error('درخواست عضویت پیدا نشد');
+  var headers = values[0].map(String), idx = {};
+  headers.forEach(function(h,i){idx[h]=i;});
+  for (var i=1;i<values.length;i++) {
+    var row = values[i];
+    if (String(row[idx.id] || '') !== id) continue;
+    if (String(row[idx.approvalStatus] || '').toLowerCase() !== 'pending' || truthy(row[idx.active])) throw new Error('این درخواست دیگر در انتظار تأیید نیست');
+    var official = verifyOfficialCode(String(auth.subject || '').toUpperCase());
+    if (!official || official.roleCode !== 'attendance') throw new Error('فقط مسئول مجاز حضور و غیاب می‌تواند عضویت را تأیید کند');
+    row[idx.active] = true;
+    row[idx.approvalStatus] = 'approved';
+    if (idx.approvedAt !== undefined) row[idx.approvedAt] = nowIso();
+    if (idx.approvedBy !== undefined) row[idx.approvedBy] = String(official.name || official.code || 'مسئول');
+    sheet.getRange(i+1,1,1,row.length).setValues([row]);
+    return {ok:true, approved:true, member:{id:id,name:String(row[idx.name] || ''),phone:String(row[idx.phone] || '')}};
+  }
+  throw new Error('درخواست عضویت پیدا نشد');
+}
+
+function rejectPendingMember_(p) {
+  var auth = requireToken(String(p.token || ''), ['attendance']);
+  var id = String(p.id || '').trim();
+  if (!id) throw new Error('حساب موردنظر معتبر نیست');
+  var official = verifyOfficialCode(String(auth.subject || '').toUpperCase());
+  if (!official || official.roleCode !== 'attendance') throw new Error('فقط مسئول مجاز حضور و غیاب می‌تواند درخواست را رد کند');
+  var sheet = getSheet('اعضا');
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) throw new Error('درخواست عضویت پیدا نشد');
+  var headers = values[0].map(String), idx = {};
+  headers.forEach(function(h,i){idx[h]=i;});
+  for (var i=1;i<values.length;i++) {
+    var row=values[i];
+    if (String(row[idx.id] || '') !== id) continue;
+    if (String(row[idx.approvalStatus] || '').toLowerCase() !== 'pending' || truthy(row[idx.active])) throw new Error('فقط درخواست در انتظار را می‌توان رد کرد');
+    row[idx.approvalStatus] = 'rejected';
+    row[idx.active] = false;
+    if (idx.approvedAt !== undefined) row[idx.approvedAt] = nowIso();
+    if (idx.approvedBy !== undefined) row[idx.approvedBy] = String(official.name || official.code || 'مسئول') + ' (رد درخواست)';
+    sheet.getRange(i+1,1,1,row.length).setValues([row]);
+    return {ok:true,rejected:true};
+  }
+  throw new Error('درخواست عضویت پیدا نشد');
+}
+
+function updateRejectedMemberForRetry_(member, fullName, salt, hash) {
+  if (!fullName || fullName.length < 2 || fullName.split(' ').filter(Boolean).length < 2) throw new Error('برای ساخت حساب جدید، نام و نام خانوادگی را وارد کن');
+  var parts=fullName.split(' '), last=parts.pop(), first=parts.join(' ');
+  var sheet=getSheet('اعضا'), rowNumber=findRow(sheet,'id',String(member.id || ''));
+  if (!rowNumber) throw new Error('حساب عضو پیدا نشد');
+  var values=sheet.getDataRange().getValues(), headers=values[0].map(String), idx={};
+  headers.forEach(function(h,i){idx[h]=i;});
+  var row=values[rowNumber-1];
+  row[idx.firstName]=first; row[idx.lastName]=last; row[idx.name]=fullName;
+  row[idx.nickname]=''; row[idx.profileCompleted]=false; row[idx.active]=false;
+  row[idx.passwordSalt]=salt; row[idx.passwordHash]=hash; row[idx.approvalStatus]='pending';
+  if(idx.approvedAt!==undefined)row[idx.approvedAt]='';
+  if(idx.approvedBy!==undefined)row[idx.approvedBy]='';
+  sheet.getRange(rowNumber,1,1,row.length).setValues([row]);
 }
 
 function findMemberByPhone(phone, includeInactive) {
@@ -1786,6 +1888,7 @@ function publicMember(r) {
     bestScore: Number(r.bestScore || 0),
     profileImage: r.profileImage || '',
     active: truthy(r.active),
+    approvalStatus: String(r.approvalStatus || (truthy(r.active) ? 'approved' : 'inactive')),
     createdAt: r.createdAt
   };
 }
