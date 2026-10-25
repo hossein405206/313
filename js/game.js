@@ -61,6 +61,8 @@
     member=app().session.getMember();
     if(!member||!member.token){location.replace('login.html?return=game.html');return;}
     setButton('در حال بارگذاری بازی…',true);
+    // جدول را هم‌زمان با بررسی عضویت دریافت کن تا تأخیر درخواست‌ها روی هم جمع نشود.
+    load();
     try{
       var registration=await api().post({action:'getRingRegistration',token:member.token});
       if(!registration.registered){location.replace('ring-registration.html?required=1');return;}
@@ -371,6 +373,12 @@
     else if(state==='ready')say('حالا روی زمین بازی لمس کن تا پرواز شروع شود.');
   });
   var shopShortcut=document.getElementById('openBirdWardrobe');
-  if(shopShortcut)shopShortcut.addEventListener('click',function(){var wardrobe=document.getElementById('gameWalletTitle');if(wardrobe){wardrobe.scrollIntoView({behavior:'smooth',block:'start'});wardrobe.setAttribute('tabindex','-1');wardrobe.focus({preventScroll:true});}});
+  var wardrobeModal=document.getElementById('birdWardrobeModal');
+  var wardrobeCloseButtons=document.querySelectorAll('[data-close-wardrobe]');
+  function closeWardrobe(){if(!wardrobeModal)return;wardrobeModal.hidden=true;document.body.classList.remove('wardrobe-open');if(shopShortcut)shopShortcut.focus({preventScroll:true});}
+  function openWardrobe(){if(!wardrobeModal)return;shopCategory='hat';document.querySelectorAll('[data-shop-category]').forEach(function(b){var active=b.dataset.shopCategory==='hat';b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});renderWallet();wardrobeModal.hidden=false;document.body.classList.add('wardrobe-open');var close=wardrobeModal.querySelector('.bird-wardrobe-close');if(close)close.focus({preventScroll:true});}
+  if(shopShortcut)shopShortcut.addEventListener('click',openWardrobe);
+  wardrobeCloseButtons.forEach(function(btn){btn.addEventListener('click',closeWardrobe);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&wardrobeModal&&!wardrobeModal.hidden)closeWardrobe();});
   scoreEl.textContent=faNum(0);bestEl.textContent=faNum(0);draw();boot();
 })();
