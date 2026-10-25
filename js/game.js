@@ -234,9 +234,17 @@
     ctx.save();ctx.translate(bird.x,bird.y);
     ctx.rotate(state==='playing'?Math.max(-.45,Math.min(.75,bird.vy*.0012)):0);
     var outfit=wallet&&wallet.equippedOutfit||'';
-    if(outfit==='outfit_scout'){ctx.fillStyle='#4d8064';rr(-14,-1,28,22,7);ctx.fill();ctx.fillStyle='#d9e7c9';ctx.fillRect(-5,2,10,3);}
-    else if(outfit==='outfit_winter'){ctx.fillStyle='#d8edf0';rr(-15,-2,30,23,8);ctx.fill();ctx.fillStyle='#5b9eaf';ctx.fillRect(-3,1,6,14);ctx.fillStyle='#fff';ctx.fillRect(-12,6,4,4);}
-    else if(outfit==='outfit_royal'){ctx.fillStyle='#7146a3';rr(-15,-2,30,23,8);ctx.fill();ctx.fillStyle='#f4ce62';ctx.fillRect(-3,0,6,15);ctx.fillStyle='#f4ce62';ctx.beginPath();ctx.arc(-9,4,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(9,4,2,0,Math.PI*2);ctx.fill();}
+    var outfitColors={outfit_scout:'#4d8064',outfit_winter:'#d8edf0',outfit_royal:'#7146a3',outfit_hoodie:'#4b6c94',outfit_sport:'#d84e4e',outfit_astronaut:'#d7e2e8',outfit_ninja:'#353947',outfit_firefighter:'#c74435',outfit_pirate:'#473c35',outfit_tuxedo:'#252d3a',outfit_rainbow:'#d77bb7',outfit_galaxy:'#3b326f',outfit_gold:'#e0ad2e'};
+    if(outfitColors[outfit]){
+      ctx.fillStyle=outfitColors[outfit];rr(-15,-2,30,23,8);ctx.fill();
+      if(outfit==='outfit_scout'){ctx.fillStyle='#d9e7c9';ctx.fillRect(-5,2,10,3);ctx.fillStyle='#293e34';ctx.fillRect(-11,7,5,4);}
+      else if(outfit==='outfit_winter'){ctx.fillStyle='#5b9eaf';ctx.fillRect(-3,1,6,14);ctx.fillStyle='#fff';ctx.fillRect(-12,6,4,4);}
+      else if(outfit==='outfit_royal'||outfit==='outfit_gold'||outfit==='outfit_tuxedo'){ctx.fillStyle=outfit==='outfit_tuxedo'?'#fff4dd':'#f4ce62';ctx.fillRect(-3,0,6,15);ctx.beginPath();ctx.arc(-9,4,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(9,4,2,0,Math.PI*2);ctx.fill();}
+      else if(outfit==='outfit_astronaut'){ctx.fillStyle='#7192a4';rr(-9,1,18,10,4);ctx.fill();ctx.fillStyle='#f2c84b';ctx.fillRect(5,4,5,3);}
+      else if(outfit==='outfit_ninja'){ctx.fillStyle='#d5d8df';ctx.fillRect(-12,1,24,3);}
+      else if(outfit==='outfit_firefighter'){ctx.fillStyle='#f2cf57';ctx.fillRect(-12,2,24,3);ctx.fillRect(-12,9,24,3);}
+      else if(outfit==='outfit_rainbow'||outfit==='outfit_galaxy'){ctx.fillStyle='#f8d36d';ctx.fillRect(-12,2,24,2);ctx.fillStyle='#85d5d1';ctx.fillRect(-12,7,24,2);}
+      else if(outfit==='outfit_sport'){ctx.fillStyle='#fff';ctx.fillRect(-8,2,16,3);}
     ctx.shadowColor='rgba(38,53,70,.24)';ctx.shadowBlur=8;ctx.shadowOffsetY=3;
     var body=ctx.createLinearGradient(-17,-14,15,14);body.addColorStop(0,'#ffe978');body.addColorStop(.55,'#f5c843');body.addColorStop(1,'#e5a72f');
     ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,17,13,0,0,Math.PI*2);ctx.fill();
@@ -246,11 +254,17 @@
     ctx.fillStyle='#f0b52e';ctx.beginPath();ctx.ellipse(-9,-3,9,5,-.35+bird.wing*.45,0,Math.PI*2);ctx.fill();
     var hat=wallet&&wallet.equippedHat||'';
     ctx.shadowColor='transparent';
+    var hatColors={hat_cowboy:'#9a693d',hat_tophat:'#272b35',hat_chef:'#fff5e8',hat_pirate:'#3a3031',hat_wizard:'#54429a',hat_grad:'#252b37',hat_beanie:'#d64c50',hat_headphones:'#3d4f75',hat_royal:'#8b2638',hat_flower:'#e98ba9',hat_ninja:'#333744',hat_astronaut:'#d8e4ea',hat_detective:'#927653',hat_rainbow:'#e6a1b6'};
     if(hat==='hat_soldier'){ctx.fillStyle='#526747';rr(-14,-18,24,8,3);ctx.fill();ctx.fillRect(-12,-12,20,3);}
     else if(hat==='hat_police'){ctx.fillStyle='#233e70';rr(-14,-19,23,9,3);ctx.fill();ctx.fillStyle='#f1c84d';ctx.fillRect(-5,-16,5,4);ctx.fillRect(-15,-12,27,3);}
-    else if(hat==='hat_winter'){ctx.fillStyle='#d64c50';ctx.beginPath();ctx.arc(-1,-12,12,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(-14,-13,27,4);ctx.beginPath();ctx.arc(-1,-24,3,0,Math.PI*2);ctx.fill();}
-    else if(hat==='hat_crown'){ctx.fillStyle='#f4c84c';ctx.beginPath();ctx.moveTo(-14,-12);ctx.lineTo(-13,-22);ctx.lineTo(-6,-16);ctx.lineTo(0,-25);ctx.lineTo(6,-16);ctx.lineTo(13,-22);ctx.lineTo(14,-12);ctx.closePath();ctx.fill();}
-    else if(hat==='hat_party'){ctx.fillStyle='#ef8f4b';ctx.beginPath();ctx.moveTo(-12,-13);ctx.lineTo(-3,-30);ctx.lineTo(8,-13);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0a1';ctx.beginPath();ctx.arc(-3,-30,2,0,Math.PI*2);ctx.fill();}
+    else if(hat==='hat_winter'||hat==='hat_beanie'){ctx.fillStyle=hat==='hat_winter'?'#d64c50':'#c84f76';ctx.beginPath();ctx.arc(-1,-12,12,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(-14,-13,27,4);ctx.beginPath();ctx.arc(-1,-24,3,0,Math.PI*2);ctx.fill();}
+    else if(hat==='hat_crown'||hat==='hat_royal'){ctx.fillStyle=hat==='hat_crown'?'#f4c84c':'#d6a8e8';ctx.beginPath();ctx.moveTo(-14,-12);ctx.lineTo(-13,-22);ctx.lineTo(-6,-16);ctx.lineTo(0,-25);ctx.lineTo(6,-16);ctx.lineTo(13,-22);ctx.lineTo(14,-12);ctx.closePath();ctx.fill();}
+    else if(hat==='hat_party'||hat==='hat_wizard'||hat==='hat_rainbow'){ctx.fillStyle=hat==='hat_party'?'#ef8f4b':(hat==='hat_wizard'?'#54429a':'#e6a1b6');ctx.beginPath();ctx.moveTo(-12,-13);ctx.lineTo(-3,-30);ctx.lineTo(8,-13);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0a1';ctx.beginPath();ctx.arc(-3,-30,2,0,Math.PI*2);ctx.fill();}
+    else if(hat==='hat_halo'){ctx.strokeStyle='#f5d45b';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(-1,-19,12,4,0,0,Math.PI*2);ctx.stroke();}
+    else if(hat==='hat_flower'){ctx.fillStyle='#e98ba9';for(var petal=0;petal<5;petal++){ctx.beginPath();ctx.arc(-1+Math.cos(petal*Math.PI*2/5)*7,-17+Math.sin(petal*Math.PI*2/5)*5,3,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#f6d35d';ctx.beginPath();ctx.arc(-1,-17,3,0,Math.PI*2);ctx.fill();}
+    else if(hat==='hat_headphones'){ctx.strokeStyle='#3d4f75';ctx.lineWidth=4;ctx.beginPath();ctx.arc(-1,-13,13,Math.PI,Math.PI*2);ctx.stroke();ctx.fillStyle='#e3b5ed';rr(-15,-14,5,9,2);ctx.fill();rr(9,-14,5,9,2);ctx.fill();}
+    else if(hat==='hat_astronaut'){ctx.fillStyle='#d8e4ea';rr(-14,-22,26,13,5);ctx.fill();ctx.fillStyle='#6ab8ce';rr(-10,-19,18,7,4);ctx.fill();}
+    else if(hatColors[hat]){ctx.fillStyle=hatColors[hat];rr(-14,-19,25,8,3);ctx.fill();ctx.fillRect(-12,-12,21,3);if(hat==='hat_grad'){ctx.fillRect(-16,-17,30,3);ctx.fillStyle='#f4c84c';ctx.fillRect(8,-16,2,10);}if(hat==='hat_pirate'){ctx.fillStyle='#e3d5c1';ctx.fillRect(-4,-17,7,3);}if(hat==='hat_chef'){ctx.fillStyle='#fff5e8';rr(-10,-26,18,10,5);ctx.fill();}}
     ctx.restore();
   }
   function draw(){
