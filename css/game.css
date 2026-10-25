@@ -45,3 +45,17 @@
 .game-shell .btn-submit{position:relative!important;left:auto!important;top:auto!important;transform:none!important;display:block!important;width:min(100%,260px)!important;margin:12px auto 0!important}
 .game-shell .leader-row .leader-avatar{position:relative;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;flex:0 0 38px!important;border-radius:50%;overflow:hidden}
 .game-shell .leader-row .leader-avatar img{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:cover;border-radius:inherit}
+
+
+/* v5.63.0 — Clearer arcade feedback and compact leaderboard hierarchy. */
+.game-page{padding-top:14px}
+.game-hero{position:relative;overflow:hidden}
+.game-hero:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 18%,rgba(255,226,147,.10) 0 2px,transparent 3px),radial-gradient(circle at 88% 78%,rgba(255,226,147,.10) 0 2px,transparent 3px);background-size:28px 28px}
+.game-shell{border:1px solid rgba(33,71,91,.08)}
+.game-top strong{padding:7px 10px;border:1px solid rgba(255,255,255,.24);border-radius:999px;background:rgba(12,29,43,.28);backdrop-filter:blur(5px)}
+.leaderboard .section-heading{margin-bottom:11px}
+.leader-row:first-child{border-color:rgba(206,164,56,.35);background:linear-gradient(100deg,#fff4c9,#fffdf6)}
+.leader-row:nth-child(2){background:linear-gradient(100deg,#f0f5fa,#fff)}
+.leader-row:nth-child(3){background:linear-gradient(100deg,#fff0e4,#fff)}
+.leader-row.me{box-shadow:inset -3px 0 0 #c39a3a,0 5px 15px rgba(23,35,56,.06)}
+@media(max-width:390px){.game-hero{padding:22px 14px 19px}.game-hero h2{font-size:1.65rem}.prize-panel{margin-top:13px}.leader-row{gap:6px;padding:9px 8px}.leader-row .leader-avatar{width:33px!important;height:33px!important;min-width:33px!important;max-width:33px!important;flex-basis:33px!important}}
