@@ -866,3 +866,24 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 .home-identity-banner{justify-content:center;text-align:center}
 .home-identity-banner img{margin-inline:auto;object-position:center center}
 @media(min-width:600px){.home-identity-banner img{margin-inline:auto}}
+
+
+/* v5.62.0 — Tighter identity banner: crop transparent lower canvas and reduce vertical whitespace. */
+.home-identity-banner{padding-top:4px;padding-bottom:2px;overflow:hidden}
+.home-identity-banner img{
+  display:block;
+  width:90%;
+  max-width:520px;
+  height:clamp(170px,34vw,300px);
+  object-fit:cover;
+  object-position:center top;
+  margin-inline:auto;
+}
+@media(min-width:600px){
+  .home-identity-banner{padding-top:6px;padding-bottom:3px}
+  .home-identity-banner img{width:82%;max-width:720px;height:clamp(220px,29vw,360px)}
+}
+@media(max-width:360px){
+  .home-identity-banner{padding-top:2px;padding-bottom:1px}
+  .home-identity-banner img{width:94%;height:clamp(145px,42vw,170px)}
+}
