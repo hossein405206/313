@@ -49,7 +49,7 @@ var HEADERS = {
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
   'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
-  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','receiptPhotoUrl','paymentStatus'],
+  'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','receiptPhotoUrl','paymentStatus','receiptUploadToken'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
@@ -2345,13 +2345,16 @@ function deleteCamp(p) {
 
 function uploadCampReceipt(p) {
   var id = String(p.registrationId || '').trim();
-  if (!id) throw new Error('شناسه ثبت‌نام پیدا نشد؛ صفحه را تازه‌سازی نکن و دوباره تلاش کن');
+  var uploadToken = String(p.receiptUploadToken || '').trim();
+  if (!id || !uploadToken) throw new Error('اطلاعات امن ارسال رسید ناقص است؛ با تازه‌سازی صفحه دوباره تلاش کن');
   var sheet = getSheet('ثبت‌نام‌ها');
   var pos = findRow(sheet, 'id', id);
   if (!pos) throw new Error('درخواست ثبت‌نام پیدا نشد');
   var width = HEADERS['ثبت‌نام‌ها'].length;
   var values = sheet.getRange(pos, 1, 1, width).getValues()[0];
   var statusIndex = HEADERS['ثبت‌نام‌ها'].indexOf('status');
+  var tokenIndex = HEADERS['ثبت‌نام‌ها'].indexOf('receiptUploadToken');
+  if (tokenIndex < 0 || String(values[tokenIndex] || '') !== uploadToken) throw new Error('اجازهٔ ارسال رسید برای این ثبت‌نام معتبر نیست');
   var receiptIndex = HEADERS['ثبت‌نام‌ها'].indexOf('receiptPhotoUrl');
   var payIndex = HEADERS['ثبت‌نام‌ها'].indexOf('paymentStatus');
   var updatedIndex = HEADERS['ثبت‌نام‌ها'].indexOf('updatedAt');
@@ -2361,6 +2364,7 @@ function uploadCampReceipt(p) {
   if (!receiptBase64) throw new Error('عکس رسید کارت‌به‌کارت را انتخاب کن');
   var uploaded = uploadConsentPhotoPrivate(receiptBase64, mime, 'registration-payment-' + Date.now());
   values[receiptIndex] = uploaded.url;
+  values[tokenIndex] = ''; // مجوز یک‌بارمصرف است؛ پس از ثبت رسید فوراً باطل می‌شود.
   values[payIndex] = 'در انتظار تایید رسید';
   values[updatedIndex] = nowIso();
   sheet.getRange(pos, 1, 1, width).setValues([values]);
@@ -2420,6 +2424,7 @@ function registerCamp(p) {
       String(p.photoMimeType || 'image/jpeg'),
       'registration-' + Date.now()
     );
+    var receiptUploadToken = Utilities.getUuid() + '-' + Utilities.getUuid();
     var row = {
       id: uid('REG'),
       campId: campId,
@@ -2434,11 +2439,13 @@ function registerCamp(p) {
       createdAt: nowIso(),
       updatedAt: nowIso(),
       receiptPhotoUrl: '',
-      paymentStatus: Number(activeCamp.cost || 0) > 0 ? 'منتظر ارسال رسید' : 'پرداخت لازم نیست'
+      paymentStatus: Number(activeCamp.cost || 0) > 0 ? 'منتظر ارسال رسید' : 'پرداخت لازم نیست',
+      receiptUploadToken: Number(activeCamp.cost || 0) > 0 ? receiptUploadToken : ''
     };
     getSheet('ثبت‌نام‌ها').appendRow(rowToArray('ثبت‌نام‌ها', row));
     return {
       ok:true, id:row.id, status:row.status,
+      receiptUploadToken: Number(activeCamp.cost || 0) > 0 ? receiptUploadToken : '',
       camp:{
         id:activeCamp.id, title:activeCamp.title, cardNumber:activeCamp.cardNumber,
         cost:activeCamp.cost, registrationDeadline:activeCamp.registrationDeadline,
