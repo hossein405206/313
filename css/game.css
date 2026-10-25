@@ -146,3 +146,14 @@
 body.game-shop-open{overflow:hidden}
 .weekly-load-error button{margin-top:8px;padding:8px 14px;border:0;border-radius:10px;background:#203b57;color:#fff;font:inherit;font-size:.7rem;font-weight:800}
 @media(max-width:390px){.game-shop-modal{padding:8px}.game-shop-modal__dialog{padding:42px 9px 10px;border-radius:19px}}
+
+
+/* v5.73.0 — focused wardrobe shop overlay */
+.bird-wardrobe-modal[hidden]{display:none!important}
+.bird-wardrobe-modal{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.bird-wardrobe-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(9,18,31,.74);backdrop-filter:blur(7px)}
+.bird-wardrobe-modal .game-wallet{position:relative;z-index:1;width:min(100%,560px);max-height:min(82dvh,760px);overflow:auto;margin:0;padding:20px 16px 16px;box-shadow:0 25px 80px rgba(0,0,0,.3);overscroll-behavior:contain}
+.bird-wardrobe-close{position:absolute;top:10px;left:10px;z-index:2;display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:12px;background:#edf2ef;color:#263d4b;font-size:1.5rem;line-height:1;cursor:pointer}
+.bird-wardrobe-modal .game-wallet__head{padding-left:34px}
+body.wardrobe-open{overflow:hidden}
+@media(max-width:390px){.bird-wardrobe-modal{padding:10px}.bird-wardrobe-modal .game-wallet{max-height:88dvh;padding:17px 12px 12px}}
