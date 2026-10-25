@@ -775,6 +775,7 @@
     var selectedFile = null;
     var camps = [];
     var pendingRegistrationId = '';
+    var pendingReceiptUploadToken = '';
     var receiptFile = null;
     var campInfoCard = DOM.qs('#campInfoCard');
     var paymentStep = DOM.qs('#campPaymentStep');
@@ -957,8 +958,9 @@
           updateCampInfo(campForPayment);
         }
         pendingRegistrationId = String(registrationResult && registrationResult.id || '');
+        pendingReceiptUploadToken = String(registrationResult && registrationResult.receiptUploadToken || '');
         if (campForPayment && Number(campForPayment.cost || 0) > 0) {
-          if (!pendingRegistrationId) throw new Error('ثبت‌نام ذخیره شد، اما شناسه برای ارسال رسید دریافت نشد. لطفاً با مربی هماهنگ کن.');
+          if (!pendingRegistrationId || !pendingReceiptUploadToken) throw new Error('ثبت‌نام ذخیره شد، اما مجوز امن ارسال رسید دریافت نشد. لطفاً با مربی هماهنگ کن.');
           if (paymentStep) { paymentStep.hidden = false; paymentStep.classList.remove('hidden'); }
           updateCampInfo(campForPayment, true);
           if (paymentStatus) paymentStatus.textContent = 'اطلاعات ثبت‌نام دریافت شد؛ پس از واریز، تصویر رسید را بفرست.';
@@ -1005,7 +1007,9 @@
       receiptBtn.disabled = true; receiptBtn.textContent = 'در حال ارسال امن رسید...';
       try {
         var base64 = await RegisterForm._fileToBase64(receiptFile);
-        await Api.post({action:'uploadCampReceipt', registrationId:pendingRegistrationId, receiptBase64:base64, receiptMimeType:receiptFile.type});
+        if (!pendingReceiptUploadToken) throw new Error('مجوز امن ارسال رسید وجود ندارد؛ ثبت‌نام را دوباره انجام بده یا با مربی هماهنگ کن.');
+        await Api.post({action:'uploadCampReceipt', registrationId:pendingRegistrationId, receiptUploadToken:pendingReceiptUploadToken, receiptBase64:base64, receiptMimeType:receiptFile.type});
+        pendingReceiptUploadToken = ''; // توکن یک‌بارمصرف پس از ارسال موفق در مرورگر هم پاک می‌شود.
         if (paymentStatus) paymentStatus.textContent = 'رسید ثبت شد؛ اکنون منتظر تأیید مربی باشید.';
         receiptInput.disabled = true;
         receiptBtn.textContent = 'رسید با موفقیت ارسال شد ✓';
