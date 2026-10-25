@@ -63,7 +63,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.31.0-official-role-limits';
+var APP_VERSION = '4.32.0-legacy-account-guard';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1309,10 +1309,14 @@ function memberAuth(p) {
     } else {
       // حساب‌های قدیمی پیش از اضافه شدن گذرواژه: فقط یک‌بار با نام ثبت‌شده فعال می‌شوند.
       var storedName = String(existing.name || ((existing.firstName || '') + ' ' + (existing.lastName || ''))).trim().replace(/\s+/g, ' ');
-      if (storedName && (!fullName || storedName !== fullName)) {
+      // نام و شماره همراه به‌تنهایی اثبات مالکیت حساب نیستند. اگر رکورد قدیمی نام قابل
+      // تطبیق ندارد، اجازه نده اولین درخواست‌کننده گذرواژهٔ آن را تصاحب کند.
+      if (!storedName) {
+        throw new Error('اطلاعات این حساب قدیمی برای فعال‌سازی امن کافی نیست؛ از مربی حلقه بخواه نام ثبت‌شده را بررسی و حساب را اصلاح کند.');
+      }
+      if (!fullName || storedName !== fullName) {
         throw new Error('این حساب قدیمی هنوز گذرواژه ندارد. برای فعال‌سازی اولیه، یک‌بار نام ثبت‌شده را دقیق وارد کن؛ بعد از آن فقط شماره و گذرواژه لازم است.');
       }
-      if (!storedName && !fullName) throw new Error('برای فعال‌سازی اولیه حساب قدیمی، نام و نام خانوادگی را هم وارد کن');
       setMemberPassword(existing.id, password);
       existing = findMemberByPhone(phone, true);
     }
