@@ -2293,8 +2293,9 @@ function registerCamp(p) {
     if (nationalCode && !/^\d{10}$/.test(nationalCode)) throw new Error('کد ملی باید ۱۰ رقم باشد');
 
     var capacity = Number(activeCamp.capacity || 0);
+    if (capacity < 1) throw new Error('ظرفیت این اردو هنوز تعیین نشده است؛ مسئول اردو باید ابتدا ظرفیت را ثبت کند');
     var registrationCount = campRegistrationCount_(campId);
-    if (capacity > 0 && registrationCount >= capacity) throw new Error('ظرفیت این اردو تکمیل شده است؛ ثبت‌نام جدید پذیرفته نمی‌شود');
+    if (registrationCount >= capacity) throw new Error('ظرفیت این اردو تکمیل شده است؛ ثبت‌نام جدید پذیرفته نمی‌شود');
     if (!p.photoBase64) throw new Error('عکس رضایت‌نامه پدر الزامی است');
 
     var uploaded = uploadConsentPhotoPrivate(
