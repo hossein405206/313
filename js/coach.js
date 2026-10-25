@@ -1,5 +1,5 @@
 (function(){'use strict';
-var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,permissions:{},events:[],data:null};
+var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,isCampOfficial:false,permissions:{},events:[],data:null};
 var PERMS=[['events','رویدادها'],['schedule','برنامه هفتگی'],['registrations','ثبت‌نام‌ها'],['reports','گزارش‌ها'],['game','جایزه بازی'],['officials','مدیریت مسئولین'],['feedback','انتقاد و پیشنهاد']];
 function api(){return window.KanoonApp&&window.KanoonApp.api}
 function sessionGet(key){try{return window.sessionStorage.getItem(key)||''}catch(e){return ''}}
@@ -14,7 +14,7 @@ function setBusy(btn,text){if(btn){btn.disabled=true;btn.dataset.oldText=btn.tex
 function clearBusy(btn){if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'ذخیره'}}
 function scheduleDayIndex(day){return ['شنبه','یکشنبه','دوشنبه','سهشنبه','چهارشنبه','پنجشنبه','جمعه'].indexOf(String(day||'').replace(/\u200c/g,''))}
 function sortScheduleRows(list){return list.sort(function(a,b){var ai=scheduleDayIndex(a.day),bi=scheduleDayIndex(b.day);if(ai<0)ai=99;if(bi<0)bi=99;if(ai!==bi)return ai-bi;return String(a.createdAt||'').localeCompare(String(b.createdAt||''))||String(a.title||'').localeCompare(String(b.title||''),'fa')})}
-function renderCoachRoleBadge(){var badge=$('#coachRoleBadge');if(!badge)return;badge.textContent=state.isMaster?'مربی ارشد':'مربی';badge.classList.toggle('is-owner',state.isMaster);badge.classList.toggle('is-coach',!state.isMaster)}
+function renderCoachRoleBadge(){var badge=$('#coachRoleBadge');if(!badge)return;badge.textContent=state.isCampOfficial?'مسئول اردو':(state.isMaster?'مربی ارشد':'مربی');badge.classList.toggle('is-owner',state.isMaster);badge.classList.toggle('is-coach',!state.isMaster);badge.classList.toggle('is-camp',state.isCampOfficial)}
 
 function renderPermissionChecks(root,values){
  if(!root)return;
@@ -27,6 +27,12 @@ function readPermissions(root){
  return out;
 }
 function applyPermissions(){
+ if(state.isCampOfficial){
+  document.querySelectorAll('.coach-panel,.coach-quick-link').forEach(function(s){s.classList.toggle('permission-hidden',s.id!=='coachCampsSection')});
+  var campStaff=$('#coachStaffPanel'),campOfficialStaff=$('#officialStaffPanel'),campReset=$('#memberResetPanel');
+  if(campStaff)campStaff.classList.add('hidden');if(campOfficialStaff)campOfficialStaff.classList.add('hidden');if(campReset)campReset.classList.add('hidden');
+  return;
+ }
  document.querySelectorAll('.coach-permission-section,.coach-quick-link').forEach(function(s){
    var p=s.getAttribute('data-permission');s.classList.toggle('permission-hidden',!state.isMaster && state.permissions[p]!==true);
  });
@@ -59,7 +65,8 @@ function login(){
     console.error('[CoachLogin] پاسخ ناقص یا ناسازگار از سرور',{hasResponse:!!r,keys:r&&Object.keys(r),version:r&&r.version,requestId:r&&r.requestId});
     throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ نسخهٔ منتشرشدهٔ Google Apps Script را بررسی کن.');
    }
-   state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.permissions=coach.permissions||{};
+   state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.isCampOfficial=false;state.permissions=coach.permissions||{};
+   sessionRemove('coach_camp_official');
    sessionSet('coach_token',state.token);sessionSet('coach_name',state.name);sessionSet('coach_master',state.isMaster?'1':'0');sessionSet('coach_permissions',JSON.stringify(state.permissions));
    var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
    if(nameEl)nameEl.textContent=state.name;
@@ -108,6 +115,7 @@ function isCurrentAttendanceTrend(items,today){
  return String(last.date||'').slice(0,10)===String(today).slice(0,10)&&items.every(function(item){return /^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''));});
 }
 async function load(){
+ if(state.isCampOfficial){await loadCamps();return;}
  var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];
  // Ignore a stale/malformed trend payload; rebuild from the dashboard attendance rows instead.
  var trend=isCurrentAttendanceTrend(r.attendanceTrend,r.today)?r.attendanceTrend:buildAttendanceTrendFallback(r.attendance||[]);
@@ -359,8 +367,9 @@ function loadSchedule(){
 function renderCamps(items){
  var box=$('#campsAdmin');if(!box)return;
  box.innerHTML=items.length?items.map(function(c){
-  var cost=Number(c.cost||0),deadline=esc(c.registrationDeadline?(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(c.registrationDeadline):c.registrationDeadline):'مهلت مشخص نشده');
-  return '<div class="admin-item camp-admin-item"><div class="admin-item-main"><strong>'+esc(c.title)+'</strong><small>شماره کارت: '+esc(c.cardNumber||'ثبت نشده')+' · هزینه: '+(cost?cost.toLocaleString('fa-IR')+' تومان':'بدون هزینه')+' · پایان ثبت‌نام: '+deadline+'</small></div><div class="admin-actions"><button class="danger" data-camp-delete="'+esc(c.id)+'">حذف اردو</button></div></div>';
+  var cost=Number(c.cost||0),capacity=Number(c.capacity||0),count=Number(c.registrationCount||0),deadline=esc(c.registrationDeadline?(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(c.registrationDeadline):c.registrationDeadline):'مهلت مشخص نشده');
+  var capacityLabel=capacity>0?' · ثبت‌نام: '+count.toLocaleString('fa-IR')+' از '+capacity.toLocaleString('fa-IR')+' نفر'+(count>=capacity?' · ظرفیت تکمیل':''):' · ثبت‌نام: '+count.toLocaleString('fa-IR')+' نفر · ظرفیت تعیین نشده';
+  return '<div class="admin-item camp-admin-item"><div class="admin-item-main"><strong>'+esc(c.title)+'</strong><small>ظرفیت: '+esc(capacityLabel)+' · شماره کارت: '+esc(c.cardNumber||'ثبت نشده')+' · هزینه: '+(cost?cost.toLocaleString('fa-IR')+' تومان':'بدون هزینه')+' · پایان ثبت‌نام: '+deadline+'</small></div><div class="admin-actions"><button class="danger" data-camp-delete="'+esc(c.id)+'">حذف اردو</button></div></div>';
  }).join(''):'<div class="empty"><p>اردوی فعالی ثبت نشده است.</p></div>';
  box.querySelectorAll('[data-camp-delete]').forEach(function(b){b.onclick=function(){var id=b.dataset.campDelete;if(!confirm('این اردو از فهرست ثبت‌نام برداشته شود؟'))return;api().post({action:'deleteCamp',token:state.token,id:id}).then(function(){toast('اردو از فهرست ثبت‌نام حذف شد ✓');loadCamps()}).catch(function(e){toast(e.message||'حذف اردو ناموفق بود',1)})}});
 }
@@ -371,8 +380,8 @@ function loadCamps(){
 function setupCamps(){
  var save=$('#saveCampBtn'),clear=$('#cancelCampBtn'),box=$('#campsAdmin');
  if(!save||!box)return;
- if(clear)clear.onclick=function(){$('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';};
- var card=$('#campCardNumber'),costInput=$('#campCost');
+ if(clear)clear.onclick=function(){$('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';$('#campCapacity').value='';};
+ var card=$('#campCardNumber'),costInput=$('#campCost'),capacityInput=$('#campCapacity');
  if(card)card.addEventListener('input',function(){card.value=normalizeDigits(card.value).replace(/[^0-9\s-]/g,'').slice(0,30)});
  if(costInput)costInput.addEventListener('input',function(){costInput.value=normalizeDigits(costInput.value).replace(/[^0-9,،٬]/g,'').slice(0,14)});
  save.onclick=async function(){
@@ -380,14 +389,16 @@ function setupCamps(){
   var cardNumber=normalizeDigits($('#campCardNumber').value).replace(/[\s-]/g,'');
   var cost=normalizeDigits($('#campCost').value).replace(/[\s,،٬]/g,'');
   var registrationDeadline=$('#campDeadline').value;
+  var capacity=capacityInput?normalizeDigits(capacityInput.value).replace(/[\s,،٬]/g,''):'';
   if(!title){toast('نام اردو را وارد کن',1);$('#campTitle').focus();return}
+  if(!/^\d+$/.test(capacity)||Number(capacity)<1||Number(capacity)>100000){toast('ظرفیت را به عدد صحیح بین ۱ تا ۱۰۰٬۰۰۰ نفر وارد کن',1);if(capacityInput)capacityInput.focus();return}
   if(!registrationDeadline){toast('تاریخ پایان ثبت‌نام را انتخاب کن',1);$('#campDeadline').focus();return}
   if(Number(cost||0)>0&&!/^\d{16,26}$/.test(cardNumber)){toast('شماره کارت یا شبا را درست وارد کن',1);$('#campCardNumber').focus();return}
   setBusy(save,'در حال ثبت اردو...');
   try{
-   await api().post({action:'saveCamp',token:state.token,title:title,cardNumber:cardNumber,cost:cost||0,registrationDeadline:registrationDeadline});
-   toast('اردو ثبت شد ✓');
-   $('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';
+   await api().post({action:'saveCamp',token:state.token,title:title,cardNumber:cardNumber,cost:cost||0,registrationDeadline:registrationDeadline,capacity:Number(capacity)});
+   toast('اردو با ظرفیت مشخص‌شده ثبت شد ✓');
+   $('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';$('#campCapacity').value='';
    await loadCamps();
   }catch(e){toast(e.message||'ثبت اردو ناموفق بود',1)}
   finally{clearBusy(save)}
@@ -495,17 +506,21 @@ function setup(){
   var savePrizeBtn=$('#savePrizeBtn');
   if(savePrizeBtn)savePrizeBtn.onclick=function(){api().post({action:'saveGamePrize',token:state.token,prize:$('#gamePrize').value.trim()}).then(function(){toast('جایزه ذخیره شد ✓')}).catch(function(err){toast(err.message,1)})};
   var logoutBtn=$('#coachLogout');
-  if(logoutBtn)logoutBtn.onclick=function(){['coach_token','coach_name','coach_master','coach_permissions'].forEach(sessionRemove);location.reload()};
+  if(logoutBtn)logoutBtn.onclick=function(){if(state.isCampOfficial&&window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.clearOfficial();['coach_token','coach_name','coach_master','coach_permissions','coach_camp_official'].forEach(sessionRemove);location.reload()};
   var archiveBtn=$('#loadAttendanceArchive');if(archiveBtn)archiveBtn.onclick=loadAttendanceArchive;
   var memberHistoryForm=$('#attendanceMemberHistoryForm');if(memberHistoryForm)memberHistoryForm.addEventListener('submit',function(e){e.preventDefault();searchAttendanceMemberHistory()});
   var refreshFeedbackBtn=$('#refreshFeedbackBtn');
   if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
  });
  window.addEventListener('pageshow',function(event){if(event.persisted&&state.token){load().catch(function(err){toast(err.message||'به‌روزرسانی نمودار ناموفق بود',1)});}});
- state.token=sessionGet('coach_token');state.name=sessionGet('coach_name');state.isMaster=sessionGet('coach_master')==='1';
+ var savedOfficial=window.KanoonApp&&window.KanoonApp.session&&window.KanoonApp.session.getOfficial?window.KanoonApp.session.getOfficial():null;
+ if(savedOfficial&&savedOfficial.token&&String(savedOfficial.role||'').trim()==='مسئول اردو'){
+  sessionSet('coach_token',savedOfficial.token);sessionSet('coach_name',String(savedOfficial.name||'مسئول اردو'));sessionSet('coach_master','0');sessionSet('coach_permissions',JSON.stringify({events:true}));sessionSet('coach_camp_official','1');
+ }
+ state.token=sessionGet('coach_token');state.name=sessionGet('coach_name');state.isMaster=sessionGet('coach_master')==='1';state.isCampOfficial=sessionGet('coach_camp_official')==='1';
  try{state.permissions=JSON.parse(sessionGet('coach_permissions')||'{}')}catch(err){state.permissions={}}
  if(state.token){
-  var archiveDateInput=$('#attendanceArchiveDate');if(archiveDateInput){api().post({action:'getAttendanceArchiveDates',token:state.token}).then(function(r){archiveDateInput.setAttribute('data-available-dates',JSON.stringify(r.dates||[]));}).catch(function(){archiveDateInput.setAttribute('data-available-dates','[]');});}
+  var archiveDateInput=$('#attendanceArchiveDate');if(archiveDateInput&&!state.isCampOfficial){api().post({action:'getAttendanceArchiveDates',token:state.token}).then(function(r){archiveDateInput.setAttribute('data-available-dates',JSON.stringify(r.dates||[]));}).catch(function(){archiveDateInput.setAttribute('data-available-dates','[]');});}
   var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
   if(loginPanel)loginPanel.classList.add('hidden');
   if(dashboard)dashboard.classList.remove('hidden');
@@ -513,14 +528,15 @@ function setup(){
   renderCoachRoleBadge();applyPermissions();
   Promise.resolve().then(function(){var client=api();return client&&client.checkBackendVersion?client.checkBackendVersion():null;}).then(function(){return load()}).then(function(){
    if(state.isMaster)loadCoaches();
-   if(state.isMaster||state.permissions.events)loadCamps();
+   if((state.isMaster||state.permissions.events)&&!state.isCampOfficial)loadCamps();
    if(state.isMaster||state.permissions.officials)loadOfficials();
    if(state.isMaster||state.permissions.feedback)loadFeedback();
   }).catch(function(err){
    var msg=err&&err.message||'بارگذاری پنل ناموفق بود';
    if(/نشست|توکن|منقضی|دسترسی مسئول|حساب مربی غیرفعال/i.test(msg)){
-    ['coach_token','coach_name','coach_master','coach_permissions'].forEach(sessionRemove);
-    state.token='';state.name='';state.isMaster=false;state.permissions={};
+    ['coach_token','coach_name','coach_master','coach_permissions','coach_camp_official'].forEach(sessionRemove);
+    if(state.isCampOfficial&&window.KanoonApp&&window.KanoonApp.session)window.KanoonApp.session.clearOfficial();
+    state.token='';state.name='';state.isMaster=false;state.isCampOfficial=false;state.permissions={};
     if(dashboard)dashboard.classList.add('hidden');
     if(loginPanel)loginPanel.classList.remove('hidden');
    }
