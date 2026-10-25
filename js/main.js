@@ -1361,6 +1361,39 @@
     initProV2();
   }
 })();
+  /* Consistent, lightweight inline SVG icons (Lucide-style stroke system). */
+function uiIcon(name,cls){
+  var p={
+    'house':'<path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9M9 21v-7h6v7"/>',
+    'calendar-range':'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M14 14h2"/>',
+    'calendar-clock':'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v3l2 1"/>',
+    'gamepad-2':'<path d="M6 11h12a4 4 0 0 1 3.8 5.2l-.6 2a2 2 0 0 1-3.3.8L15 16H9l-2.9 3a2 2 0 0 1-3.3-.8l-.6-2A4 4 0 0 1 6 11Z"/><path d="M7 13v4M5 15h4M16 14h.01M18 16h.01"/>',
+    'user-round':'<circle cx="12" cy="8" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
+    'users-round':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'log-in':'<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"/>'
+  };
+  return '<svg class="'+(cls||'ui-icon')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(p[name]||p.house)+'</svg>';
+}
+function renderHomeIcons(){
+  document.querySelectorAll('[data-ui-icon]').forEach(function(el){
+    if(el.getAttribute('data-icon-ready'))return;
+    var name=el.getAttribute('data-ui-icon');
+    var map={
+      'users-round':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+      'backpack':'<path d="M6 7V5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v2"/><rect x="4" y="7" width="16" height="15" rx="3"/><path d="M4 12h16M9 12v3h6v-3M9 7V5h6v2"/>',
+      'shield-check':'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/>',
+      'calendar-days':'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01M16 17h.01"/>',
+      'ticket-check':'<path d="M2 9a3 3 0 0 0 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 4v2M13 10v2M13 16v2M7 12l2 2 4-4"/>',
+      'radio-tower':'<path d="M5 8.5a10 10 0 0 0 0 7M19 8.5a10 10 0 0 1 0 7M8 11a5 5 0 0 0 0 2M16 11a5 5 0 0 1 0 2"/><circle cx="12" cy="12" r="2"/><path d="m10 14-3 8h10l-3-8"/>',
+      'calendar-check':'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18m-11 5 2 2 4-4"/>',
+      'calendar-clock':'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v3l2 1"/>',
+      'message-square-text':'<path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8M8 13h6"/>',
+      'gamepad-2':'<path d="M6 11h12a4 4 0 0 1 3.8 5.2l-.6 2a2 2 0 0 1-3.3.8L15 16H9l-2.9 3a2 2 0 0 1-3.3-.8l-.6-2A4 4 0 0 1 6 11Z"/><path d="M7 13v4M5 15h4M16 14h.01M18 16h.01"/>'
+    };
+    el.innerHTML='<svg class="page-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(map[name]||map['calendar-check'])+'</svg>';
+    el.setAttribute('data-icon-ready','1');
+  });
+}
   /* V5 navigation — ورود یا پروفایل */
 function buildBottomNav() {
   var nav=document.querySelector('.bottom-nav'); if(!nav)return;
@@ -1370,13 +1403,13 @@ function buildBottomNav() {
   var official=session?session.getOfficial():null;
   var staffPage=['officials.html','attendance.html','supervision.html'].indexOf(path)>=0 || !!official;
   var items=[
-    ['index.html','⌂','خانه'],
-    ['activities.html','✦','فعالیت‌ها'],
-    ['schedule.html','◷','برنامه'],
-    ['game.html','◉','بازی'],
-    staffPage?['officials.html','♙','مسئولین']:[member?'profile.html':'login.html',member?'♙':'↗',member?'پروفایل':'ورود']
+    ['index.html','house','خانه'],
+    ['activities.html','calendar-range','فعالیت‌ها'],
+    ['schedule.html','calendar-clock','برنامه'],
+    ['game.html','gamepad-2','بازی'],
+    staffPage?['officials.html','users-round','مسئولین']:[member?'profile.html':'login.html',member?'user-round':'log-in',member?'پروفایل':'ورود']
   ];
-  nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+x[1]+'</span><span>'+x[2]+'</span></a>'}).join('');
+  nav.innerHTML=items.map(function(x){var active=path===x[0]?' active':'';return '<a class="nav-item'+active+'" href="'+x[0]+'"><span class="nav-icon">'+uiIcon(x[1],'nav-svg')+'</span><span>'+x[2]+'</span></a>'}).join('');
 }
 function bindGlobalNavigation(){
   buildBottomNav();
@@ -1387,6 +1420,7 @@ function bindGlobalNavigation(){
 }
 (function(){
   function bootV4Navigation(){
+    renderHomeIcons();
     if(typeof bindGlobalNavigation==='function') bindGlobalNavigation();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bootV4Navigation); else bootV4Navigation();
