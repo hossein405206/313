@@ -49,6 +49,7 @@ var HEADERS = {
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
   'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
+  'کیف پول بازی': ['memberId','coins','owned','equippedHat','equippedOutfit','runs','updatedAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','receiptPhotoUrl','paymentStatus','receiptUploadToken'],
   'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
@@ -63,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.34.0-receipt-upload-guard';
+var APP_VERSION = '4.35.0-consent-link-game-wallet';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -216,6 +217,7 @@ function setup() {
   if (!findRow(settings, 'key', 'gamePrize')) {
     settings.appendRow(['gamePrize', CFG.DEFAULT_GAME_PRIZE]);
   }
+  if (!findRow(settings, 'key', 'campConsentUrl')) settings.appendRow(['campConsentUrl', '']);
 
   var coaches = getSheet('مربیان');
   migrateSheetHeaders(coaches, 'مربیان');
@@ -247,7 +249,7 @@ function isPostOnlyAuthenticatedReadAction_(action) {
   return [
     'listSystemErrors', 'listFeedback', 'listActivityReportsManage',
     'listCoaches', 'listOfficialsManage', 'getRingRegistration',
-    'getMyGameRole', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
+    'getMyGameRole', 'getGameWallet', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
     'getAttendanceMemberHistory', 'listMonthlyAttendance', 'listWarnings', 'listRegistrations',
     'getDashboard'
   ].indexOf(String(action || '')) >= 0;
@@ -304,6 +306,10 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
   }
 
   if (action === 'getRingRegistration') return getRingRegistration(p);
+
+  if (action === 'getCampConsentUrl') return {ok:true,url:getSetting('campConsentUrl')};
+  if (action === 'getGameWallet') return getGameWallet_(p);
+
 
   if (action === 'getMyGameRole') {
     var roleAuth = requireToken(p.token, ['member']);
@@ -506,6 +512,7 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
       allTimeLeaderboard: allTimeLeaderboard()
     };
   }
+  if (action === 'getCampConsentUrl') return {ok:true,url:getSetting('campConsentUrl')};
 
   return { ok: false, error: 'عملیات شناخته نشد: ' + action };
 }
@@ -555,6 +562,9 @@ function handlePost(p) {
   if (action === 'setFeedbackStatus') return setFeedbackStatus(p);
 
   if (action === 'saveCamp') return saveCamp(p);
+  if (action === 'saveCampConsentUrl') return saveCampConsentUrl_(p);
+  if (action === 'buyGameCosmetic') return buyGameCosmetic_(p);
+  if (action === 'equipGameCosmetic') return equipGameCosmetic_(p);
   if (action === 'deleteCamp') return deleteCamp(p);
   if (action === 'uploadCampReceipt') return uploadCampReceipt(p);
   if (action === 'setCampPaymentStatus') return setCampPaymentStatus(p);
@@ -2842,6 +2852,78 @@ function ensureLifetimeGameRecords() {
   }
 }
 
+var GAME_COSMETICS_ = {
+  hat_soldier:{id:'hat_soldier',category:'hat',name:'کلاه سربازی',price:20},
+  hat_police:{id:'hat_police',category:'hat',name:'کلاه پلیس',price:35},
+  hat_winter:{id:'hat_winter',category:'hat',name:'کلاه زمستانی',price:15},
+  hat_crown:{id:'hat_crown',category:'hat',name:'تاج طلایی',price:80},
+  hat_party:{id:'hat_party',category:'hat',name:'کلاه جشن',price:12},
+  outfit_scout:{id:'outfit_scout',category:'outfit',name:'لباس پیشاهنگی',price:30},
+  outfit_winter:{id:'outfit_winter',category:'outfit',name:'پالتوی زمستانی',price:25},
+  outfit_royal:{id:'outfit_royal',category:'outfit',name:'لباس سلطنتی',price:100}
+};
+function gameWalletRow_(memberId,create) {
+  var sheet=getSheet('کیف پول بازی'), rows=getSheetObjects('کیف پول بازی');
+  for(var i=0;i<rows.length;i++) if(String(rows[i].memberId)===String(memberId)) return {row:i+2,item:rows[i],sheet:sheet};
+  if(!create)return {row:0,item:null,sheet:sheet};
+  var item={memberId:String(memberId),coins:0,owned:'[]',equippedHat:'',equippedOutfit:'',runs:'[]',updatedAt:nowIso()};
+  sheet.appendRow(rowToArray('کیف پول بازی',item));
+  return {row:sheet.getLastRow(),item:item,sheet:sheet};
+}
+function saveGameWallet_(wallet) {
+  wallet.item.updatedAt=nowIso();
+  wallet.sheet.getRange(wallet.row,1,1,HEADERS['کیف پول بازی'].length).setValues([rowToArray('کیف پول بازی',wallet.item)]);
+}
+function walletPublic_(item) {
+  item=item||{coins:0,owned:'[]',equippedHat:'',equippedOutfit:''};
+  var owned=[];try{owned=JSON.parse(String(item.owned||'[]'));}catch(e){owned=[];}
+  return {coins:Math.max(0,Number(item.coins||0)),owned:owned,equippedHat:String(item.equippedHat||''),equippedOutfit:String(item.equippedOutfit||''),catalog:Object.keys(GAME_COSMETICS_).map(function(k){return GAME_COSMETICS_[k];})};
+}
+function getGameWallet_(p) {
+  var auth=requireToken(p.token,['member']),member=findMemberByPhone(auth.subject,true);
+  if(!member||!truthy(member.active))throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+  var wallet=gameWalletRow_(member.id,true);
+  return {ok:true,wallet:walletPublic_(wallet.item)};
+}
+function saveCampConsentUrl_(p) {
+  requireCoachPermission(p.token,'events');
+  var url=String(p.url||'').trim();
+  if(url && !/^https?:\\/\\//i.test(url))throw new Error('لینک باید با https:// یا http:// شروع شود');
+  if(url.length>1000)throw new Error('لینک بیش از حد طولانی است');
+  setSetting('campConsentUrl',url);
+  return {ok:true,url:url};
+}
+function buyGameCosmetic_(p) {
+  var auth=requireToken(p.token,['member']),member=findMemberByPhone(auth.subject,true);
+  if(!member||!truthy(member.active))throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+  var id=String(p.id||''),item=GAME_COSMETICS_[id];
+  if(!item)throw new Error('این وسیله تزئینی وجود ندارد');
+  var lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    var wallet=gameWalletRow_(member.id,true),owned=[];
+    try{owned=JSON.parse(String(wallet.item.owned||'[]'));}catch(e){owned=[];}
+    if(owned.indexOf(id)>=0)return {ok:true,wallet:walletPublic_(wallet.item),alreadyOwned:true};
+    var coins=Math.max(0,Number(wallet.item.coins||0));
+    if(coins<item.price)throw new Error('سکه کافی نداری؛ از عبور از موانع سکه جمع کن');
+    wallet.item.coins=coins-item.price;owned.push(id);wallet.item.owned=JSON.stringify(owned);
+    saveGameWallet_(wallet);
+    return {ok:true,wallet:walletPublic_(wallet.item)};
+  }finally{lock.releaseLock();}
+}
+function equipGameCosmetic_(p) {
+  var auth=requireToken(p.token,['member']),member=findMemberByPhone(auth.subject,true);
+  if(!member||!truthy(member.active))throw new Error('حساب عضو پیدا نشد یا غیرفعال است');
+  var id=String(p.id||''),slot=String(p.slot||''),item=GAME_COSMETICS_[id];
+  if(!item||['hat','outfit'].indexOf(slot)<0||item.category!==slot)throw new Error('انتخاب تزئینی معتبر نیست');
+  var lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    var wallet=gameWalletRow_(member.id,true),owned=[];
+    try{owned=JSON.parse(String(wallet.item.owned||'[]'));}catch(e){owned=[];}
+    if(owned.indexOf(id)<0)throw new Error('ابتدا این وسیله را با سکه بخر');
+    if(slot==='hat')wallet.item.equippedHat=id;else wallet.item.equippedOutfit=id;
+    saveGameWallet_(wallet);return {ok:true,wallet:walletPublic_(wallet.item)};
+  }finally{lock.releaseLock();}
+}
 function submitGameScore(p) {
   var auth = requireToken(p.token, ['member']);
   var member = findMemberByPhone(auth.subject, true);
@@ -2855,6 +2937,17 @@ function submitGameScore(p) {
   var week = currentWeekKey(), sheet = getSheet('بازی');
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
+    // هر دور شناسهٔ مستقل دارد؛ عبورهای همان دور فقط یک‌بار جایزه می‌گیرند.
+    var runId=String(p.runId||'').trim();
+    if(!/^[A-Za-z0-9_-]{8,100}$/.test(runId))throw new Error('شناسهٔ دور بازی نامعتبر است؛ بازی را دوباره شروع کن');
+    var wallet=gameWalletRow_(member.id,true),runs=[];
+    try{runs=JSON.parse(String(wallet.item.runs||'[]'));}catch(e){runs=[];}
+    if(runs.indexOf(runId)<0){
+      wallet.item.coins=Math.max(0,Number(wallet.item.coins||0))+score*2;
+      runs.push(runId);if(runs.length>120)runs=runs.slice(-120);
+      wallet.item.runs=JSON.stringify(runs);saveGameWallet_(wallet);
+    }
+    var walletState=walletPublic_(wallet.item);
     var rows = getSheetObjects('بازی'), existing = null, existingRow = 0;
     for (var i = 0; i < rows.length; i++) {
       if (String(rows[i].weekKey) === week && String(rows[i].memberId) === String(member.id)) {
@@ -2870,7 +2963,7 @@ function submitGameScore(p) {
 
     // رکورد هفتگی و رکورد تاریخی مستقل‌اند.
 if (score <= weeklyBest) {
-  return {ok:true, saved:false, score:weeklyBest, weekKey:week, lifetimeBest:lifetimeBest,
+  return {ok:true, saved:false, score:weeklyBest, weekKey:week, lifetimeBest:lifetimeBest, coins:walletState.coins, wallet:walletState,
     leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
 }
 
@@ -2891,7 +2984,7 @@ if (score > lifetimeBest) {
       sheet.appendRow([week, member.id, playerName, score, nowIso()]);
     }
 
-    return {ok:true, saved:true, score:score, weekKey:week, lifetimeBest:lifetimeBest,
+    return {ok:true, saved:true, score:score, weekKey:week, lifetimeBest:lifetimeBest, coins:walletState.coins, wallet:walletState,
       leaderboard:leaderboardForWeek(week), allTimeLeaderboard:allTimeLeaderboard()};
   } finally {
     lock.releaseLock();
