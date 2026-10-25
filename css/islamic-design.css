@@ -810,3 +810,9 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
   font-weight: 800;
   letter-spacing: .025em;
 }
+
+
+/* v5.53.0 — Homepage identity artwork, preserving the source PNG ratio. */
+.home-identity-banner{margin:10px var(--gutter) 16px;padding:10px;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;border:1px solid rgba(196,154,58,.28);border-radius:20px;background:radial-gradient(160px 90px at 100% 0,rgba(196,154,58,.12),transparent 75%),linear-gradient(145deg,#fffdf7,#f5eddd)}
+.home-identity-banner img{display:block;width:100%;max-width:420px;height:auto;aspect-ratio:1672/941;object-fit:contain;object-position:center}
+@media(max-width:360px){.home-identity-banner{margin-inline:10px;padding:7px;border-radius:16px}}
