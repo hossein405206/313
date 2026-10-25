@@ -81,9 +81,9 @@
     setButton('شروع بازی',false);
     best=Math.max(0,Number(member.bestScore||0));
     bestEl.textContent=faNum(best);
-    // Fetch the wallet and leaderboards together; these requests do not depend on one another.
-    await Promise.all([loadWallet(),load()]);
+    // Render the playfield immediately; fetch wallet and leaderboards without blocking the first paint.
     draw();
+    Promise.all([loadWallet(),load()]).then(function(){draw();});
   }
   async function load(attempt){
     attempt=Number(attempt||0);
@@ -140,6 +140,24 @@
   document.querySelectorAll('[data-shop-category]').forEach(function(btn){btn.addEventListener('click',function(){
     shopCategory=btn.dataset.shopCategory;document.querySelectorAll('[data-shop-category]').forEach(function(b){var active=b===btn;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});renderWallet();
   });});
+
+  // فروشگاه به‌صورت پنجره باز می‌شود تا از صفحه بازی جدا بماند.
+  var shopModal=document.getElementById('gameShopModal');
+  var openShop=document.getElementById('openGameShop');
+  var closeShop=document.getElementById('closeGameShop');
+  function setShopOpen(open){
+    if(!shopModal)return;
+    shopModal.hidden=!open;
+    shopModal.setAttribute('aria-hidden',String(!open));
+    document.body.classList.toggle('game-shop-open',open);
+    if(open&&closeShop)closeShop.focus();
+    if(!open&&openShop)openShop.focus();
+  }
+  if(openShop)openShop.addEventListener('click',function(){setShopOpen(true);});
+  if(closeShop)closeShop.addEventListener('click',function(){setShopOpen(false);});
+  if(shopModal)shopModal.querySelectorAll('[data-close-game-shop]').forEach(function(el){el.addEventListener('click',function(){setShopOpen(false);});});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shopModal&&!shopModal.hidden)setShopOpen(false);});
+
   function startReady(){
     if(state==='playing'||submitting)return;
     if(raf)cancelAnimationFrame(raf);
