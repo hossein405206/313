@@ -1,5 +1,5 @@
 (function(){'use strict';
-var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,isCampOfficial:false,permissions:{},events:[],data:null};
+var $=function(s){return document.querySelector(s)},state={token:'',name:'',isMaster:false,isCampOfficial:false,editingCampId:'',permissions:{},events:[],data:null};
 var PERMS=[['events','رویدادها'],['schedule','برنامه هفتگی'],['registrations','ثبت‌نام‌ها'],['reports','گزارش‌ها'],['game','جایزه بازی'],['officials','مدیریت مسئولین'],['feedback','انتقاد و پیشنهاد']];
 function api(){return window.KanoonApp&&window.KanoonApp.api}
 function sessionGet(key){try{return window.sessionStorage.getItem(key)||''}catch(e){return ''}}
@@ -369,8 +369,9 @@ function renderCamps(items){
  box.innerHTML=items.length?items.map(function(c){
   var cost=Number(c.cost||0),capacity=Number(c.capacity||0),count=Number(c.registrationCount||0),deadline=esc(c.registrationDeadline?(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(c.registrationDeadline):c.registrationDeadline):'مهلت مشخص نشده');
   var capacityLabel=capacity>0?' · ثبت‌نام: '+count.toLocaleString('fa-IR')+' از '+capacity.toLocaleString('fa-IR')+' نفر'+(count>=capacity?' · ظرفیت تکمیل':''):' · ثبت‌نام: '+count.toLocaleString('fa-IR')+' نفر · ظرفیت تعیین نشده';
-  return '<div class="admin-item camp-admin-item"><div class="admin-item-main"><strong>'+esc(c.title)+'</strong><small>ظرفیت: '+esc(capacityLabel)+' · شماره کارت: '+esc(c.cardNumber||'ثبت نشده')+' · هزینه: '+(cost?cost.toLocaleString('fa-IR')+' تومان':'بدون هزینه')+' · پایان ثبت‌نام: '+deadline+'</small></div><div class="admin-actions"><button class="danger" data-camp-delete="'+esc(c.id)+'">حذف اردو</button></div></div>';
+  return '<div class="admin-item camp-admin-item"><div class="admin-item-main"><strong>'+esc(c.title)+'</strong><small>ظرفیت: '+esc(capacityLabel)+' · شماره کارت: '+esc(c.cardNumber||'ثبت نشده')+' · هزینه: '+(cost?cost.toLocaleString('fa-IR')+' تومان':'بدون هزینه')+' · پایان ثبت‌نام: '+deadline+'</small></div><div class="admin-actions"><button type="button" data-camp-edit="'+esc(c.id)+'">ویرایش / تعیین ظرفیت</button><button type="button" class="danger" data-camp-delete="'+esc(c.id)+'">حذف اردو</button></div></div>';
  }).join(''):'<div class="empty"><p>اردوی فعالی ثبت نشده است.</p></div>';
+ box.querySelectorAll('[data-camp-edit]').forEach(function(b){b.onclick=function(){var c=items.filter(function(x){return String(x.id)===String(b.dataset.campEdit)})[0];if(!c)return;state.editingCampId=String(c.id);$('#campTitle').value=c.title||'';$('#campCardNumber').value=c.cardNumber||'';$('#campCost').value=Number(c.cost||0)||'';$('#campCapacity').value=Number(c.capacity||0)||'';$('#campDeadline').value=c.registrationDeadline||'';var save=$('#saveCampBtn');if(save)save.textContent='ذخیره تغییرات اردو';var title=$('#campTitle');if(title){title.scrollIntoView({behavior:'smooth',block:'center'});title.focus({preventScroll:true})}}});
  box.querySelectorAll('[data-camp-delete]').forEach(function(b){b.onclick=function(){var id=b.dataset.campDelete;if(!confirm('این اردو از فهرست ثبت‌نام برداشته شود؟'))return;api().post({action:'deleteCamp',token:state.token,id:id}).then(function(){toast('اردو از فهرست ثبت‌نام حذف شد ✓');loadCamps()}).catch(function(e){toast(e.message||'حذف اردو ناموفق بود',1)})}});
 }
 function loadCamps(){
@@ -380,7 +381,7 @@ function loadCamps(){
 function setupCamps(){
  var save=$('#saveCampBtn'),clear=$('#cancelCampBtn'),box=$('#campsAdmin');
  if(!save||!box)return;
- if(clear)clear.onclick=function(){$('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';$('#campCapacity').value='';};
+ if(clear)clear.onclick=function(){state.editingCampId='';$('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';$('#campCapacity').value='';save.textContent='ثبت اردو';};
  var card=$('#campCardNumber'),costInput=$('#campCost'),capacityInput=$('#campCapacity');
  if(card)card.addEventListener('input',function(){card.value=normalizeDigits(card.value).replace(/[^0-9\s-]/g,'').slice(0,30)});
  if(costInput)costInput.addEventListener('input',function(){costInput.value=normalizeDigits(costInput.value).replace(/[^0-9,،٬]/g,'').slice(0,14)});
@@ -398,8 +399,9 @@ function setupCamps(){
   try{
    var backendVersion=await api().get({action:'ping'});
    if(!backendVersion||backendVersion.version!=='4.30.0-camp-capacity-official-role')throw new Error('برای ذخیرهٔ ظرفیت، ابتدا نسخهٔ جدید فایل Apps Script باید منتشر شود.');
-   await api().post({action:'saveCamp',token:state.token,title:title,cardNumber:cardNumber,cost:cost||0,registrationDeadline:registrationDeadline,capacity:Number(capacity)});
-   toast('اردو با ظرفیت مشخص‌شده ثبت شد ✓');
+   await api().post({action:'saveCamp',token:state.token,id:state.editingCampId||'',title:title,cardNumber:cardNumber,cost:cost||0,registrationDeadline:registrationDeadline,capacity:Number(capacity)});
+   toast(state.editingCampId?'تغییرات اردو ذخیره شد ✓':'اردو با ظرفیت مشخص‌شده ثبت شد ✓');
+   state.editingCampId='';save.textContent='ثبت اردو';
    $('#campTitle').value='';$('#campCardNumber').value='';$('#campCost').value='';$('#campDeadline').value='';$('#campCapacity').value='';
    await loadCamps();
   }catch(e){toast(e.message||'ثبت اردو ناموفق بود',1)}
