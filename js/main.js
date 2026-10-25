@@ -17,7 +17,7 @@
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
     VERSION: '5.52.0',
-    BACKEND_VERSION: '4.31.0-official-role-limits',
+    BACKEND_VERSION: '4.30.0-camp-capacity-official-role',
     BACKEND_COMPATIBLE_VERSIONS: ['4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
   };
 
