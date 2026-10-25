@@ -2975,7 +2975,7 @@ function submitGameScore(p) {
     var walletState=walletPublic_(wallet.item);
     var rows = getSheetObjects('بازی'), existing = null, existingRow = 0;
     for (var i = 0; i < rows.length; i++) {
-      if (String(rows[i].weekKey) === week && String(rows[i].memberId) === String(member.id)) {
+      if (normalizeGameWeekKey_(rows[i].weekKey) === week && String(rows[i].memberId) === String(member.id)) {
         existing = rows[i];
         existingRow = findRow(sheet, 'weekKey', week, 'memberId', member.id);
         break;
@@ -3054,7 +3054,7 @@ function leaderboardForWeek(week) {
   members.forEach(function(m){memberById[String(m.id||'')]=m;});
   var registeredPhones=registeredRingPhones_(),roles=gameRoleMap_(members,registeredPhones);
   return getSheetObjects('بازی')
-    .filter(function(r){return String(r.weekKey)===String(week);})
+    .filter(function(r){return normalizeGameWeekKey_(r.weekKey)===normalizeGameWeekKey_(week);})
     .map(function(r){
       var id=String(r.memberId||''),member=memberById[id]||{},role=roles[id]||{roleKey:'unregistered',roleLabel:'عضو نشده'};
       return {memberId:id,playerName:r.playerName,score:Number(r.score||0),profileImage:String(member.profileImage||''),registered:!!registeredPhones[normalizeMemberPhone(member.phone)],roleKey:role.roleKey,roleLabel:role.roleLabel};
@@ -3206,6 +3206,15 @@ function rowToObject(name,row) {
   return o;
 }
 
+function normalizeGameWeekKey_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) return Utilities.formatDate(value, CFG.TIMEZONE, 'yyyy-MM-dd');
+  var s = String(value == null ? '' : value).trim();
+  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;
+  var parsed = new Date(s);
+  if (s && !isNaN(parsed.getTime()) && /GMT|UTC|T|\\//.test(s)) return Utilities.formatDate(parsed, CFG.TIMEZONE, 'yyyy-MM-dd');
+  return s;
+}
+
 function findRow(sheet, key1, val1, key2, val2) {
   var range = sheet.getDataRange();
   var values = range.getValues();
@@ -3215,7 +3224,9 @@ function findRow(sheet, key1, val1, key2, val2) {
   var i2 = key2 ? headers.indexOf(key2) : -1;
 
   for (var r=1;r<values.length;r++){
-    if (String(values[r][i1]) === String(val1) &&
+    var left = key1 === 'weekKey' ? normalizeGameWeekKey_(values[r][i1]) : String(values[r][i1]);
+    var right = key1 === 'weekKey' ? normalizeGameWeekKey_(val1) : String(val1);
+    if (left === right &&
         (!key2 || String(values[r][i2]) === String(val2))) {
       return r+1;
     }
