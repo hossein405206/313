@@ -812,8 +812,8 @@ html,body,button,input,textarea,select,.form-control,.nav-item,.btn-submit,.btn-
 }
 
 
-/* v5.56.0 — Balanced identity artwork: smaller than the original banner, still clearly legible. */
-.home-identity-banner{margin:5px var(--gutter) 7px;padding:8px;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;border:1px solid rgba(196,154,58,.18);border-radius:12px;background:radial-gradient(160px 70px at 100% 0,rgba(196,154,58,.07),transparent 75%),linear-gradient(145deg,#fffdf7,#f5eddd)}
-.home-identity-banner img{display:block;width:78%;max-width:360px;height:auto;aspect-ratio:1672/941;object-fit:contain;object-position:center}
-@media(min-width:600px){.home-identity-banner{margin:6px var(--gutter) 8px;padding:10px}.home-identity-banner img{width:70%;max-width:420px}}
-@media(max-width:360px){.home-identity-banner{margin-inline:10px;padding:6px;border-radius:10px}.home-identity-banner img{width:78%}}
+/* v5.57.0 — Full-width identity banner, right-aligned and slightly larger, without a card frame. */
+.home-identity-banner{position:relative;margin:0;padding:12px 4%;display:flex;align-items:center;justify-content:flex-start;direction:rtl;text-align:right;min-width:0;overflow:hidden;border:0;border-top:1px solid rgba(196,154,58,.22);border-bottom:1px solid rgba(196,154,58,.22);border-radius:0;background:radial-gradient(circle at 96% 20%,rgba(196,154,58,.10) 0 1px,transparent 2px),radial-gradient(circle at 4% 80%,rgba(196,154,58,.09) 0 1px,transparent 2px),linear-gradient(135deg,#fffdf7 0%,#f5eddd 48%,#fffaf0 100%);background-size:18px 18px,18px 18px,auto}
+.home-identity-banner img{display:block;width:90%;max-width:520px;height:auto;aspect-ratio:1672/941;object-fit:contain;object-position:right center;margin-inline-start:0;margin-inline-end:auto}
+@media(min-width:600px){.home-identity-banner{padding:16px 5%}.home-identity-banner img{width:82%;max-width:720px}}
+@media(max-width:360px){.home-identity-banner{padding:10px 4%}.home-identity-banner img{width:94%}}
