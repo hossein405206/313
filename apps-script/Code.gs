@@ -2853,14 +2853,39 @@ function ensureLifetimeGameRecords() {
 }
 
 var GAME_COSMETICS_ = {
-  hat_soldier:{id:'hat_soldier',category:'hat',name:'کلاه سربازی',price:20},
-  hat_police:{id:'hat_police',category:'hat',name:'کلاه پلیس',price:35},
-  hat_winter:{id:'hat_winter',category:'hat',name:'کلاه زمستانی',price:15},
-  hat_crown:{id:'hat_crown',category:'hat',name:'تاج طلایی',price:80},
-  hat_party:{id:'hat_party',category:'hat',name:'کلاه جشن',price:12},
-  outfit_scout:{id:'outfit_scout',category:'outfit',name:'لباس پیشاهنگی',price:30},
-  outfit_winter:{id:'outfit_winter',category:'outfit',name:'پالتوی زمستانی',price:25},
-  outfit_royal:{id:'outfit_royal',category:'outfit',name:'لباس سلطنتی',price:100}
+  hat_soldier:{id:'hat_soldier',category:'hat',name:'کلاه سربازی',price:2000},
+  hat_police:{id:'hat_police',category:'hat',name:'کلاه پلیس',price:3500},
+  hat_winter:{id:'hat_winter',category:'hat',name:'کلاه زمستانی',price:1500},
+  hat_crown:{id:'hat_crown',category:'hat',name:'تاج طلایی',price:8000},
+  hat_party:{id:'hat_party',category:'hat',name:'کلاه جشن',price:1200},
+  hat_cowboy:{id:'hat_cowboy',category:'hat',name:'کلاه کابویی',price:2800},
+  hat_tophat:{id:'hat_tophat',category:'hat',name:'کلاه سیلندری',price:4200},
+  hat_chef:{id:'hat_chef',category:'hat',name:'کلاه سرآشپز',price:2400},
+  hat_pirate:{id:'hat_pirate',category:'hat',name:'کلاه دزد دریایی',price:6500},
+  hat_wizard:{id:'hat_wizard',category:'hat',name:'کلاه جادوگر',price:9000},
+  hat_grad:{id:'hat_grad',category:'hat',name:'کلاه فارغ‌التحصیلی',price:5000},
+  hat_beanie:{id:'hat_beanie',category:'hat',name:'بینی بافتنی',price:1800},
+  hat_headphones:{id:'hat_headphones',category:'hat',name:'هدفون گیمر',price:7500},
+  hat_royal:{id:'hat_royal',category:'hat',name:'تاج یاقوتی',price:18000},
+  hat_halo:{id:'hat_halo',category:'hat',name:'هاله نورانی',price:22000},
+  hat_flower:{id:'hat_flower',category:'hat',name:'تاج گل بهاری',price:6000},
+  hat_ninja:{id:'hat_ninja',category:'hat',name:'هدبند نینجا',price:8500},
+  hat_astronaut:{id:'hat_astronaut',category:'hat',name:'کلاه فضانوردی',price:25000},
+  hat_detective:{id:'hat_detective',category:'hat',name:'کلاه کارآگاهی',price:5500},
+  hat_rainbow:{id:'hat_rainbow',category:'hat',name:'کلاه رنگین‌کمانی',price:12000},
+  outfit_scout:{id:'outfit_scout',category:'outfit',name:'لباس پیشاهنگی',price:3000},
+  outfit_winter:{id:'outfit_winter',category:'outfit',name:'پالتوی زمستانی',price:2500},
+  outfit_royal:{id:'outfit_royal',category:'outfit',name:'لباس سلطنتی',price:10000},
+  outfit_hoodie:{id:'outfit_hoodie',category:'outfit',name:'هودی خیابانی',price:4500},
+  outfit_sport:{id:'outfit_sport',category:'outfit',name:'لباس ورزشی',price:5000},
+  outfit_astronaut:{id:'outfit_astronaut',category:'outfit',name:'لباس فضانوردی',price:28000},
+  outfit_ninja:{id:'outfit_ninja',category:'outfit',name:'لباس نینجا',price:16000},
+  outfit_firefighter:{id:'outfit_firefighter',category:'outfit',name:'لباس آتش‌نشان',price:12000},
+  outfit_pirate:{id:'outfit_pirate',category:'outfit',name:'لباس دزد دریایی',price:14000},
+  outfit_tuxedo:{id:'outfit_tuxedo',category:'outfit',name:'کت‌وشلوار رسمی',price:20000},
+  outfit_rainbow:{id:'outfit_rainbow',category:'outfit',name:'لباس رنگین‌کمانی',price:24000},
+  outfit_galaxy:{id:'outfit_galaxy',category:'outfit',name:'لباس کهکشانی',price:45000},
+  outfit_gold:{id:'outfit_gold',category:'outfit',name:'لباس طلای ناب',price:50000}
 };
 function gameWalletRow_(memberId,create) {
   var sheet=getSheet('کیف پول بازی'), rows=getSheetObjects('کیف پول بازی');
