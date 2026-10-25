@@ -66,6 +66,8 @@ function login(){
     throw new Error((r&&r.error)||'پاسخ ورود مربی ناقص است؛ نسخهٔ منتشرشدهٔ Google Apps Script را بررسی کن.');
    }
    state.token=r.token;state.name=String(coach.name||'مربی');state.isMaster=!!coach.isMaster;state.isCampOfficial=false;state.permissions=coach.permissions||{};
+   // Clear a separately saved camp-official session when logging in as a coach.
+   if(window.KanoonApp&&window.KanoonApp.session&&window.KanoonApp.session.clearOfficial)window.KanoonApp.session.clearOfficial();
    sessionRemove('coach_camp_official');
    sessionSet('coach_token',state.token);sessionSet('coach_name',state.name);sessionSet('coach_master',state.isMaster?'1':'0');sessionSet('coach_permissions',JSON.stringify(state.permissions));
    var loginPanel=$('#coachLogin'),dashboard=$('#coachDashboard'),nameEl=$('#coachName');
