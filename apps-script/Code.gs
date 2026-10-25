@@ -2888,7 +2888,7 @@ function getGameWallet_(p) {
 function saveCampConsentUrl_(p) {
   requireCoachPermission(p.token,'events');
   var url=String(p.url||'').trim();
-  if(url && !/^https?:\\/\\//i.test(url))throw new Error('لینک باید با https:// یا http:// شروع شود');
+  if(url && !/^https?:\/\//i.test(url))throw new Error('لینک باید با https:// یا http:// شروع شود');
   if(url.length>1000)throw new Error('لینک بیش از حد طولانی است');
   setSetting('campConsentUrl',url);
   return {ok:true,url:url};
