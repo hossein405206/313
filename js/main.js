@@ -17,8 +17,8 @@
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
     VERSION: '5.78.0',
-    BACKEND_VERSION: '4.36.0-camp-receipt-review',
-    BACKEND_COMPATIBLE_VERSIONS: ['4.34.0-receipt-upload-guard', '4.33.0-member-approval', '4.32.0-legacy-account-guard', '4.30.0-camp-capacity-official-role', '4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
+    BACKEND_VERSION: '4.37.0-camp-payment-review-fix',
+    BACKEND_COMPATIBLE_VERSIONS: ['4.36.0-camp-receipt-review', '4.34.0-receipt-upload-guard', '4.33.0-member-approval', '4.32.0-legacy-account-guard', '4.30.0-camp-capacity-official-role', '4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -803,6 +803,7 @@
     var receiptPreview = DOM.qs('#receiptPreview');
     var receiptBtn = DOM.qs('#sendReceiptBtn');
     var paymentStatus = DOM.qs('#paymentStepStatus');
+    var finishCampRegistrationBtn = DOM.qs('#finishCampRegistrationBtn');
 
     function money(value) { return Number(value || 0).toLocaleString('fa-IR') + ' تومان'; }
     function selectedCamp() {
@@ -1058,6 +1059,20 @@
         receiptBtn.disabled = false; receiptBtn.textContent = 'ثبت و ارسال رسید';
       }
     });
+    if (finishCampRegistrationBtn) DOM.on(finishCampRegistrationBtn, 'click', function() {
+      if (!pendingRegistrationId) { Toast.error('اطلاعات ثبت‌نام پیدا نشد؛ صفحه را تازه‌سازی کن'); return; }
+      if (paymentStep) { paymentStep.hidden = true; paymentStep.classList.add('hidden'); }
+      form.reset();
+      if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
+      if (receiptPreview) { receiptPreview.innerHTML = ''; receiptPreview.hidden = true; receiptPreview.classList.remove('is-submitted'); }
+      selectedFile = null; receiptFile = null; pendingRegistrationId = ''; pendingReceiptUploadToken = '';
+      if (receiptInput) { receiptInput.value = ''; receiptInput.disabled = false; }
+      if (receiptBtn) { receiptBtn.disabled = false; receiptBtn.textContent = 'ثبت و ارسال رسید'; }
+      updateCampInfo();
+      Toast.success('ثبت‌نام ذخیره شد و برای بررسی ارسال شد ✓');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+
   }
 
   RegisterForm._fileToBase64 = function (file) {
