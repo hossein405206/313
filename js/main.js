@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.80.0',
-    BACKEND_VERSION: '4.38.0-login-ring-approval-fix',
+    VERSION: '5.81.0',
+    BACKEND_VERSION: '4.39.0-camp-receipts-post-only',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
@@ -621,7 +621,7 @@
           } else if (role.indexOf('نظارت') >= 0) {
             location.href = 'supervision.html';
           } else if (role.indexOf('اردو') >= 0) {
-            location.href = 'coach.html?campOfficial=1';
+            location.href = 'camp-official.html';
           } else {
             location.href = 'index.html';
             Toast.show('پنل این مسئولیت هنوز آماده نیست', 'error');
