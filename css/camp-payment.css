@@ -39,3 +39,11 @@
 .camp-capacity__track{height:9px;overflow:hidden;border-radius:99px;background:#dce8e3}
 .camp-capacity__bar{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#118667,#42b883);transition:width .25s ease}
 .camp-capacity__bar.is-full{background:#d97739}
+
+
+/* v5.79.0 — رسید پرداخت در فرم اولیه؛ انتخاب آن مانع ثبت‌نام نمی‌شود. */
+.camp-initial-receipt{margin-top:18px;padding:14px;border:1px solid #e2ece7;border-radius:18px;background:linear-gradient(145deg,#fff,#f7fbf9)}
+.camp-initial-receipt>label:first-child{display:block;margin-bottom:10px;color:#203c38;font-size:.86rem;font-weight:800}
+.camp-initial-receipt .camp-receipt-picker{padding:18px 12px;border-radius:15px}
+.camp-initial-receipt .camp-receipt-picker input{max-width:100%;width:100%}
+#initialReceiptPreview[hidden]{display:none!important}
