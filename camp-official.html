@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14243b">
+<meta name="description" content="مدیریت مستقل اردوها و رسیدهای پرداخت">
+<title>پنل مسئول اردو | حلقه شهید هادی ذوالفقاری</title>
+<link rel="stylesheet" href="css/style.css?v=5.80.0">
+<link rel="stylesheet" href="css/islamic-design.css?v=5.80.0">
+<link rel="stylesheet" href="css/camp-official.css?v=5.81.0">
+</head>
+<body class="camp-official-body">
+<div class="app-container">
+<header class="app-header">
+  <a href="officials.html" class="header-back" aria-label="بازگشت به ورود مسئولین">←</a>
+  <h1>پنل مسئول اردو</h1>
+</header>
+<main class="page camp-official-page">
+  <section id="campAccessError" class="camp-access-error" hidden>
+    <div class="camp-access-error__icon" aria-hidden="true">🔒</div>
+    <h2>ورود مسئول اردو لازم است</h2>
+    <p>این صفحه مستقل از پنل مربیان است. از صفحهٔ ورود مسئولین، گزینهٔ «مسئول اردو» را انتخاب و با کد معتبر وارد شو.</p>
+    <a href="officials.html" class="btn-submit">بازگشت به ورود مسئولین</a>
+  </section>
+
+  <section id="campDashboard" hidden>
+    <div class="camp-official-hero">
+      <div class="camp-official-hero__copy">
+        <span class="camp-official-eyebrow">CAMP MANAGEMENT</span>
+        <h2>مدیریت اردوها</h2>
+        <p id="campOfficialName">—</p>
+      </div>
+      <div class="camp-official-hero__actions">
+        <button type="button" id="refreshCampDataBtn" class="camp-button camp-button--light">به‌روزرسانی</button>
+        <button type="button" id="campLogout" class="camp-button camp-button--outline">خروج</button>
+      </div>
+    </div>
+
+    <div id="campBackendNotice" class="camp-backend-notice" role="status" aria-live="polite" hidden></div>
+
+    <section class="camp-panel" id="campCampsSection">
+      <div class="camp-panel__head">
+        <div>
+          <h2>اردوها و ظرفیت ثبت‌نام</h2>
+          <p>نام اردو، هزینه، شماره کارت، ظرفیت و مهلت ثبت‌نام را مدیریت کن.</p>
+        </div>
+      </div>
+      <div class="camp-form-grid">
+        <label class="camp-field camp-field--full">نام اردو
+          <input id="campTitle" class="form-control" maxlength="140" placeholder="مثلاً اردوی فرهنگی جمعه" required>
+        </label>
+        <label class="camp-field camp-field--full">لینک متن رضایت‌نامه
+          <input id="campConsentUrl" class="form-control" type="url" inputmode="url" dir="ltr" placeholder="https://...">
+          <small>این لینک در فرم ثبت‌نام اردو نمایش داده می‌شود.</small>
+        </label>
+        <div class="camp-field-action camp-field-action--full">
+          <button type="button" id="saveCampConsentBtn" class="camp-button camp-button--secondary">ذخیره لینک رضایت‌نامه</button>
+        </div>
+        <label class="camp-field camp-field--full">شماره کارت مقصد
+          <input id="campCardNumber" class="form-control" dir="ltr" inputmode="numeric" maxlength="30" placeholder="شماره کارت یا شبا">
+        </label>
+        <label class="camp-field">هزینه (تومان)
+          <input id="campCost" class="form-control" inputmode="numeric" dir="ltr" placeholder="مثلاً ۱۵۰۰۰۰">
+        </label>
+        <label class="camp-field">ظرفیت اردو (نفر)
+          <input id="campCapacity" class="form-control" type="number" min="1" max="100000" step="1" placeholder="مثلاً ۵۰" required>
+        </label>
+        <label class="camp-field camp-field--full">پایان ثبت‌نام
+          <input id="campDeadline" class="form-control" type="date" required>
+        </label>
+      </div>
+      <div class="camp-form-actions">
+        <button type="button" id="saveCampBtn" class="btn-submit">ثبت اردو</button>
+        <button type="button" id="cancelCampBtn" class="camp-button camp-button--secondary">پاک‌کردن فرم</button>
+      </div>
+      <div class="camp-list-heading"><h3>اردوهای ثبت‌شده</h3></div>
+      <div id="campsAdmin" class="camp-admin-list" aria-live="polite">
+        <div class="camp-empty">اردوها پس از دریافت اطلاعات نمایش داده می‌شوند.</div>
+      </div>
+    </section>
+
+    <section class="camp-panel" id="campPaymentReviewSection">
+      <div class="camp-panel__head">
+        <div>
+          <h2>رسیدهای پرداخت</h2>
+          <p>رسید را امن مشاهده کن و پرداخت را تأیید یا رد کن.</p>
+        </div>
+        <button type="button" id="refreshCampReceiptsBtn" class="camp-button camp-button--secondary">تازه‌سازی رسیدها</button>
+      </div>
+      <div id="campPaymentReviewAdmin" class="camp-admin-list" aria-live="polite">
+        <div class="camp-empty">رسیدها پس از ورود بارگذاری می‌شوند.</div>
+      </div>
+    </section>
+  </section>
+</main>
+<nav class="bottom-nav"></nav>
+</div>
+
+<div class="modal camp-photo-modal" id="registrationPhotoModal" role="dialog" aria-modal="true" aria-labelledby="registrationPhotoTitle" hidden>
+  <div class="modal-content camp-photo-modal__content">
+    <div class="modal-header">
+      <h3 id="registrationPhotoTitle">رسید پرداخت</h3>
+      <button type="button" id="registrationPhotoClose" class="close-btn" aria-label="بستن رسید">×</button>
+    </div>
+    <p id="registrationPhotoStatus" class="camp-photo-modal__status" role="status" aria-live="polite">در حال آماده‌سازی نمایشگر…</p>
+    <img id="registrationPhotoImage" class="camp-photo-modal__image" alt="تصویر رسید پرداخت" hidden>
+  </div>
+</div>
+<script src="js/main.js?v=5.81.0" defer></script>
+<script src="js/camp-official.js?v=5.81.0" defer></script>
+</body>
+</html>
