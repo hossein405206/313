@@ -426,3 +426,6 @@ body:has(.coach-page) .app-container{background:transparent}
 #campPaymentReviewAdmin .admin-actions button.danger{background:#fff0ef;color:#9e3b3b;border-color:#f2d4d2}
 #campPaymentReviewAdmin .payment-waiting{display:inline-flex;align-items:center;padding:8px 11px;border-radius:999px;background:#fff6df;color:#87651e;font-size:.75rem;font-weight:800}
 @media(max-width:520px){#campPaymentReviewSection{padding:13px}#campPaymentReviewAdmin .camp-registration-item{align-items:stretch}#campPaymentReviewAdmin .admin-actions{display:grid;grid-template-columns:1fr 1fr}#campPaymentReviewAdmin .admin-actions button{min-height:42px}}
+
+
+/* v5.79.0 — حفظ نمودار برای مربیان؛ پنهان‌سازی صریح برای مسئول اردو در js/coach.js. */
