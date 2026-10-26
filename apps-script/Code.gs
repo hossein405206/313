@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.35.0-consent-link-game-wallet';
+var APP_VERSION = '4.36.0-camp-receipt-review';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -480,6 +480,12 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
       items: warningsForMonth(requestedMonth),
       role: warningAuth.role
     };
+  }
+
+  if (action === 'listCampPaymentReceipts') {
+    var paymentAuth = requireToken(p.token, ['coach', 'camp']);
+    if (paymentAuth.role === 'coach') requireCoachPermission(p.token, 'registrations');
+    return {ok:true, items:listCampPaymentReceipts_()};
   }
 
   if (action === 'listRegistrations') {
@@ -2371,7 +2377,8 @@ function uploadCampReceipt(p) {
 }
 
 function setCampPaymentStatus(p) {
-  requireCoachPermission(p.token, 'registrations');
+  var paymentAuth = requireToken(p.token, ['coach', 'camp']);
+  if (paymentAuth.role === 'coach') requireCoachPermission(p.token, 'registrations');
   var id = String(p.id || '').trim();
   var nextStatus = String(p.status || '').trim();
   if (['تایید پرداخت', 'رد پرداخت'].indexOf(nextStatus) < 0) throw new Error('وضعیت رسید معتبر نیست');
@@ -2391,6 +2398,28 @@ function setCampPaymentStatus(p) {
     setRegistrationStatus({token:p.token, id:id, status:'تایید شد'});
   }
   return {ok:true, id:id, paymentStatus:nextStatus};
+}
+
+function listCampPaymentReceipts_() {
+  var camps = {};
+  getSheetObjects('اردوها').forEach(function(c) {
+    camps[String(c.id || '')] = {title:String(c.title || ''), cost:Number(c.cost || 0)};
+  });
+  return getSheetObjects('ثبت‌نام‌ها').filter(function(r) {
+    var camp = camps[String(r.campId || '')];
+    return camp && camp.cost > 0 && String(r.status || '') !== 'رد شد' &&
+      String(r.paymentStatus || '') !== 'تایید پرداخت';
+  }).map(function(r) {
+    var camp = camps[String(r.campId || '')] || {};
+    return {
+      id:String(r.id || ''), campId:String(r.campId || ''),
+      campTitle:String(camp.title || ''), campCost:Number(camp.cost || 0),
+      firstName:String(r.firstName || ''), lastName:String(r.lastName || ''),
+      phone:String(r.phone || ''), status:String(r.status || ''),
+      paymentStatus:String(r.paymentStatus || 'منتظر ارسال رسید'),
+      receiptPhotoUrl:String(r.receiptPhotoUrl || ''), createdAt:String(r.createdAt || '')
+    };
+  }).sort(function(a,b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
 }
 
 function registerCamp(p) {
@@ -2456,14 +2485,17 @@ function registerCamp(p) {
   }
 }
 function getRegistrationPhoto(p) {
-  requireCoachPermission(p.token, 'registrations');
+  var isReceiptRequest = String(p.type || '') === 'receipt';
+  var photoAuth = requireToken(p.token, isReceiptRequest ? ['coach', 'camp'] : ['coach']);
+  if (photoAuth.role === 'coach') requireCoachPermission(p.token, 'registrations');
+  if (photoAuth.role === 'camp' && !isReceiptRequest) throw new Error('مسئول اردو فقط به رسید پرداخت دسترسی دارد');
   var registrationId = String(p.id || '').trim();
   if (!registrationId) throw new Error('شناسهٔ ثبت‌نام مشخص نیست');
   var registration = getSheetObjects('ثبت‌نام‌ها').filter(function(row) {
     return String(row.id || '') === registrationId;
   })[0];
   if (!registration) throw new Error('ثبت‌نام پیدا نشد');
-  var isReceipt = String(p.type || '') === 'receipt';
+  var isReceipt = isReceiptRequest;
   var url = String((isReceipt ? registration.receiptPhotoUrl : registration.photoUrl) || '');
   var match = /[?&]id=([A-Za-z0-9_-]{10,})/.exec(url);
   if (!match) throw new Error(isReceipt ? 'برای این ثبت‌نام رسید پرداختی ثبت نشده است' : 'برای این ثبت‌نام عکس رضایت‌نامه‌ای ثبت نشده است');
