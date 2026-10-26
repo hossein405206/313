@@ -1369,12 +1369,8 @@ function memberAuth(p) {
       // ساخت حساب سایت نیازی به تأیید ندارد؛ تأیید جداگانه فقط برای عضویت در حلقه است.
       var legacySalt = String(existing.passwordSalt || '');
       var legacyHash = String(existing.passwordHash || '');
-      if (currentApprovalStatus === 'pending' && (!legacyHash || !legacySalt || memberPasswordHash(password, legacySalt) !== legacyHash)) {
+      if (!legacyHash || !legacySalt || memberPasswordHash(password, legacySalt) !== legacyHash) {
         throw new Error('شماره همراه یا گذرواژه اشتباه است');
-      }
-      if (currentApprovalStatus === 'rejected') {
-        legacySalt = Utilities.getUuid() + '-' + Utilities.getUuid();
-        legacyHash = memberPasswordHash(password, legacySalt);
       }
       activateMemberAccount_(existing.id, fullName, legacySalt, legacyHash);
       existing = findMemberByPhone(phone, true);
