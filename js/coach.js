@@ -28,7 +28,7 @@ function readPermissions(root){
 }
 function applyPermissions(){
  if(state.isCampOfficial){
-  document.querySelectorAll('.coach-panel,.coach-quick-link').forEach(function(s){s.classList.toggle('permission-hidden',s.id!=='coachCampsSection')});
+  document.querySelectorAll('.coach-panel,.coach-quick-link').forEach(function(s){s.classList.toggle('permission-hidden',s.id!=='coachCampsSection'&&s.id!=='campPaymentReviewSection')});
   var campStaff=$('#coachStaffPanel'),campOfficialStaff=$('#officialStaffPanel'),campReset=$('#memberResetPanel');
   if(campStaff)campStaff.classList.add('hidden');if(campOfficialStaff)campOfficialStaff.classList.add('hidden');if(campReset)campReset.classList.add('hidden');
   return;
