@@ -392,8 +392,13 @@
       button.disabled=true;button.textContent='در حال ثبت...';
       try{
         var res=await window.KanoonApp.api.post(data);
-        if(!alreadyRegistered){location.href='welcome.html';return;}
-        alreadyRegistered=true;
+        if(!alreadyRegistered){
+          alreadyRegistered=true;
+          show(res.message||'درخواست عضویت در حلقه ثبت شد و پس از بررسی مسئول حلقه اعلام نتیجه می‌شود.','success');
+          button.textContent='ذخیره تغییرات ثبت‌نام';
+          window.scrollTo({top:0,behavior:'smooth'});
+          return;
+        }
         show(res.message||'اطلاعات عضویت با موفقیت به‌روزرسانی شد.','success');
         button.textContent='ذخیره تغییرات ثبت‌نام';
       }catch(err){
