@@ -990,6 +990,9 @@
               var initialReceiptBase64 = await RegisterForm._fileToBase64(initialReceiptFile);
               await Api.post({action:'uploadCampReceipt',registrationId:pendingRegistrationId,receiptUploadToken:pendingReceiptUploadToken,receiptBase64:initialReceiptBase64,receiptMimeType:initialReceiptFile.type});
               pendingReceiptUploadToken = '';
+              initialReceiptFile = null;
+              if (initialReceiptInput) initialReceiptInput.value = '';
+              if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; }
               if (paymentStatus) paymentStatus.textContent = 'رسید دریافت شد؛ اکنون منتظر تأیید مسئول اردو بمان.';
               if (receiptInput) receiptInput.disabled = true;
               if (receiptBtn) { receiptBtn.disabled = true; receiptBtn.textContent = 'رسید با موفقیت ارسال شد ✓'; }
@@ -1008,6 +1011,8 @@
         } else {
           form.reset();
           if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
+          if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; }
+          initialReceiptFile = null;
           selectedFile = null;
           updateCampInfo();
           Toast.success('ثبت‌نام ارسال شد و در انتظار تأیید مربی است ✓');
