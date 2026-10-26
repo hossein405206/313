@@ -121,6 +121,17 @@
   function loadWallet(){
     return api().post({action:'getGameWallet',token:member.token}).then(function(r){wallet=r.wallet||null;renderWallet();}).catch(function(e){console.warn('[GameWallet]',e);var box=document.getElementById('gameCosmetics');if(box)box.textContent='کمد تزئینات فعلاً در دسترس نیست.';});
   }
+  function drawCosmeticPreview(preview,id){
+    var previewCtx=preview.getContext('2d');if(!previewCtx)return;
+    var oldCtx=ctx,oldBird=bird,oldState=state,oldHat=wallet.equippedHat,oldOutfit=wallet.equippedOutfit;
+    previewCtx.clearRect(0,0,preview.width,preview.height);
+    var bg=previewCtx.createLinearGradient(0,0,0,preview.height);bg.addColorStop(0,'#eef8fb');bg.addColorStop(1,'#d7e9ed');previewCtx.fillStyle=bg;previewCtx.fillRect(0,0,preview.width,preview.height);
+    previewCtx.fillStyle='rgba(255,255,255,.8)';previewCtx.beginPath();previewCtx.arc(77,15,10,0,Math.PI*2);previewCtx.fill();
+    ctx=previewCtx;bird={x:49,y:43,vy:0,r:13,wing:0};state='idle';
+    if(shopCategory==='hat')wallet.equippedHat=id;else wallet.equippedOutfit=id;
+    drawBird();
+    ctx=oldCtx;bird=oldBird;state=oldState;wallet.equippedHat=oldHat;wallet.equippedOutfit=oldOutfit;
+  }
   function renderWallet(){
     var coins=document.getElementById('gameCoins'),box=document.getElementById('gameCosmetics');
     if(coins)coins.textContent=faNum(wallet&&wallet.coins||0);
@@ -129,10 +140,11 @@
     box.innerHTML=items.map(function(item){
       var owned=(wallet.owned||[]).indexOf(item.id)>=0;
       var equipped=(shopCategory==='hat'?wallet.equippedHat:wallet.equippedOutfit)===item.id;
-      var glyphMap={hat_soldier:'🪖',hat_police:'👮',hat_winter:'🧢',hat_crown:'👑',hat_party:'🎉',hat_cowboy:'🤠',hat_tophat:'🎩',hat_chef:'👨‍🍳',hat_pirate:'🏴‍☠️',hat_wizard:'🧙',hat_grad:'🎓',hat_beanie:'🧶',hat_headphones:'🎧',hat_royal:'💎',hat_halo:'😇',hat_flower:'🌸',hat_ninja:'🥷',hat_astronaut:'🧑‍🚀',hat_detective:'🕵️',hat_rainbow:'🌈',outfit_scout:'🦺',outfit_winter:'🧥',outfit_royal:'✨',outfit_hoodie:'👕',outfit_sport:'🏅',outfit_astronaut:'🚀',outfit_ninja:'🥷',outfit_firefighter:'🚒',outfit_pirate:'🏴‍☠️',outfit_tuxedo:'🤵',outfit_rainbow:'🌈',outfit_galaxy:'🌌',outfit_gold:'🥇'};var glyph=glyphMap[item.id]||'✨';
+
       var action=owned?'equip':'buy',label=equipped?'روی پرنده است':(owned?'پوشیدن':'خرید · '+faNum(item.price)+' سکه');
-      return '<article class="cosmetic-card '+(equipped?'is-equipped':'')+'"><div class="cosmetic-card__preview" aria-hidden="true">'+glyph+'</div><div class="cosmetic-card__info"><strong>'+esc(item.name)+'</strong><small>'+(owned?'خریداری‌شده':'قیمت: '+faNum(item.price)+' سکه')+'</small></div><button type="button" data-cosmetic-action="'+action+'" data-cosmetic-id="'+esc(item.id)+'" data-cosmetic-slot="'+shopCategory+'" '+(equipped?'disabled':'')+'>'+label+'</button></article>';
+      return '<article class="cosmetic-card '+(equipped?'is-equipped':'')+'"><div class="cosmetic-card__preview" aria-hidden="true"><canvas class="cosmetic-preview-canvas" width="100" height="72" data-preview-id="'+esc(item.id)+'"></canvas></div><div class="cosmetic-card__info"><strong>'+esc(item.name)+'</strong><small>'+(owned?'خریداری‌شده':'قیمت: '+faNum(item.price)+' سکه')+'</small></div><button type="button" data-cosmetic-action="'+action+'" data-cosmetic-id="'+esc(item.id)+'" data-cosmetic-slot="'+shopCategory+'" '+(equipped?'disabled':'')+'>'+label+'</button></article>';
     }).join('');
+    box.querySelectorAll('.cosmetic-preview-canvas').forEach(function(preview){drawCosmeticPreview(preview,preview.dataset.previewId);});
     box.querySelectorAll('[data-cosmetic-action]').forEach(function(btn){btn.addEventListener('click',async function(){
       btn.disabled=true;var action=btn.dataset.cosmeticAction;
       try{var result=await api().post({action:action==='buy'?'buyGameCosmetic':'equipGameCosmetic',token:member.token,id:btn.dataset.cosmeticId,slot:btn.dataset.cosmeticSlot});wallet=result.wallet;renderWallet();toast(action==='buy'?'خرید انجام شد!':'ظاهر پرنده تغییر کرد!');}
@@ -255,6 +267,13 @@
   function drawBird(){
     ctx.save();ctx.translate(bird.x,bird.y);
     ctx.rotate(state==='playing'?Math.max(-.45,Math.min(.75,bird.vy*.0012)):0);
+    ctx.shadowColor='rgba(38,53,70,.24)';ctx.shadowBlur=8;ctx.shadowOffsetY=3;
+    var body=ctx.createLinearGradient(-17,-14,15,14);body.addColorStop(0,'#ffe978');body.addColorStop(.55,'#f5c843');body.addColorStop(1,'#e5a72f');
+    ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,17,13,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowColor='transparent';ctx.fillStyle='#d89b2b';ctx.beginPath();ctx.ellipse(-5,6,10,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(8,-6,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#26313b';ctx.beginPath();ctx.arc(9,-6,2.2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#e97b2e';ctx.beginPath();ctx.moveTo(14,-2);ctx.lineTo(28,3);ctx.lineTo(14,8);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#f0b52e';ctx.beginPath();ctx.ellipse(-9,-3,9,5,-.35+bird.wing*.45,0,Math.PI*2);ctx.fill();
     var outfit=wallet&&wallet.equippedOutfit||'';
     var outfitColors={outfit_scout:'#4d8064',outfit_winter:'#d8edf0',outfit_royal:'#7146a3',outfit_hoodie:'#4b6c94',outfit_sport:'#d84e4e',outfit_astronaut:'#d7e2e8',outfit_ninja:'#353947',outfit_firefighter:'#c74435',outfit_pirate:'#473c35',outfit_tuxedo:'#252d3a',outfit_rainbow:'#d77bb7',outfit_galaxy:'#3b326f',outfit_gold:'#e0ad2e'};
     if(outfitColors[outfit]){
@@ -268,13 +287,7 @@
       else if(outfit==='outfit_rainbow'||outfit==='outfit_galaxy'){ctx.fillStyle='#f8d36d';ctx.fillRect(-12,2,24,2);ctx.fillStyle='#85d5d1';ctx.fillRect(-12,7,24,2);}
       else if(outfit==='outfit_sport'){ctx.fillStyle='#fff';ctx.fillRect(-8,2,16,3);}
     }
-    ctx.shadowColor='rgba(38,53,70,.24)';ctx.shadowBlur=8;ctx.shadowOffsetY=3;
-    var body=ctx.createLinearGradient(-17,-14,15,14);body.addColorStop(0,'#ffe978');body.addColorStop(.55,'#f5c843');body.addColorStop(1,'#e5a72f');
-    ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,17,13,0,0,Math.PI*2);ctx.fill();
-    ctx.shadowColor='transparent';ctx.fillStyle='#d89b2b';ctx.beginPath();ctx.ellipse(-5,6,10,5,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(8,-6,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#26313b';ctx.beginPath();ctx.arc(9,-6,2.2,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#e97b2e';ctx.beginPath();ctx.moveTo(14,-2);ctx.lineTo(28,3);ctx.lineTo(14,8);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#f0b52e';ctx.beginPath();ctx.ellipse(-9,-3,9,5,-.35+bird.wing*.45,0,Math.PI*2);ctx.fill();
+
     var hat=wallet&&wallet.equippedHat||'';
     ctx.shadowColor='transparent';
     var hatColors={hat_cowboy:'#9a693d',hat_tophat:'#272b35',hat_chef:'#fff5e8',hat_pirate:'#3a3031',hat_wizard:'#54429a',hat_grad:'#252b37',hat_beanie:'#d64c50',hat_headphones:'#3d4f75',hat_royal:'#8b2638',hat_flower:'#e98ba9',hat_ninja:'#333744',hat_astronaut:'#d8e4ea',hat_detective:'#927653',hat_rainbow:'#e6a1b6'};
