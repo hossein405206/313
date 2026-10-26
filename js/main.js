@@ -16,9 +16,9 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.79.0',
-    BACKEND_VERSION: '4.37.0-camp-payment-review-fix',
-    BACKEND_COMPATIBLE_VERSIONS: ['4.36.0-camp-receipt-review', '4.34.0-receipt-upload-guard', '4.33.0-member-approval', '4.32.0-legacy-account-guard', '4.30.0-camp-capacity-official-role', '4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
+    VERSION: '5.80.0',
+    BACKEND_VERSION: '4.38.0-login-ring-approval-fix',
+    BACKEND_COMPATIBLE_VERSIONS: []
   };
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -621,7 +621,7 @@
           } else if (role.indexOf('نظارت') >= 0) {
             location.href = 'supervision.html';
           } else if (role.indexOf('اردو') >= 0) {
-            location.href = 'coach.html';
+            location.href = 'coach.html?campOfficial=1';
           } else {
             location.href = 'index.html';
             Toast.show('پنل این مسئولیت هنوز آماده نیست', 'error');
