@@ -2833,6 +2833,20 @@ function warningsForMonth(month) {
 /* Dashboard                                                                  */
 /* -------------------------------------------------------------------------- */
 
+function getRecentSiteMembers_() {
+  return getSheetObjects('اعضا')
+    .filter(function(r){ return truthy(r.active); })
+    .sort(function(a,b){ return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); })
+    .slice(0,20)
+    .map(function(r){ return {id:String(r.id||''),name:String(r.name||((r.firstName||'')+' '+(r.lastName||'')).trim()),phone:String(r.phone||''),createdAt:String(r.createdAt||'')}; });
+}
+function getPendingRingRegistrations_() {
+  return getSheetObjects('ثبت‌نام حلقه')
+    .filter(function(r){ return String(r.status||'در انتظار تایید') === 'در انتظار تایید'; })
+    .sort(function(a,b){ return String(a.createdAt||'').localeCompare(String(b.createdAt||'')); })
+    .map(function(r){ return {id:String(r.id||''),memberId:String(r.memberId||''),phone:String(r.phone||''),nationalCode:String(r.nationalCode||''),birthDate:String(r.birthDate||''),fatherName:String(r.fatherName||''),fatherPhone:String(r.fatherPhone||''),address:String(r.address||''),school:String(r.school||''),grade:String(r.grade||''),guardianName:String(r.guardianName||''),emergencyPhone:String(r.emergencyPhone||''),status:String(r.status||'در انتظار تایید'),createdAt:String(r.createdAt||'')}; });
+}
+
 function dashboardData(auth) {
   var month = currentMonth();
   var today = currentDate();
@@ -2863,6 +2877,8 @@ function dashboardData(auth) {
       monthWarnings:warnings.length
     },
     events:(!auth || auth.isMaster || auth.permissions.events) ? listEventsPublic() : [],
+    recentMembers:(!auth || auth.isMaster || auth.permissions.registrations) ? getRecentSiteMembers_() : [],
+    ringRegistrations:(!auth || auth.isMaster || auth.permissions.registrations) ? getPendingRingRegistrations_() : [],
     registrations:(!auth || auth.isMaster || auth.permissions.registrations) ? adminRegistrations : [],
     attendance:(!auth || auth.isMaster || auth.permissions.reports) ? attendance : [],
     warnings:(!auth || auth.isMaster || auth.permissions.reports) ? warnings : [],
