@@ -267,6 +267,7 @@
       else if(outfit==='outfit_firefighter'){ctx.fillStyle='#f2cf57';ctx.fillRect(-12,2,24,3);ctx.fillRect(-12,9,24,3);}
       else if(outfit==='outfit_rainbow'||outfit==='outfit_galaxy'){ctx.fillStyle='#f8d36d';ctx.fillRect(-12,2,24,2);ctx.fillStyle='#85d5d1';ctx.fillRect(-12,7,24,2);}
       else if(outfit==='outfit_sport'){ctx.fillStyle='#fff';ctx.fillRect(-8,2,16,3);}
+    }
     ctx.shadowColor='rgba(38,53,70,.24)';ctx.shadowBlur=8;ctx.shadowOffsetY=3;
     var body=ctx.createLinearGradient(-17,-14,15,14);body.addColorStop(0,'#ffe978');body.addColorStop(.55,'#f5c843');body.addColorStop(1,'#e5a72f');
     ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,17,13,0,0,Math.PI*2);ctx.fill();
