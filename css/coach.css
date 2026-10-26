@@ -292,3 +292,127 @@ body:has(.coach-page) .app-container{background:transparent}
  .coach-quick-nav{gap:8px}
  .coach-quick-link{padding:12px;border-radius:14px}
 }
+
+
+/* v5.77.0 — ورودی لوکس پنل مربیان + رفع پوشانده‌شدن کلیک دکمه ورود */
+#coachLogin.coach-login{
+  isolation:isolate;
+  min-height:min(690px,calc(100svh - 150px));
+  margin:28px auto 42px;
+  padding:clamp(28px,6vw,46px) clamp(22px,5vw,38px);
+  border-radius:30px!important;
+  border:1px solid rgba(221,185,99,.48)!important;
+  background:
+    radial-gradient(ellipse at 50% -12%,rgba(213,177,92,.19),transparent 43%),
+    radial-gradient(circle at 0% 100%,rgba(78,112,151,.22),transparent 34%),
+    linear-gradient(145deg,#0a1423 0%,#14263d 48%,#091321 100%)!important;
+  color:#f7f1e5!important;
+  box-shadow:0 28px 75px rgba(6,17,31,.28),inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 5px rgba(255,255,255,.018)!important;
+}
+#coachLogin.coach-login:before{
+  content:"";
+  position:absolute;
+  inset:11px;
+  z-index:0;
+  pointer-events:none;
+  border:1px solid rgba(218,184,105,.16);
+  border-radius:22px;
+}
+#coachLogin.coach-login:after{
+  content:"";
+  position:absolute;
+  width:260px;height:260px;
+  right:-115px;bottom:-132px;
+  z-index:0;
+  pointer-events:none!important;
+  border:1px solid rgba(221,185,99,.2);
+  border-radius:50%;
+  box-shadow:0 0 0 22px rgba(221,185,99,.035),0 0 0 46px rgba(221,185,99,.025),0 0 0 70px rgba(221,185,99,.018);
+}
+#coachLogin.coach-login>*{position:relative;z-index:1}
+#coachLogin .coach-lock{
+  width:82px;height:82px;
+  margin:0 auto 22px;
+  border-radius:27px;
+  color:#f5d58a;
+  background:linear-gradient(145deg,#273b54,#101e31)!important;
+  border:1px solid rgba(229,194,111,.72)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.13),0 0 0 6px rgba(224,188,101,.055)!important;
+  font-size:2.05rem;
+}
+#coachLogin h2{
+  margin:0 0 8px!important;
+  color:#fff7e8!important;
+  font-size:clamp(1.8rem,5vw,2.25rem)!important;
+  letter-spacing:-.4px;
+  text-shadow:0 3px 20px rgba(0,0,0,.18);
+}
+#coachLogin>p:not(.coach-login-status){
+  max-width:340px;
+  margin:0 auto;
+  color:#bdc8d7!important;
+  font-size:.8rem;
+  line-height:2;
+}
+#coachLogin form{
+  position:relative;
+  z-index:5;
+  gap:13px;
+  margin-top:30px;
+}
+#coachLogin .form-control{
+  position:relative;
+  z-index:6;
+  width:100%;
+  min-height:56px;
+  padding:15px 17px;
+  border-radius:15px!important;
+  border:1px solid rgba(200,216,235,.2)!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.045))!important;
+  color:#fff7e8!important;
+  caret-color:#edce83;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.12),0 5px 18px rgba(0,0,0,.08)!important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+#coachLogin .form-control::placeholder{color:#aab8ca!important;opacity:1}
+#coachLogin .form-control:focus{
+  outline:none;
+  border-color:#d9b76c!important;
+  box-shadow:0 0 0 3px rgba(217,183,108,.12),0 8px 22px rgba(0,0,0,.13)!important;
+}
+#coachLogin .btn-submit{
+  position:relative;
+  z-index:7;
+  min-height:56px;
+  margin-top:5px;
+  border-radius:15px!important;
+  border:1px solid #f2d88e!important;
+  background:linear-gradient(135deg,#f0d38b 0%,#c69a42 47%,#e4bd67 100%)!important;
+  color:#19283a!important;
+  font-size:.95rem;
+  font-weight:900;
+  letter-spacing:.1px;
+  box-shadow:0 10px 25px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.55)!important;
+  cursor:pointer;
+  pointer-events:auto!important;
+  touch-action:manipulation;
+}
+#coachLogin .btn-submit:hover{filter:brightness(1.045);transform:translateY(-1px)}
+#coachLogin .btn-submit:active{transform:translateY(0) scale(.99)}
+#coachLogin .coach-login-status{
+  position:relative;
+  z-index:3;
+  min-height:1.5em;
+  margin:13px 0 0;
+  color:#d7e0ed!important;
+  overflow-wrap:anywhere;
+}
+#coachLogin .coach-login-status:empty{display:block;min-height:1.5em}
+@media(max-width:420px){
+ #coachLogin.coach-login{min-height:0;margin:16px auto 28px;padding:30px 20px;border-radius:25px!important}
+ #coachLogin.coach-login:before{inset:8px;border-radius:18px}
+ #coachLogin .coach-lock{width:74px;height:74px;border-radius:24px}
+ #coachLogin form{margin-top:24px}
+ #coachLogin .form-control,#coachLogin .btn-submit{min-height:54px}
+}
