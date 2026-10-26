@@ -3234,9 +3234,9 @@ function rowToObject(name,row) {
 function normalizeGameWeekKey_(value) {
   if (value instanceof Date && !isNaN(value.getTime())) return Utilities.formatDate(value, CFG.TIMEZONE, 'yyyy-MM-dd');
   var s = String(value == null ? '' : value).trim();
-  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   var parsed = new Date(s);
-  if (s && !isNaN(parsed.getTime()) && /GMT|UTC|T|\\//.test(s)) return Utilities.formatDate(parsed, CFG.TIMEZONE, 'yyyy-MM-dd');
+  if (s && !isNaN(parsed.getTime()) && /GMT|UTC|T|\//.test(s)) return Utilities.formatDate(parsed, CFG.TIMEZONE, 'yyyy-MM-dd');
   return s;
 }
 
