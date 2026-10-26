@@ -30,6 +30,9 @@ function applyPermissions(){
  if(state.isCampOfficial){
   document.querySelectorAll('.coach-panel,.coach-quick-link').forEach(function(s){s.classList.toggle('permission-hidden',s.id!=='coachCampsSection'&&s.id!=='campPaymentReviewSection')});
   var campStaff=$('#coachStaffPanel'),campOfficialStaff=$('#officialStaffPanel'),campReset=$('#memberResetPanel');
+  var attendanceTrend=$('#attendanceTrendPanel'),attendanceArchive=$('#attendanceArchivePanel');
+  if(attendanceTrend)attendanceTrend.classList.add('permission-hidden');
+  if(attendanceArchive)attendanceArchive.classList.add('permission-hidden');
   if(campStaff)campStaff.classList.add('hidden');if(campOfficialStaff)campOfficialStaff.classList.add('hidden');if(campReset)campReset.classList.add('hidden');
   return;
  }
@@ -407,7 +410,7 @@ function setupCamps(){
    if(url && !/^https?:\/\//i.test(url)){toast('لینک باید با https:// یا http:// شروع شود',1);consentField.focus();return;}
    try{
     var ping=await api().get({action:'ping'});
-    if(!ping||ping.version!=='4.35.0-consent-link-game-wallet')throw new Error('ابتدا نسخهٔ جدید Apps Script را منتشر کن.');
+    if(!ping||ping.version!=='4.36.0-camp-receipt-review')throw new Error('ابتدا نسخهٔ جدید Apps Script را منتشر کن.');
     await api().post({action:'saveCampConsentUrl',token:state.token,url:url});
     toast(url?'لینک رضایت‌نامه ذخیره شد ✓':'لینک رضایت‌نامه پاک شد');
    }catch(e){toast(e.message||'ذخیرهٔ لینک ناموفق بود',1);}
@@ -432,7 +435,7 @@ function setupCamps(){
   setBusy(save,'در حال ثبت اردو...');
   try{
    var backendVersion=await api().get({action:'ping'});
-   if(!backendVersion||backendVersion.version!=='4.35.0-consent-link-game-wallet')throw new Error('ابتدا نسخهٔ جدید فایل Apps Script باید منتشر شود.');
+   if(!backendVersion||backendVersion.version!=='4.36.0-camp-receipt-review')throw new Error('ابتدا نسخهٔ جدید فایل Apps Script باید منتشر شود.');
    await api().post({action:'saveCamp',token:state.token,id:state.editingCampId||'',title:title,cardNumber:cardNumber,cost:cost||0,registrationDeadline:registrationDeadline,capacity:Number(capacity)});
    toast(state.editingCampId?'تغییرات اردو ذخیره شد ✓':'اردو با ظرفیت مشخص‌شده ثبت شد ✓');
    state.editingCampId='';save.textContent='ثبت اردو';
