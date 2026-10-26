@@ -1,0 +1,50 @@
+.camp-official-body{background:#f5f7fa}
+.camp-official-page{max-width:980px;margin:0 auto;padding:16px 14px 100px}
+.camp-official-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 20px;border-radius:24px;background:radial-gradient(circle at 12% 18%,rgba(226,194,112,.18),transparent 32%),linear-gradient(135deg,#11233b,#203c5a);color:#fff;box-shadow:0 16px 38px rgba(19,38,61,.14)}
+.camp-official-hero__copy{min-width:0}
+.camp-official-eyebrow{display:block;color:#e4c56d;font-size:.62rem;font-weight:900;letter-spacing:1.8px}
+.camp-official-hero h2{margin:8px 0 3px;font-size:1.35rem;font-weight:900}
+.camp-official-hero p{margin:0;color:rgba(255,255,255,.7);font-size:.75rem}
+.camp-official-hero__actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.camp-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 13px;border:1px solid transparent;border-radius:12px;font:800 .7rem Vazirmatn,sans-serif;cursor:pointer}
+.camp-button:disabled,.btn-submit:disabled{opacity:.6;cursor:wait}
+.camp-button--light{background:linear-gradient(135deg,#f2d994,#d2ad58);color:#192b40}
+.camp-button--outline{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.06);color:#fff}
+.camp-button--secondary{background:#edf2f7;border-color:#dfe7ef;color:#304965}
+.camp-backend-notice{margin-top:14px;padding:13px 15px;border:1px solid #edd29a;border-radius:15px;background:#fff8e8;color:#76551b;font-size:.75rem;line-height:1.9;overflow-wrap:anywhere}
+.camp-backend-notice[hidden],.camp-access-error[hidden],#campDashboard[hidden],.camp-photo-modal[hidden]{display:none!important}
+.camp-panel{margin:16px 0;padding:18px;border:1px solid #e4eaf1;border-radius:22px;background:#fff;box-shadow:0 10px 27px rgba(24,42,65,.045)}
+.camp-panel__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.camp-panel__head h2{margin:0;color:#1b3049;font-size:1rem;font-weight:900}
+.camp-panel__head p{margin:5px 0 0;color:#8290a0;font-size:.68rem;line-height:1.8}
+.camp-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.camp-field{display:block;min-width:0;color:#47566b;font-size:.72rem;font-weight:800}
+.camp-field--full,.camp-field-action--full{grid-column:1/-1}
+.camp-field .form-control{display:block;box-sizing:border-box;width:100%;min-width:0;margin-top:6px}
+.camp-field small{display:block;margin-top:5px;color:#8894a3;font-size:.62rem;font-weight:500;line-height:1.8}
+.camp-field-action{display:flex;justify-content:flex-start;margin-top:-3px}
+.camp-form-actions{display:flex;gap:9px;margin-top:15px}
+.camp-form-actions>*{flex:1;min-width:0}
+.camp-list-heading{margin-top:22px;padding-top:14px;border-top:1px solid #edf0f4}
+.camp-list-heading h3{margin:0 0 10px;color:#263c55;font-size:.82rem;font-weight:900}
+.camp-admin-list{display:grid;gap:9px}
+.camp-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px;border:1px solid #e8edf3;border-radius:15px;background:#fbfcfe}
+.camp-item__main{flex:1;min-width:0}
+.camp-item__main strong{display:block;color:#203752;font-size:.78rem;overflow-wrap:anywhere}
+.camp-item__main small{display:block;margin-top:5px;color:#7b8899;font-size:.64rem;line-height:1.9;overflow-wrap:anywhere}
+.camp-item__actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px}
+.camp-item__actions button{min-height:37px;padding:8px 10px;border:1px solid #dfe7ef;border-radius:10px;background:#edf3f8;color:#2b4b69;font:800 .63rem Vazirmatn,sans-serif;cursor:pointer}
+.camp-item__actions button[data-payment-ok]{border-color:#e3c575;background:linear-gradient(135deg,#f2d994,#c9a14d);color:#192a3c}
+.camp-item__actions button.danger{border-color:#f2d4d2;background:#fff0ef;color:#9e3b3b}
+.camp-payment-waiting{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border-radius:999px;background:#fff6df;color:#87651e;font-size:.64rem;font-weight:800}
+.camp-empty{padding:16px;border:1px dashed #dce4ec;border-radius:14px;color:#778599;background:#fafbfd;font-size:.72rem;line-height:1.9;text-align:center}
+.camp-access-error{max-width:560px;margin:40px auto;padding:24px;border:1px solid #e5eaf0;border-radius:22px;background:#fff;text-align:center;box-shadow:0 14px 34px rgba(24,42,65,.06)}
+.camp-access-error__icon{font-size:2rem}
+.camp-access-error h2{margin:10px 0;color:#1b3049;font-size:1.05rem}
+.camp-access-error p{color:#6c7b8f;font-size:.77rem;line-height:2}
+.camp-access-error a{display:block;margin-top:14px;text-decoration:none}
+.camp-photo-modal[hidden]{display:none!important}
+.camp-photo-modal__content{width:min(92vw,800px);max-height:90vh;overflow:auto}
+.camp-photo-modal__status{color:#64748b;font-size:.74rem;line-height:1.9;overflow-wrap:anywhere}
+.camp-photo-modal__image{display:block;max-width:100%;max-height:70vh;object-fit:contain;margin:12px auto;border-radius:12px;background:#f5f7fa}
+@media(max-width:600px){.camp-official-page{padding:10px 10px 92px}.camp-official-hero{align-items:flex-start;flex-direction:column;padding:18px 15px;border-radius:20px}.camp-official-hero__actions{width:100%}.camp-official-hero__actions button{flex:1}.camp-panel{padding:14px;border-radius:18px}.camp-form-grid{grid-template-columns:1fr}.camp-field--full,.camp-field-action--full{grid-column:auto}.camp-form-actions{flex-direction:column}.camp-panel__head{align-items:flex-start;flex-direction:column}.camp-panel__head>button{width:100%}.camp-item{align-items:stretch;flex-direction:column}.camp-item__actions{display:grid;grid-template-columns:1fr 1fr}.camp-item__actions button{min-height:42px}.camp-payment-waiting{justify-self:start}.camp-photo-modal__content{padding:14px}}
