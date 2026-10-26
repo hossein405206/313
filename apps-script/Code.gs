@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.37.0-camp-payment-review-fix';
+var APP_VERSION = '4.38.0-login-ring-approval-fix';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -526,6 +526,33 @@ function handlePost(p) {
   if (action === 'listPendingMembers') {
     requireToken(p.token, ['attendance']);
     return {ok:true, items:listPendingMembers_()};
+  }
+  if (action === 'listRingRegistrations') {
+    var ringListAuth = requireToken(p.token, ['coach']);
+    requireCoachPermission(p.token, 'registrations');
+    var ringRows = getSheetObjects('ثبت‌نام حلقه').sort(byNewest);
+    return {ok:true, items:ringRows.map(function(r){return {
+      id:String(r.id||''), memberId:String(r.memberId||''), phone:String(r.phone||''),
+      nationalCode:String(r.nationalCode||''), birthDate:String(r.birthDate||''),
+      fatherName:String(r.fatherName||''), fatherPhone:String(r.fatherPhone||''),
+      address:String(r.address||''), school:String(r.school||''), grade:String(r.grade||''),
+      guardianName:String(r.guardianName||''), emergencyPhone:String(r.emergencyPhone||''),
+      status:String(r.status||'در انتظار تایید'), createdAt:String(r.createdAt||'')
+    };})};
+  }
+  if (action === 'setRingRegistrationStatus') {
+    var ringAuth = requireToken(p.token, ['coach']);
+    requireCoachPermission(p.token, 'registrations');
+    var ringId = String(p.id||'').trim(), ringStatus = String(p.status||'').trim();
+    if (!ringId || ['تایید شد','رد شد'].indexOf(ringStatus)<0) throw new Error('وضعیت درخواست نامعتبر است');
+    var ringSheet = getSheet('ثبت‌نام حلقه'), ringPos = findRow(ringSheet,'id',ringId);
+    if (!ringPos) throw new Error('درخواست عضویت پیدا نشد');
+    var ringWidth = HEADERS['ثبت‌نام حلقه'].length;
+    var ringValues = ringSheet.getRange(ringPos,1,1,ringWidth).getValues()[0];
+    ringValues[HEADERS['ثبت‌نام حلقه'].indexOf('status')] = ringStatus;
+    ringValues[HEADERS['ثبت‌نام حلقه'].indexOf('updatedAt')] = nowIso();
+    ringSheet.getRange(ringPos,1,1,ringWidth).setValues([ringValues]);
+    return {ok:true,status:ringStatus};
   }
   if (action === 'saveRingRegistration') return saveRingRegistration(p);
   if (action === 'registerMember') { throw new Error('برای ثبت‌نام و ورود از فرم شماره همراه و گذرواژه استفاده کن'); }
@@ -1299,6 +1326,33 @@ function setMemberPassword(memberId, password) {
   sheet.getRange(rowNumber, hashIndex + 1).setValue(hash);
 }
 
+function activateMemberAccount_(memberId, fullName, salt, hash) {
+  var sheet = getSheet('اعضا');
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) throw new Error('حساب پیدا نشد');
+  var headers = values[0].map(String), idx = {};
+  headers.forEach(function(h,i){idx[h]=i;});
+  for (var i=1;i<values.length;i++) {
+    if (String(values[i][idx.id] || '') !== String(memberId || '')) continue;
+    var row = values[i];
+    if (idx.active !== undefined) row[idx.active] = true;
+    if (idx.approvalStatus !== undefined) row[idx.approvalStatus] = 'approved';
+    if (idx.approvedAt !== undefined && !row[idx.approvedAt]) row[idx.approvedAt] = nowIso();
+    if (idx.approvedBy !== undefined && !row[idx.approvedBy]) row[idx.approvedBy] = 'سیستم';
+    if (salt) row[idx.passwordSalt] = salt;
+    if (hash) row[idx.passwordHash] = hash;
+    if (fullName && !String(row[idx.name] || '').trim()) {
+      var parts = String(fullName).trim().split(/\s+/);
+      row[idx.firstName] = parts.slice(0,-1).join(' ');
+      row[idx.lastName] = parts.slice(-1).join('');
+      row[idx.name] = String(fullName).trim();
+    }
+    sheet.getRange(i+1,1,1,row.length).setValues([row]);
+    return true;
+  }
+  throw new Error('حساب پیدا نشد');
+}
+
 function memberAuth(p) {
   var fullName = String(p.name || '').trim().replace(/\s+/g, ' ');
   var phone = normalizeIranDigits(String(p.phone || '').trim()).replace(/\s+/g, '');
@@ -1311,20 +1365,20 @@ function memberAuth(p) {
 
   if (existing) {
     var currentApprovalStatus = String(existing.approvalStatus || '').toLowerCase();
-    if (currentApprovalStatus === 'pending') {
-      var pendingHash = String(existing.passwordHash || '');
-      var pendingSalt = String(existing.passwordSalt || '');
-      if (!pendingHash || !pendingSalt || memberPasswordHash(password, pendingSalt) !== pendingHash) {
+    if (currentApprovalStatus === 'pending' || currentApprovalStatus === 'rejected') {
+      // ساخت حساب سایت نیازی به تأیید ندارد؛ تأیید جداگانه فقط برای عضویت در حلقه است.
+      var legacySalt = String(existing.passwordSalt || '');
+      var legacyHash = String(existing.passwordHash || '');
+      if (currentApprovalStatus === 'pending' && (!legacyHash || !legacySalt || memberPasswordHash(password, legacySalt) !== legacyHash)) {
         throw new Error('شماره همراه یا گذرواژه اشتباه است');
       }
-      return {ok:true, pendingApproval:true, message:'درخواست ساخت حساب ثبت شده و منتظر تأیید حضوری مسئول حلقه است. پس از تأیید می‌توانی با همین شماره و گذرواژه وارد شوی.'};
-    }
-    if (currentApprovalStatus === 'rejected') {
-      // درخواست ردشده می‌تواند با تأیید حضوری مجدد ثبت شود؛ رکورد قبلی برای جلوگیری از تکرار حفظ می‌شود.
-      var retrySalt = Utilities.getUuid() + '-' + Utilities.getUuid();
-      var retryHash = memberPasswordHash(password, retrySalt);
-      updateRejectedMemberForRetry_(existing, fullName, retrySalt, retryHash);
-      return {ok:true, pendingApproval:true, message:'درخواست تازه ثبت شد و پس از بررسی حضوری مسئول حلقه قابل استفاده خواهد بود.'};
+      if (currentApprovalStatus === 'rejected') {
+        legacySalt = Utilities.getUuid() + '-' + Utilities.getUuid();
+        legacyHash = memberPasswordHash(password, legacySalt);
+      }
+      activateMemberAccount_(existing.id, fullName, legacySalt, legacyHash);
+      existing = findMemberByPhone(phone, true);
+      return {ok:true, member:publicMember(existing), token:issueToken('member', phone), existing:true, passwordInitialized:false};
     }
     if (!truthy(existing.active)) throw new Error('حساب این شماره همراه غیرفعال است؛ با مربی حلقه تماس بگیر');
 
@@ -1376,20 +1430,17 @@ function memberAuth(p) {
     phone: phone,
     nickname: '',
     profileCompleted: false,
-    active: false,
-    approvalStatus: 'pending',
-    approvedAt: '',
-    approvedBy: '',
+    active: true,
+    approvalStatus: 'approved',
+    approvedAt: nowIso(),
+    approvedBy: 'سیستم',
     passwordSalt: salt,
     passwordHash: hash,
     profileImage: ''
   });
 
-  return {
-    ok: true,
-    pendingApproval: true,
-    message: 'درخواست ساخت حساب ثبت شد. برای فعال‌شدن حساب باید مسئول حلقه هویتت را حضوری بررسی و درخواست را تأیید کند.'
-  };
+  var createdMember = findMemberByPhone(phone, true);
+  return {ok:true, member:publicMember(createdMember), token:issueToken('member', phone), existing:false};
 }
 
 // Endpoint قدیمی عمداً غیرفعال است تا بدون گذرواژه نتوان حساب عضو ساخت.
@@ -1853,7 +1904,7 @@ function saveRingRegistration(p) {
     grade: grade,
     guardianName: guardianName,
     emergencyPhone: emergencyPhone,
-    status: 'ثبت‌نام‌شده',
+    status: 'در انتظار تایید',
     createdAt: existingRow ? String(sheet.getRange(existingRow, 14).getValue() || nowIso()) : nowIso(),
     updatedAt: nowIso()
   };
@@ -1861,7 +1912,7 @@ function saveRingRegistration(p) {
   if (existingRow) sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
   else sheet.appendRow(row);
 
-  return { ok:true, registered:true, message:'ثبت‌نام در حلقه با موفقیت انجام شد', item:{
+  return { ok:true, registered:true, pendingApproval:true, message:'درخواست عضویت در حلقه ثبت شد و پس از بررسی مسئول حلقه اعلام نتیجه می‌شود.', item:{
     id:existing.id, nationalCode:nationalCode, birthDate:birthDate, fatherName:fatherName,
     fatherPhone:fatherPhone, address:address, school:school, grade:grade,
     guardianName:guardianName, emergencyPhone:emergencyPhone, status:existing.status
