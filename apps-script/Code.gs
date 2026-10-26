@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.36.0-camp-receipt-review';
+var APP_VERSION = '4.37.0-camp-payment-review-fix';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
