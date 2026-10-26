@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.38.0-login-ring-approval-fix';
+var APP_VERSION = '4.39.0-camp-receipts-post-only';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -250,7 +250,7 @@ function isPostOnlyAuthenticatedReadAction_(action) {
     'listSystemErrors', 'listFeedback', 'listActivityReportsManage',
     'listCoaches', 'listOfficialsManage', 'getRingRegistration',
     'getMyGameRole', 'getGameWallet', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
-    'getAttendanceMemberHistory', 'listMonthlyAttendance', 'listWarnings', 'listRegistrations',
+    'getAttendanceMemberHistory', 'listMonthlyAttendance', 'listWarnings', 'listRegistrations', 'listCampPaymentReceipts',
     'getDashboard'
   ].indexOf(String(action || '')) >= 0;
 }
