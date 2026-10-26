@@ -579,6 +579,23 @@
       }
     });
 
+    if (initialReceiptInput) DOM.on(initialReceiptInput, 'change', function() {
+      initialReceiptFile = initialReceiptInput.files && initialReceiptInput.files[0] || null;
+      if (!initialReceiptFile) { if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; } return; }
+      if (['image/jpeg','image/png','image/webp'].indexOf(String(initialReceiptFile.type || '').toLowerCase()) < 0 || initialReceiptFile.size > CONFIG.MAX_FILE_SIZE) {
+        initialReceiptFile = null; initialReceiptInput.value = '';
+        if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; }
+        Toast.error('رسید باید تصویر JPG، PNG یا WebP و حداکثر ۵ مگابایت باشد'); return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (!initialReceiptPreview) return;
+        initialReceiptPreview.innerHTML = '<img src="' + e.target.result + '" alt="پیش‌نمایش رسید پرداخت"><span>رسید انتخاب‌شده</span>';
+        initialReceiptPreview.hidden = false;
+      };
+      reader.readAsDataURL(initialReceiptFile);
+    });
+
     DOM.on(form, 'submit', async function (e) {
       e.preventDefault();
       var code = input.value.trim().toUpperCase();
@@ -780,6 +797,9 @@
     var campInfoCard = DOM.qs('#campInfoCard');
     var paymentStep = DOM.qs('#campPaymentStep');
     var receiptInput = DOM.qs('#receiptInput');
+    var initialReceiptInput = DOM.qs('#initialReceiptInput');
+    var initialReceiptPreview = DOM.qs('#initialReceiptPreview');
+    var initialReceiptFile = null;
     var receiptPreview = DOM.qs('#receiptPreview');
     var receiptBtn = DOM.qs('#sendReceiptBtn');
     var paymentStatus = DOM.qs('#paymentStepStatus');
@@ -963,10 +983,27 @@
           if (!pendingRegistrationId || !pendingReceiptUploadToken) throw new Error('ثبت‌نام ذخیره شد، اما مجوز امن ارسال رسید دریافت نشد. لطفاً با مربی هماهنگ کن.');
           if (paymentStep) { paymentStep.hidden = false; paymentStep.classList.remove('hidden'); }
           updateCampInfo(campForPayment, true);
-          if (paymentStatus) paymentStatus.textContent = 'اطلاعات ثبت‌نام دریافت شد؛ پس از واریز، تصویر رسید را بفرست.';
           form.classList.add('hidden');
+          if (initialReceiptFile) {
+            try {
+              var initialReceiptBase64 = await RegisterForm._fileToBase64(initialReceiptFile);
+              await Api.post({action:'uploadCampReceipt',registrationId:pendingRegistrationId,receiptUploadToken:pendingReceiptUploadToken,receiptBase64:initialReceiptBase64,receiptMimeType:initialReceiptFile.type});
+              pendingReceiptUploadToken = '';
+              if (paymentStatus) paymentStatus.textContent = 'رسید دریافت شد؛ اکنون منتظر تأیید مسئول اردو بمان.';
+              if (receiptInput) receiptInput.disabled = true;
+              if (receiptBtn) { receiptBtn.disabled = true; receiptBtn.textContent = 'رسید با موفقیت ارسال شد ✓'; }
+              if (receiptPreview) { receiptPreview.innerHTML = '<span>رسید قبلاً ارسال شده است.</span>'; receiptPreview.hidden = false; }
+              Toast.success('ثبت‌نام و ارسال رسید انجام شد؛ منتظر تأیید مسئول اردو بمان.');
+            } catch (receiptErr) {
+              Logger.error('ارسال رسید همراه ثبت‌نام:', receiptErr);
+              if (paymentStatus) paymentStatus.textContent = 'ثبت‌نام انجام شد؛ ارسال رسید از بخش زیر دوباره انجام بده.';
+              Toast.error('ثبت‌نام انجام شد، اما ارسال رسید کامل نشد؛ از بخش زیر دوباره تلاش کن.');
+            }
+          } else {
+            if (paymentStatus) paymentStatus.textContent = 'ثبت‌نام انجام شد؛ پس از واریز، تصویر رسید را در این بخش بفرست.';
+            Toast.success('ثبت‌نام انجام شد؛ مرحله پرداخت در ادامه قرار دارد.');
+          }
           if (paymentStep) paymentStep.scrollIntoView({behavior:'smooth', block:'start'});
-          Toast.success('مرحله اول ثبت‌نام انجام شد؛ حالا رسید پرداخت را بفرست.');
         } else {
           form.reset();
           if (preview) { preview.innerHTML = ''; preview.classList.remove('active'); }
