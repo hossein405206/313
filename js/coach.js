@@ -124,7 +124,7 @@ async function load(){
  var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];
  // Ignore a stale/malformed trend payload; rebuild from the dashboard attendance rows instead.
  var trend=isCurrentAttendanceTrend(r.attendanceTrend,r.today)?r.attendanceTrend:buildAttendanceTrendFallback(r.attendance||[]);
- renderAttendanceTrend(trend);renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events){loadActivityReports();loadCamps();}}
+ renderAttendanceTrend(trend);renderStats(r.stats);renderEvents(state.events);renderRegs(r.registrations||[]);renderRecentMembers(r.recentMembers||[]);renderRingRegs(r.ringRegistrations||[]);renderAttendance(r.attendance||[]);renderWarnings(r.warnings||[]);$('#gamePrize').value=r.prize||'به بیشترین رکورد هفته جایزه داده می شود';if(state.isMaster||state.permissions.events){loadActivityReports();loadCamps();}}
 
 function renderAttendanceTrend(items){
  var chart=$('#attendanceTrendChart'),summary=$('#attendanceTrendSummary');if(!chart)return;
@@ -196,6 +196,27 @@ async function searchAttendanceMemberHistory(){
  }finally{if(button)clearBusy(button)}
 }
 
+function renderRecentMembers(list){
+ var box=$('#recentSiteMembersAdmin');if(!box)return;
+ box.innerHTML=list.length?list.map(function(m){
+  return '<article class="admin-item"><div class="admin-item-main"><strong>'+esc(m.name||'بدون نام')+'</strong><small>'+esc(m.phone||'')+' · عضویت سایت: '+esc(m.createdAt||'ثبت نشده')+'</small></div><span class="coach-role-badge">حساب فعال</span></article>';
+ }).join(''):'<div class="empty"><p>هنوز حساب فعالی ثبت نشده است.</p></div>';
+}
+function renderRingRegs(list){
+ var box=$('#ringMembershipAdmin');if(!box)return;
+ box.innerHTML=list.length?list.map(function(r){
+  var detail='شماره: '+esc(r.phone)+' · مدرسه: '+esc(r.school)+' · پایه: '+esc(r.grade)+' · کد ملی: '+esc(r.nationalCode)+' · وضعیت: '+esc(r.status||'در انتظار تایید');
+  var more='پدر/سرپرست: '+esc(r.guardianName||r.fatherName)+' · تماس اضطراری: '+esc(r.emergencyPhone||r.fatherPhone)+' · نشانی: '+esc(r.address);
+  return '<article class="admin-item"><div class="admin-item-main"><strong>'+esc(r.phone)+' — درخواست عضویت در حلقه</strong><small>'+detail+'</small><small>'+more+'</small></div><div class="admin-actions"><button type="button" data-ring-ok="'+esc(r.id)+'">تأیید عضویت</button><button type="button" class="danger" data-ring-no="'+esc(r.id)+'">رد درخواست</button></div></article>';
+ }).join(''):'<div class="empty"><p>درخواست عضویت در حلقه‌ای برای بررسی وجود ندارد.</p></div>';
+ box.querySelectorAll('[data-ring-ok]').forEach(function(b){b.onclick=function(){setRingRegStatus(b.dataset.ringOk,'تایید شد',b)}});
+ box.querySelectorAll('[data-ring-no]').forEach(function(b){b.onclick=function(){setRingRegStatus(b.dataset.ringNo,'رد شد',b)}});
+}
+function setRingRegStatus(id,status,button){
+ if(!confirm(status==='تایید شد'?'عضویت این فرد در حلقه تأیید شود؟':'درخواست عضویت این فرد رد شود؟'))return;
+ setBusy(button,'در حال ثبت…');
+ api().post({action:'setRingRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast(status==='تایید شد'?'عضویت در حلقه تأیید شد ✓':'درخواست عضویت رد شد');return load()}).catch(function(e){toast(e.message||'ثبت وضعیت عضویت ناموفق بود',1)}).finally(function(){clearBusy(button)});
+}
 function renderStats(s){$('#coachStats').innerHTML=[['اعضای فعال',s.activeMembers],['در انتظار تایید',s.pendingRegistrations],['حضور امروز',s.todayAttendance],['اخطار ماه',s.monthWarnings]].map(function(x){return '<div class="coach-stat"><strong>'+Number(x[1]||0).toLocaleString('fa-IR')+'</strong><span>'+x[0]+'</span></div>'}).join('')}
 function renderEvents(list){var box=$('#eventsAdmin');if(!box)return;box.innerHTML=list.length?list.map(function(e){return '<div class="admin-item"><img src="'+esc(e.imageUrl||'images/placeholder.svg')+'"><div class="admin-item-main"><strong>'+esc(e.title)+'</strong><small>'+esc(e.label||'رویداد')+' · '+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(e.date):e.date||'')+'</small></div><div class="admin-actions"><button data-edit="'+esc(e.id)+'">ویرایش</button><button class="danger" data-del="'+esc(e.id)+'">حذف</button></div></div>'}).join(''):'<div class="empty"><p>هنوز رویدادی ثبت نشده</p></div>';box.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editEvent(b.dataset.edit)}});box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){deleteEvent(b.dataset.del)}})}
 async function viewRegistrationPhoto(id,button,type){
@@ -554,9 +575,13 @@ function setup(){
   if(refreshFeedbackBtn)refreshFeedbackBtn.addEventListener('click',function(){if(state.token)loadFeedback()});
  });
  window.addEventListener('pageshow',function(event){if(event.persisted&&state.token){load().catch(function(err){toast(err.message||'به‌روزرسانی نمودار ناموفق بود',1)});}});
+ var query=new URLSearchParams(window.location.search);
+ var isCampOfficialEntry=query.get('campOfficial')==='1';
  var savedOfficial=window.KanoonApp&&window.KanoonApp.session&&window.KanoonApp.session.getOfficial?window.KanoonApp.session.getOfficial():null;
- if(savedOfficial&&savedOfficial.token&&String(savedOfficial.role||'').trim()==='مسئول اردو'){
-  sessionSet('coach_token',savedOfficial.token);sessionSet('coach_name',String(savedOfficial.name||'مسئول اردو'));sessionSet('coach_master','0');sessionSet('coach_permissions',JSON.stringify({events:true}));sessionSet('coach_camp_official','1');
+ if(isCampOfficialEntry&&savedOfficial&&savedOfficial.token&&String(savedOfficial.role||'').trim()==='مسئول اردو'){
+  sessionSet('coach_token',savedOfficial.token);sessionSet('coach_name',String(savedOfficial.name||'مسئول اردو'));sessionSet('coach_master','0');sessionSet('coach_permissions',JSON.stringify({events:true,registrations:true}));sessionSet('coach_camp_official','1');
+ } else if(!isCampOfficialEntry&&sessionGet('coach_camp_official')==='1'){
+  ['coach_token','coach_name','coach_master','coach_permissions','coach_camp_official'].forEach(sessionRemove);
  }
  state.token=sessionGet('coach_token');state.name=sessionGet('coach_name');state.isMaster=sessionGet('coach_master')==='1';state.isCampOfficial=sessionGet('coach_camp_official')==='1';
  try{state.permissions=JSON.parse(sessionGet('coach_permissions')||'{}')}catch(err){state.permissions={}}
