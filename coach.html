@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#14243b"><title>پنل مربیان | حلقه شهید هادی ذوالفقاری</title>
-<link rel="stylesheet" href="css/style.css?v=5.77.0"><link rel="stylesheet" href="css/coach.css?v=5.77.0">
-  <link rel="stylesheet" href="css/islamic-design.css?v=5.77.0">
+<link rel="stylesheet" href="css/style.css?v=5.78.0"><link rel="stylesheet" href="css/coach.css?v=5.78.0">
+  <link rel="stylesheet" href="css/islamic-design.css?v=5.78.0">
 </head>
 <body><div class="app-container">
 <header class="app-header"><a href="index.html" class="header-back" aria-label="بازگشت">←</a><h1>پنل مربیان</h1></header>
@@ -53,7 +53,7 @@
 <div class="editor-actions"><button id="saveEventBtn" class="btn-submit">ذخیره رویداد</button><button id="cancelEventBtn" class="btn-secondary">انصراف</button></div></div>
 <div id="eventsAdmin" class="admin-list"></div></section>
 
-<section class="coach-panel coach-permission-section" id="coachCampsSection" data-permission="events"><div class="panel-head"><div><h3>مدیریت اردوها</h3><small class="panel-subtitle">ثبت نام اردو، شماره کارت، هزینه و پایان مهلت ثبت‌نام</small></div></div><div class="event-editor"><div class="form-grid"><label class="full">نام اردو<input id="campTitle" class="form-control" maxlength="140" placeholder="مثلاً اردوی فرهنگی جمعه"></label><label class="full">لینک متن رضایت‌نامه<input id="campConsentUrl" class="form-control" type="url" inputmode="url" dir="ltr" placeholder="https://..."><small class="panel-subtitle">این لینک در فرم ثبت‌نام اردو برای دریافت متن رضایت‌نامه استفاده می‌شود.</small></label><label class="full">شماره کارت مقصد<input id="campCardNumber" class="form-control" dir="ltr" inputmode="numeric" maxlength="30" placeholder="شماره کارت یا شبا"></label><label>هزینه (تومان)<input id="campCost" class="form-control" inputmode="numeric" dir="ltr" placeholder="مثلاً ۱۵۰۰۰۰"></label><label>ظرفیت اردو (نفر)<input id="campCapacity" class="form-control" type="number" min="1" max="100000" step="1" placeholder="مثلاً ۵۰" required></label><label>پایان ثبت‌نام<input id="campDeadline" class="form-control" type="date"></label></div><div class="editor-actions"><button type="button" id="saveCampBtn" class="btn-submit">ثبت اردو</button><button type="button" id="cancelCampBtn" class="btn-secondary">پاک‌کردن فرم</button></div></div><div id="campsAdmin" class="admin-list"><div class="empty"><p>اردوها پس از ورود بارگذاری می‌شوند.</p></div></div></section>
+<section class="coach-panel coach-permission-section" id="coachCampsSection" data-permission="events"><div class="panel-head"><div><h3>مدیریت اردوها</h3><small class="panel-subtitle">ثبت نام اردو، شماره کارت، هزینه و پایان مهلت ثبت‌نام</small></div></div><div class="event-editor"><div class="form-grid"><label class="full">نام اردو<input id="campTitle" class="form-control" maxlength="140" placeholder="مثلاً اردوی فرهنگی جمعه"></label><label class="full">لینک متن رضایت‌نامه<input id="campConsentUrl" class="form-control" type="url" inputmode="url" dir="ltr" placeholder="https://..."><small class="panel-subtitle">این لینک در فرم ثبت‌نام اردو برای دریافت متن رضایت‌نامه استفاده می‌شود.</small></label><label class="full">شماره کارت مقصد<input id="campCardNumber" class="form-control" dir="ltr" inputmode="numeric" maxlength="30" placeholder="شماره کارت یا شبا"></label><label>هزینه (تومان)<input id="campCost" class="form-control" inputmode="numeric" dir="ltr" placeholder="مثلاً ۱۵۰۰۰۰"></label><label>ظرفیت اردو (نفر)<input id="campCapacity" class="form-control" type="number" min="1" max="100000" step="1" placeholder="مثلاً ۵۰" required></label><label>پایان ثبت‌نام<input id="campDeadline" class="form-control" type="date"></label></div><div class="editor-actions"><button type="button" id="saveCampBtn" class="btn-submit">ثبت اردو</button><button type="button" id="cancelCampBtn" class="btn-secondary">پاک‌کردن فرم</button></div></div><div id="campsAdmin" class="admin-list"><div class="empty"><p>اردوها پس از ورود بارگذاری می‌شوند.</p></div></div><section class="coach-panel" id="campPaymentReviewSection"><div class="panel-head"><div><h3>بررسی رسیدهای پرداخت</h3><small class="panel-subtitle">رسیدهای ثبت‌شده را مشاهده و تأیید یا رد کن.</small></div></div><div id="campPaymentReviewAdmin" class="admin-list"><div class="empty"><p>رسیدها پس از ورود بارگذاری می‌شوند.</p></div></div></section></section>
 
 <section class="coach-panel coach-permission-section" id="coachActivityReportsSection" data-permission="events">
 <div class="panel-head"><div><h3>گزارش اردوها و فعالیت‌ها</h3><small class="panel-subtitle">یک گزارش مستقل با چند عکس بساز؛ تصاویر در یک گالری کنار هم نمایش داده می‌شوند.</small></div><button type="button" id="newActivityReportBtn" class="mini-action">＋ گزارش جدید</button></div>
@@ -118,4 +118,4 @@
 </div>
 </main>
 <nav class="bottom-nav"></nav>
-</div><script src="js/main.js?v=5.77.0" defer></script><script src="js/coach.js?v=5.77.0" defer></script></body></html>
+</div><script src="js/main.js?v=5.78.0" defer></script><script src="js/coach.js?v=5.78.0" defer></script></body></html>
