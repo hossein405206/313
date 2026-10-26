@@ -18,7 +18,7 @@
     DEBUG: false,
     VERSION: '5.78.0',
     BACKEND_VERSION: '4.36.0-camp-receipt-review',
-    BACKEND_COMPATIBLE_VERSIONS: ['4.35.0-consent-link-game-wallet', '4.34.0-receipt-upload-guard', '4.33.0-member-approval', '4.32.0-legacy-account-guard', '4.30.0-camp-capacity-official-role', '4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
+    BACKEND_COMPATIBLE_VERSIONS: ['4.34.0-receipt-upload-guard', '4.33.0-member-approval', '4.32.0-legacy-account-guard', '4.30.0-camp-capacity-official-role', '4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
   };
 
   /* ══════════════════════════════════════════════════════════════════════
