@@ -416,3 +416,13 @@ body:has(.coach-page) .app-container{background:transparent}
  #coachLogin form{margin-top:24px}
  #coachLogin .form-control,#coachLogin .btn-submit{min-height:54px}
 }
+
+/* v5.78.0 — رسیدهای اردو: طراحی روشن هماهنگ با پنل و نمودار اصلی مربیان */
+#campPaymentReviewSection{margin-top:18px;background:#fff;border:1px solid #e6edf4;border-radius:18px;padding:16px}
+#campPaymentReviewAdmin .camp-registration-item{gap:12px;padding:14px;background:#fbfcfe;border:1px solid #e8edf3;border-radius:14px}
+#campPaymentReviewAdmin .admin-actions{display:flex;flex-wrap:wrap;gap:8px}
+#campPaymentReviewAdmin .admin-actions button{border-radius:10px;padding:9px 12px;background:#edf3f8;color:#284665;border:1px solid #dfe8f0;font-weight:800}
+#campPaymentReviewAdmin .admin-actions button[data-camp-payment-ok]{background:linear-gradient(135deg,#f2d994,#c9a14d);color:#1a2a3c;border-color:#e3c575}
+#campPaymentReviewAdmin .admin-actions button.danger{background:#fff0ef;color:#9e3b3b;border-color:#f2d4d2}
+#campPaymentReviewAdmin .payment-waiting{display:inline-flex;align-items:center;padding:8px 11px;border-radius:999px;background:#fff6df;color:#87651e;font-size:.75rem;font-weight:800}
+@media(max-width:520px){#campPaymentReviewSection{padding:13px}#campPaymentReviewAdmin .camp-registration-item{align-items:stretch}#campPaymentReviewAdmin .admin-actions{display:grid;grid-template-columns:1fr 1fr}#campPaymentReviewAdmin .admin-actions button{min-height:42px}}
