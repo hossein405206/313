@@ -46,7 +46,7 @@ var HEADERS = {
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt','phone'],
   'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage','approvalStatus','approvedAt','approvedBy'],
-  'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt'],
+  'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt','targetPage'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
   'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
   'کیف پول بازی': ['memberId','coins','owned','equippedHat','equippedOutfit','runs','updatedAt'],
@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.39.0-camp-receipts-post-only';
+var APP_VERSION = '4.40.0-event-target';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1949,6 +1949,12 @@ function publicMember(r) {
 /* Events / Drive                                                             */
 /* -------------------------------------------------------------------------- */
 
+function normalizeEventTargetPage_(value) {
+  var allowed = ['activities.html','register.html','game.html','ring-registration.html','schedule.html','index.html'];
+  var target = String(value || '').trim();
+  return allowed.indexOf(target) >= 0 ? target : 'activities.html';
+}
+
 function listEventsPublic() {
   var today = currentDate();
   return getSheetObjects('رویدادها')
@@ -1966,7 +1972,8 @@ function listEventsPublic() {
         imageUrl: r.imageId ? ('https://drive.google.com/thumbnail?id=' + encodeURIComponent(String(r.imageId)) + '&sz=w1200') : r.imageUrl,
         imageId: r.imageId || '',
         label: r.label,
-        date: r.date
+        date: r.date,
+        targetPage: normalizeEventTargetPage_(r.targetPage)
       };
     });
 }
@@ -2004,6 +2011,7 @@ function saveEvent(p) {
     imageId: String(p.imageId || '').trim(),
     label: String(p.label || 'رویداد').trim(),
     date: String(p.date || '').trim(),
+    targetPage: normalizeEventTargetPage_(p.targetPage),
     active: p.active !== false,
     sort: Number(p.sort || 0),
     createdAt: nowIso(),
@@ -2026,7 +2034,7 @@ function saveEvent(p) {
     if (!pos) throw new Error('رویداد پیدا نشد');
 
     rowObj.createdAt = sheet.getRange(pos, 10).getValue() || rowObj.createdAt;
-    sheet.getRange(pos, 1, 1, 11).setValues([rowToArray('رویدادها', rowObj)]);
+    sheet.getRange(pos, 1, 1, HEADERS['رویدادها'].length).setValues([rowToArray('رویدادها', rowObj)]);
   }
 
   return { ok: true, item: rowObj };
@@ -2037,10 +2045,10 @@ function deleteEvent(id) {
   var pos = findRow(sheet, 'id', id);
   if (!pos) throw new Error('رویداد پیدا نشد');
 
-  var row = sheet.getRange(pos, 1, 1, 11).getValues()[0];
+  var row = sheet.getRange(pos, 1, 1, HEADERS['رویدادها'].length).getValues()[0];
   row[7] = false;
   row[10] = nowIso();
-  sheet.getRange(pos, 1, 1, 11).setValues([row]);
+  sheet.getRange(pos, 1, 1, HEADERS['رویدادها'].length).setValues([row]);
   return { ok: true };
 }
 
