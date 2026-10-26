@@ -579,23 +579,6 @@
       }
     });
 
-    if (initialReceiptInput) DOM.on(initialReceiptInput, 'change', function() {
-      initialReceiptFile = initialReceiptInput.files && initialReceiptInput.files[0] || null;
-      if (!initialReceiptFile) { if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; } return; }
-      if (['image/jpeg','image/png','image/webp'].indexOf(String(initialReceiptFile.type || '').toLowerCase()) < 0 || initialReceiptFile.size > CONFIG.MAX_FILE_SIZE) {
-        initialReceiptFile = null; initialReceiptInput.value = '';
-        if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; }
-        Toast.error('رسید باید تصویر JPG، PNG یا WebP و حداکثر ۵ مگابایت باشد'); return;
-      }
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        if (!initialReceiptPreview) return;
-        initialReceiptPreview.innerHTML = '<img src="' + e.target.result + '" alt="پیش‌نمایش رسید پرداخت"><span>رسید انتخاب‌شده</span>';
-        initialReceiptPreview.hidden = false;
-      };
-      reader.readAsDataURL(initialReceiptFile);
-    });
-
     DOM.on(form, 'submit', async function (e) {
       e.preventDefault();
       var code = input.value.trim().toUpperCase();
@@ -886,6 +869,23 @@
         if (fileInput.files[0]) handleFile(fileInput.files[0]);
       });
     }
+
+    if (initialReceiptInput) DOM.on(initialReceiptInput, 'change', function() {
+      initialReceiptFile = initialReceiptInput.files && initialReceiptInput.files[0] || null;
+      if (!initialReceiptFile) { if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; } return; }
+      if (['image/jpeg','image/png','image/webp'].indexOf(String(initialReceiptFile.type || '').toLowerCase()) < 0 || initialReceiptFile.size > CONFIG.MAX_FILE_SIZE) {
+        initialReceiptFile = null; initialReceiptInput.value = '';
+        if (initialReceiptPreview) { initialReceiptPreview.innerHTML = ''; initialReceiptPreview.hidden = true; }
+        Toast.error('رسید باید تصویر JPG، PNG یا WebP و حداکثر ۵ مگابایت باشد'); return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (!initialReceiptPreview) return;
+        initialReceiptPreview.innerHTML = '<img src="' + e.target.result + '" alt="پیش‌نمایش رسید پرداخت"><span>رسید انتخاب‌شده</span>';
+        initialReceiptPreview.hidden = false;
+      };
+      reader.readAsDataURL(initialReceiptFile);
+    });
 
     // بارگذاری اردوهای فعال
     if (campSelect) {
