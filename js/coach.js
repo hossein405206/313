@@ -410,7 +410,7 @@ function setupCamps(){
    if(url && !/^https?:\/\//i.test(url)){toast('لینک باید با https:// یا http:// شروع شود',1);consentField.focus();return;}
    try{
     var ping=await api().get({action:'ping'});
-    if(!ping||ping.version!=='4.36.0-camp-receipt-review')throw new Error('ابتدا نسخهٔ جدید Apps Script را منتشر کن.');
+    if(!ping||['4.37.0-camp-payment-review-fix','4.36.0-camp-receipt-review'].indexOf(ping.version)<0)throw new Error('ابتدا نسخهٔ جدید Apps Script را منتشر کن.');
     await api().post({action:'saveCampConsentUrl',token:state.token,url:url});
     toast(url?'لینک رضایت‌نامه ذخیره شد ✓':'لینک رضایت‌نامه پاک شد');
    }catch(e){toast(e.message||'ذخیرهٔ لینک ناموفق بود',1);}
