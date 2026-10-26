@@ -117,7 +117,7 @@ function isCurrentAttendanceTrend(items,today){
  return String(last.date||'').slice(0,10)===String(today).slice(0,10)&&items.every(function(item){return /^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''));});
 }
 async function load(){
- if(state.isCampOfficial){await loadCamps();return;}
+ if(state.isCampOfficial){await loadCamps();await loadCampPaymentReceipts();return;}
  var r=await api().post({action:'getDashboard',token:state.token});state.data=r;state.events=r.events||[];
  // Ignore a stale/malformed trend payload; rebuild from the dashboard attendance rows instead.
  var trend=isCurrentAttendanceTrend(r.attendanceTrend,r.today)?r.attendanceTrend:buildAttendanceTrendFallback(r.attendance||[]);
@@ -375,6 +375,23 @@ function renderCamps(items){
  }).join(''):'<div class="empty"><p>اردوی فعالی ثبت نشده است.</p></div>';
  box.querySelectorAll('[data-camp-edit]').forEach(function(b){b.onclick=function(){var c=items.filter(function(x){return String(x.id)===String(b.dataset.campEdit)})[0];if(!c)return;state.editingCampId=String(c.id);$('#campTitle').value=c.title||'';$('#campCardNumber').value=c.cardNumber||'';$('#campCost').value=Number(c.cost||0)||'';$('#campCapacity').value=Number(c.capacity||0)||'';$('#campDeadline').value=c.registrationDeadline||'';var save=$('#saveCampBtn');if(save)save.textContent='ذخیره تغییرات اردو';var title=$('#campTitle');if(title){title.scrollIntoView({behavior:'smooth',block:'center'});title.focus({preventScroll:true})}}});
  box.querySelectorAll('[data-camp-delete]').forEach(function(b){b.onclick=function(){var id=b.dataset.campDelete;if(!confirm('این اردو از فهرست ثبت‌نام برداشته شود؟'))return;api().post({action:'deleteCamp',token:state.token,id:id}).then(function(){toast('اردو از فهرست ثبت‌نام حذف شد ✓');loadCamps()}).catch(function(e){toast(e.message||'حذف اردو ناموفق بود',1)})}});
+}
+function loadCampPaymentReceipts(){
+ var box=$('#campPaymentReviewAdmin');if(!box||!state.isCampOfficial)return;
+ box.innerHTML='<div class="empty"><p>در حال دریافت رسیدها…</p></div>';
+ api().post({action:'listCampPaymentReceipts',token:state.token}).then(function(r){
+  var items=r.items||[];
+  box.innerHTML=items.length?items.map(function(x){
+   var detail=esc(x.campTitle)+' · '+esc(x.phone)+' · '+esc(x.paymentStatus||'منتظر ارسال رسید')+' · '+Number(x.campCost||0).toLocaleString('fa-IR')+' تومان';
+   var actions=x.receiptPhotoUrl
+    ? '<button type="button" data-camp-receipt-view="'+esc(x.id)+'">مشاهده رسید</button>'+(x.paymentStatus==='تایید پرداخت'?'':'<button type="button" data-camp-payment-ok="'+esc(x.id)+'">تأیید پرداخت</button><button type="button" class="danger" data-camp-payment-no="'+esc(x.id)+'">رد رسید</button>')
+    : '<span class="payment-waiting">در انتظار ارسال رسید</span>';
+   return '<article class="admin-item camp-registration-item"><div class="admin-item-main"><strong>'+esc(x.firstName+' '+x.lastName)+'</strong><small>'+detail+'</small></div><div class="admin-actions">'+actions+'</div></article>';
+  }).join(''):'<div class="empty"><p>رسید پرداختی برای بررسی وجود ندارد.</p></div>';
+  box.querySelectorAll('[data-camp-receipt-view]').forEach(function(b){b.onclick=function(){viewRegistrationPhoto(b.dataset.campReceiptView,b,'receipt')}});
+  box.querySelectorAll('[data-camp-payment-ok]').forEach(function(b){b.onclick=function(){setPaymentStatus(b.dataset.campPaymentOk,'تایید پرداخت',b);}});
+  box.querySelectorAll('[data-camp-payment-no]').forEach(function(b){b.onclick=function(){setPaymentStatus(b.dataset.campPaymentNo,'رد پرداخت',b);}});
+ }).catch(function(e){box.innerHTML='<div class="empty"><p>'+esc(e.message||'دریافت رسیدها ناموفق بود')+'</p></div>'});
 }
 function loadCamps(){
  var box=$('#campsAdmin');if(!box)return;
