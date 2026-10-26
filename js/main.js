@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.76.0',
+    VERSION: '5.77.0',
     BACKEND_VERSION: '4.34.0-receipt-upload-guard',
     BACKEND_COMPATIBLE_VERSIONS: ['4.33.0-member-approval', '4.32.0-legacy-account-guard', '4.30.0-camp-capacity-official-role', '4.28.0-attendance-upsert-normalized-date', '4.27.0-attendance-archive-recorded-dates', '4.26.0-attendance-chart-date-normalization', '4.25.0-jalali-date-limits']
   };
