@@ -1,0 +1,69 @@
+name: Build 313 Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-android.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Prepare app icon from the image already in the repository
+        run: |
+          python3 -m pip install --user Pillow
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          source = Path("images/file_00000000d77081f4a3f203efd566ef56.png")
+          if not source.exists():
+              raise SystemExit(f"App icon not found: {source}")
+          image = Image.open(source).convert("RGBA")
+          sizes = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
+          for density, size in sizes.items():
+              out = Path(f"android/app/src/main/res/mipmap-{density}/ic_launcher.png")
+              image.resize((size, size), Image.Resampling.LANCZOS).save(out, "PNG")
+          print("Launcher icons generated from the project's uploaded image.")
+          PY
+
+      - name: Build debug APK
+        working-directory: android
+        run: gradle assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 313-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
