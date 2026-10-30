@@ -13,8 +13,8 @@ android {
         // for this WebView app; this keeps content below the status bar.
         targetSdk 34
         // Increment versionCode for every installable APK update.
-        versionCode 4
-        versionName '1.1.2'
+        versionCode 5
+        versionName '1.1.3'
     }
 
     compileOptions {
