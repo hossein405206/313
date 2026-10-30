@@ -23,11 +23,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -36,13 +35,14 @@ jobs:
 
       - name: Prepare app icon from the image already in the repository
         run: |
-          python3 -m pip install --user Pillow
+          python3 -m venv /tmp/icon-venv
+          /tmp/icon-venv/bin/pip install Pillow
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-xhdpi
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-          python3 - <<'PY'
+          /tmp/icon-venv/bin/python - <<'PY'
           from PIL import Image
           from pathlib import Path
           source = Path("images/file_00000000d77081f4a3f203efd566ef56.png")
