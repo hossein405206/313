@@ -89,7 +89,7 @@
 
   var state = {
     members: [],
-    records: {}, // { phone: { status, note } }
+    records: {}, // { memberKey: { maghrib: {status,note}, isha: {status,note} } }
     official: null,
     attendanceLocked: false,
     pendingMembers: []
@@ -108,40 +108,27 @@
     var phone = String(member.phone || '');
     var key = recordKey(member);
     var fullName = (String(member.firstName || '') + ' ' + String(member.lastName || '')).trim();
-    if (!fullName) fullName = phone;
-
+    if (!fullName) fullName = String(member.name || phone || 'عضو');
     var initial = fullName.charAt(0) || '؟';
-    var rec = state.records[key] || { status: '', note: '' };
-
-    var presentActive = rec.status === 'present' ? 'active' : '';
-    var excusedActive = rec.status === 'excused' ? 'active' : '';
-    var absentActive  = rec.status === 'absent'  ? 'active' : '';
-
-    var hasStatus = rec.status ? 'has-status' : '';
-
-    return ''
-      + '<div class="att-item ' + hasStatus + '" data-phone="' + escapeHtml(phone) + '" data-record-key="' + escapeHtml(key) + '">'
-      +   '<button type="button" class="att-remove" title="حذف عضو">×</button><div class="att-item__header">'
-      +     '<div class="att-item__avatar">' + escapeHtml(initial) + '</div>'
-      +     '<div class="att-item__name">' + escapeHtml(fullName) + '</div>'
-      +     '<div class="att-item__index">' + toPersian(index + 1) + '</div>'
-      +   '</div>'
-      +   '<div class="att-item__status">'
-      +     '<button type="button" class="att-status-btn ' + presentActive + '" data-status="present">'
-      +       '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
-      +       '<span>حاضر</span>'
-      +     '</button>'
-      +     '<button type="button" class="att-status-btn ' + excusedActive + '" data-status="excused">'
-      +       '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-      +       '<span>موجه</span>'
-      +     '</button>'
-      +     '<button type="button" class="att-status-btn ' + absentActive + '" data-status="absent">'
-      +       '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-      +       '<span>غایب</span>'
-      +     '</button>'
-      +   '</div>'
-      +   '<input type="text" class="att-item__note" placeholder="توضیحات (اختیاری)..." maxlength="80" value="' + escapeHtml(rec.note) + '">'
-      + '</div>';
+    var memberRecords = state.records[key] || {};
+    function prayerSection(prayer, label) {
+      var rec = memberRecords[prayer] || { status: '', note: '' };
+      var presentActive = rec.status === 'present' ? 'active' : '';
+      var excusedActive = rec.status === 'excused' ? 'active' : '';
+      var absentActive = rec.status === 'absent' ? 'active' : '';
+      return '<section class="att-prayer" data-prayer-section="' + prayer + '">'
+        + '<h3 class="att-prayer__title">' + label + '</h3>'
+        + '<div class="att-item__status" data-prayer="' + prayer + '">'
+        + '<button type="button" class="att-status-btn ' + presentActive + '" data-prayer="' + prayer + '" data-status="present"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>حاضر</span></button>'
+        + '<button type="button" class="att-status-btn ' + excusedActive + '" data-prayer="' + prayer + '" data-status="excused"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>موجه</span></button>'
+        + '<button type="button" class="att-status-btn ' + absentActive + '" data-prayer="' + prayer + '" data-status="absent"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>غایب</span></button>'
+        + '</div><input type="text" class="att-item__note" data-prayer="' + prayer + '" placeholder="توضیحات ' + label + ' (اختیاری)..." maxlength="500" value="' + escapeHtml(rec.note || '') + '"></section>';
+    }
+    var hasStatus = ['maghrib','isha'].some(function(p) { return !!(memberRecords[p] && memberRecords[p].status); });
+    return '<article class="att-item ' + (hasStatus ? 'has-status' : '') + '" data-phone="' + escapeHtml(phone) + '" data-member-id="' + escapeHtml(member.id || '') + '" data-record-key="' + escapeHtml(key) + '">'
+      + '<button type="button" class="att-remove" title="حذف از فهرست فعال" aria-label="غیرفعال‌کردن عضو">×</button>'
+      + '<div class="att-item__header"><div class="att-item__avatar">' + escapeHtml(initial) + '</div><div class="att-item__name">' + escapeHtml(fullName) + '</div><div class="att-item__index">' + toPersian(index + 1) + '</div></div>'
+      + prayerSection('maghrib', 'نماز مغرب') + prayerSection('isha', 'نماز عشاء') + '</article>';
   }
 
   function renderList() {
@@ -168,52 +155,49 @@
   }
 
   function attachListEvents() {
-    var removeBtns = $$('.att-remove');
-    for (var rb = 0; rb < removeBtns.length; rb++) { (function(btn){ btn.addEventListener('click', async function(){ var item=btn.closest('.att-item'); var id=(state.members.find(function(m){return String(m.phone)===String(item.getAttribute('data-phone'))})||{}).id; if(!id)return; if(!confirm('توجه: با حذف این عضو از فهرست، حساب ورود او هم غیرفعال می‌شود و تا فعال‌سازی مجدد نمی‌تواند وارد سایت شود. ادامه می‌دهی؟'))return; var api=getAPI(); try{await api.post({action:'deleteMember',token:state.official.token,id:id}); toast('حساب عضو غیرفعال شد ✓'); await loadMembers();}catch(e){toast(e.message||'خطا در حذف','error');} });})(removeBtns[rb]); }
-
-    var items = $$('.att-item');
-    for (var i = 0; i < items.length; i++) {
-      (function (item) {
-        var phone = item.getAttribute('data-phone');
-        var key = item.getAttribute('data-record-key') || phone;
-        var btnGroup = item.querySelector('.att-item__status');
-        var noteInput = item.querySelector('.att-item__note');
-
-        // کلیک روی دکمه‌های حالت
-        if (btnGroup) {
-          btnGroup.addEventListener('click', function (e) {
-            var btn = e.target.closest('.att-status-btn');
-            if (!btn) return;
-            var status = btn.getAttribute('data-status');
-
-            // toggle
-            var oldStatus = state.records[key] ? state.records[key].status : '';
-            if (oldStatus === status) status = '';
-
-            if (!state.records[key]) state.records[key] = { status: '', note: '' };
-            state.records[key].status = status;
-
-            // آپدیت UI
-            var buttons = btnGroup.querySelectorAll('.att-status-btn');
-            for (var j = 0; j < buttons.length; j++) {
-              buttons[j].classList.remove('active');
-            }
-            if (status) btn.classList.add('active');
-
-            item.classList.toggle('has-status', !!status);
-            updateStats();
-          });
+    $$('.att-remove').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
+        var item = btn.closest('.att-item'), id = item && item.getAttribute('data-member-id');
+        if (!id) { toast('شناسه عضو پیدا نشد؛ فهرست را تازه‌سازی کن.', 'error'); return; }
+        if (!confirm('این عضو فقط از فهرست فعال خارج و حساب ورودش غیرفعال می‌شود. سوابق حضور و غیاب قبلی او پاک نخواهد شد. ادامه می‌دهی؟')) return;
+        var api = getAPI();
+        if (!api || !state.official || !state.official.token) { toast('نشست مسئول معتبر نیست؛ دوباره وارد شو.', 'error'); return; }
+        btn.disabled = true;
+        try {
+          await api.post({action:'deleteMember', token:state.official.token, id:id});
+          toast('عضو از فهرست فعال خارج شد؛ سوابق قبلی حفظ شد ✓');
+          await loadMembers(true);
+        } catch (e) {
+          btn.disabled = false;
+          toast(e.message || 'خطا در حذف عضو از فهرست', 'error');
         }
-
-        // تغییر توضیحات
-        if (noteInput) {
-          noteInput.addEventListener('input', function () {
-            if (!state.records[key]) state.records[key] = { status: '', note: '' };
-            state.records[key].note = noteInput.value;
-          });
-        }
-      })(items[i]);
-    }
+      });
+    });
+    $$('.att-item').forEach(function(item) {
+      var key = item.getAttribute('data-record-key');
+      item.querySelectorAll('.att-item__status').forEach(function(group) {
+        group.addEventListener('click', function(e) {
+          var btn = e.target.closest('.att-status-btn'); if (!btn) return;
+          var prayer = btn.getAttribute('data-prayer'), status = btn.getAttribute('data-status');
+          if (['maghrib','isha'].indexOf(prayer) < 0) return;
+          if (!state.records[key]) state.records[key] = {};
+          if (!state.records[key][prayer]) state.records[key][prayer] = {status:'',note:''};
+          if (state.records[key][prayer].status === status) status = '';
+          state.records[key][prayer].status = status;
+          group.querySelectorAll('.att-status-btn').forEach(function(b) { b.classList.toggle('active', !!status && b === btn); });
+          item.classList.toggle('has-status', ['maghrib','isha'].some(function(p) { return !!(state.records[key][p] && state.records[key][p].status); }));
+          updateStats();
+        });
+      });
+      item.querySelectorAll('.att-item__note').forEach(function(input) {
+        input.addEventListener('input', function() {
+          var prayer = input.getAttribute('data-prayer');
+          if (!state.records[key]) state.records[key] = {};
+          if (!state.records[key][prayer]) state.records[key][prayer] = {status:'',note:''};
+          state.records[key][prayer].note = input.value;
+        });
+      });
+    });
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -221,27 +205,17 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   function updateStats() {
-    var present = 0, excused = 0, absent = 0, total = state.members.length, done = 0;
-
-    var keys = Object.keys(state.records);
-    for (var i = 0; i < keys.length; i++) {
-      var rec = state.records[keys[i]];
-      if (!rec || !rec.status) continue;
-      done++;
-      if (rec.status === 'present') present++;
-      else if (rec.status === 'excused') excused++;
-      else if (rec.status === 'absent') absent++;
-    }
-
-    var cPresent = $('#countPresent');
-    var cExcused = $('#countExcused');
-    var cAbsent = $('#countAbsent');
-    var cProgress = $('#saveProgress');
-
-    if (cPresent) cPresent.textContent = toPersian(present);
-    if (cExcused) cExcused.textContent = toPersian(excused);
-    if (cAbsent)  cAbsent.textContent  = toPersian(absent);
-    if (cProgress) cProgress.textContent = toPersian(done) + ' از ' + toPersian(total);
+    var present=0, excused=0, absent=0, total=state.members.length*2, done=0;
+    state.members.forEach(function(member) {
+      var recs=state.records[recordKey(member)]||{};
+      ['maghrib','isha'].forEach(function(prayer) {
+        var rec=recs[prayer]||{}; if(!rec.status)return; done++;
+        if(rec.status==='present')present++; else if(rec.status==='excused')excused++; else if(rec.status==='absent')absent++;
+      });
+    });
+    var p=$('#countPresent'),e=$('#countExcused'),a=$('#countAbsent'),progress=$('#saveProgress');
+    if(p)p.textContent=toPersian(present); if(e)e.textContent=toPersian(excused); if(a)a.textContent=toPersian(absent);
+    if(progress)progress.textContent=toPersian(done)+' از '+toPersian(total);
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -327,8 +301,8 @@
     btn.addEventListener('click', function () {
       for (var i = 0; i < state.members.length; i++) {
         var key = recordKey(state.members[i]);
-        if (!state.records[key]) state.records[key] = { status: '', note: '' };
-        state.records[key].status = 'present';
+        if (!state.records[key]) state.records[key] = {};
+        ['maghrib','isha'].forEach(function(prayer){if(!state.records[key][prayer])state.records[key][prayer]={status:'',note:''};state.records[key][prayer].status='present';});
       }
       renderList();
       toast('همه حاضر شدن ✓');
@@ -340,75 +314,30 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   function setupSave() {
-    var btn = $('#saveBtn');
-    if (!btn) return;
-
-    btn.addEventListener('click', async function () {
-      var api = getAPI();
-      if (!api) {
-        toast('اتصال به سرور آماده نیست', 'error');
-        return;
-      }
-
-      var official = state.official;
-      if (!official || !official.token) {
-        toast('اول باید وارد بشی', 'error');
-        return;
-      }
-
-      // جمع‌آوری رکوردها
-      var records = [];
-      for (var i = 0; i < state.members.length; i++) {
-        var m = state.members[i];
-        var phone = String(m.phone || '');
-        var rec = state.records[recordKey(m)];
-        if (!rec || !rec.status) continue;
-
-        var fullName = (String(m.firstName || '') + ' ' + String(m.lastName || '')).trim() || phone;
-        var statusFa = 'حاضر';
-        if (rec.status === 'excused') statusFa = 'موجه';
-        else if (rec.status === 'absent') statusFa = 'غیبت';
-
-        records.push({
-          memberId: m.id,
-          memberName: fullName,
-          status: statusFa,
-          note: rec.note || ''
+    var btn=$('#saveBtn'); if(!btn)return;
+    btn.addEventListener('click',async function(){
+      var api=getAPI(),official=state.official;
+      if(!api){toast('اتصال به سرور آماده نیست','error');return;}
+      if(!official||!official.token){toast('اول باید وارد بشی','error');return;}
+      var records=[];
+      state.members.forEach(function(m){
+        var key=recordKey(m),recs=state.records[key]||{};
+        var fullName=(String(m.firstName||'')+' '+String(m.lastName||'')).trim()||String(m.name||m.phone||'عضو');
+        ['maghrib','isha'].forEach(function(prayer){
+          var rec=recs[prayer];if(!rec||!rec.status)return;
+          var statusFa=rec.status==='excused'?'موجه':(rec.status==='absent'?'غیبت':'حاضر');
+          records.push({memberId:m.id,memberName:fullName,prayer:prayer,status:statusFa,note:rec.note||''});
         });
-      }
-
-      if (records.length !== state.members.length) {
-        toast('برای همه اعضا وضعیت حضور را انتخاب کن', 'error');
-        return;
-      }
-
-      if (!records.length) {
-        toast('هیچ حضوری ثبت نکردی', 'error');
-        return;
-      }
-
-      btn.disabled = true;
-      var oldText = btn.querySelector('span').textContent;
-      btn.querySelector('span').textContent = 'در حال ذخیره...';
-
-      try {
-        await api.post({
-          action: 'saveAttendanceBatch',
-          token: official.token,
-          records: records
-        });
-
-        state.attendanceLocked = true;
-        toast('حضور و غیاب ذخیره شد ✓؛ در صورت نیاز می‌توانی وضعیت‌ها را اصلاح و دوباره ذخیره کنی');
+      });
+      if(records.length!==state.members.length*2){toast('برای هر عضو، وضعیت نماز مغرب و نماز عشاء را جداگانه انتخاب کن.','error');return;}
+      if(!records.length){toast('هیچ وضعیتی ثبت نکردی','error');return;}
+      btn.disabled=true;var label=btn.querySelector('span'),oldText=label?label.textContent:'ذخیره';if(label)label.textContent='در حال ذخیره...';
+      try{
+        await api.post({action:'saveAttendanceBatch',token:official.token,records:records});
+        state.attendanceLocked=true;toast('حضور و غیاب نماز مغرب و عشاء ذخیره شد ✓؛ سوابق قبلی حفظ می‌شوند.');
         await loadMembers();
-
-      } catch (err) {
-        console.error(err);
-        toast(err.message || 'خطا در ذخیره', 'error');
-      } finally {
-        btn.disabled = false;
-        btn.querySelector('span').textContent = oldText;
-      }
+      }catch(err){console.error(err);toast(err.message||'خطا در ذخیره','error');}
+      finally{btn.disabled=false;if(label)label.textContent=oldText;}
     });
   }
 
@@ -432,7 +361,8 @@
     notice.style.display = state.attendanceLocked ? 'block' : 'none';
   }
 
-  async function loadMembers() {
+  async function loadMembers(preserveLocal) {
+    var localRecords = state.records;
     var api = getAPI();
     var list = $('#attendanceList');
 
@@ -453,7 +383,7 @@
         token: official.token
       });
       state.members = res.items || [];
-      state.records = {};
+      state.records = preserveLocal ? localRecords : {};
       state.attendanceLocked = false;
       try {
         var today = await api.post({ action: 'getAttendanceToday', token: official.token });
@@ -461,8 +391,11 @@
         (today.items || []).forEach(function(saved) {
           var member = state.members.find(function(m) { return String(m.id) === String(saved.memberId); });
           if (!member) return;
-          var status = saved.status === 'حاضر' ? 'present' : (saved.status === 'موجه' ? 'excused' : 'absent');
-          state.records[recordKey(member)] = { status: status, note: saved.note || '' };
+          var status = saved.status === 'حاضر' ? 'present' : (saved.status === 'موجه' ? 'excused' : (saved.status === 'غیبت' || saved.status === 'غایب' ? 'absent' : ''));
+          var prayer = saved.prayer === 'isha' ? 'isha' : 'maghrib';
+          var key = recordKey(member);
+          if (!state.records[key]) state.records[key] = {};
+          if (!preserveLocal || !state.records[key][prayer]) state.records[key][prayer] = {status:status,note:saved.note||''};
         });
       } catch (statusError) {
         console.warn('Could not load today attendance state', statusError);
