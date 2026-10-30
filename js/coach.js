@@ -145,7 +145,7 @@ function renderAttendanceArchive(items,date){
  var box=$('#attendanceArchiveResults');if(!box)return;items=Array.isArray(items)?items:[];
  if(!items.length){box.innerHTML='<div class="attendance-archive-empty">برای تاریخ '+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(date):date)+' سابقه‌ای ثبت نشده است.</div>';return;}
  var counts={present:0,excused:0,absent:0};items.forEach(function(r){if(r.status==='حاضر')counts.present++;else if(r.status==='موجه')counts.excused++;else if(r.status==='غیبت'||r.status==='غایب')counts.absent++});
- box.innerHTML='<div class="attendance-archive-summary"><span class="is-present">حاضر '+counts.present.toLocaleString('fa-IR')+'</span><span class="is-excused">موجه '+counts.excused.toLocaleString('fa-IR')+'</span><span class="is-absent">غیبت '+counts.absent.toLocaleString('fa-IR')+'</span></div><div class="attendance-archive-list">'+items.map(function(r){var cls=r.status==='حاضر'?'is-present':(r.status==='موجه'?'is-excused':'is-absent');return '<article class="attendance-archive-row"><div><strong>'+esc(r.memberName||'عضو بدون نام')+'</strong>'+(r.note?'<small>'+esc(r.note)+'</small>':'')+'</div><span class="'+cls+'">'+esc(r.status||'ثبت‌نشده')+'</span></article>'}).join('')+'</div>';
+ box.innerHTML='<div class="attendance-archive-summary"><span class="is-present">حاضر '+counts.present.toLocaleString('fa-IR')+'</span><span class="is-excused">موجه '+counts.excused.toLocaleString('fa-IR')+'</span><span class="is-absent">غیبت '+counts.absent.toLocaleString('fa-IR')+'</span></div><div class="attendance-archive-list">'+items.map(function(r){var cls=r.status==='حاضر'?'is-present':(r.status==='موجه'?'is-excused':'is-absent');return '<article class="attendance-archive-row"><div><strong>'+esc(r.memberName||'عضو بدون نام')+'</strong><small>'+(r.prayer==='isha'?'نماز عشاء':'نماز مغرب')+(r.note?' · '+esc(r.note):'')+'</small></div><span class="'+cls+'">'+esc(r.status||'ثبت‌نشده')+'</span></article>'}).join('')+'</div>';
 }
 async function loadAttendanceArchive(){
  var dateInput=$('#attendanceArchiveDate'),button=$('#loadAttendanceArchive'),box=$('#attendanceArchiveResults');
@@ -175,7 +175,7 @@ function renderAttendanceMemberHistory(result){
   var counts=item.counts||{},history=Array.isArray(item.history)?item.history:[];
   var rows=history.map(function(entry){
    var status=String(entry.status||'ثبت‌نشده'),cls=status==='حاضر'?'is-present':(status==='موجه'?'is-excused':((status==='غیبت'||status==='غایب')?'is-absent':''));
-   return '<div class="attendance-member-history-row"><time>'+esc(attendanceHistoryDateLabel(entry.date))+'</time><span class="'+cls+'">'+esc(status)+'</span></div>';
+   return '<div class="attendance-member-history-row"><time>'+esc(attendanceHistoryDateLabel(entry.date))+' · '+(entry.prayer==='isha'?'عشاء':'مغرب')+'</time><span class="'+cls+'">'+esc(status)+'</span></div>';
   }).join('');
   return '<article class="attendance-member-history-card"><header class="attendance-member-history-card-head"><div><strong>'+esc(item.memberName||'عضو بدون نام')+'</strong><small>اولین ثبت این عضو: '+esc(attendanceHistoryDateLabel(item.firstDate))+' · آخرین ثبت: '+esc(attendanceHistoryDateLabel(item.lastDate))+' · مجموع '+Number(item.recordCount||history.length).toLocaleString('fa-IR')+' جلسه ثبت‌شده</small></div><div class="attendance-member-history-counts"><span class="is-present">حاضر '+Number(counts.present||0).toLocaleString('fa-IR')+'</span><span class="is-excused">موجه '+Number(counts.excused||0).toLocaleString('fa-IR')+'</span><span class="is-absent">غیبت '+Number(counts.absent||0).toLocaleString('fa-IR')+'</span></div></header><details class="attendance-member-history-details"><summary>نمایش تاریخچهٔ همهٔ جلسات</summary><div class="attendance-member-history-list">'+rows+'</div></details></article>';
  }).join('');
@@ -271,7 +271,7 @@ function setPaymentStatus(id,status,button){
  api().post({action:'setCampPaymentStatus',token:state.token,id:id,status:status}).then(function(){toast(status==='تایید پرداخت'?'پرداخت تأیید و ثبت‌نام نهایی شد ✓':'رسید رد شد');load()}).catch(function(e){toast(e.message||'تغییر وضعیت رسید ناموفق بود',1)}).finally(function(){clearBusy(button)});
 }
 function setReg(id,status){api().post({action:'setRegistrationStatus',token:state.token,id:id,status:status}).then(function(){toast('وضعیت ثبت شد ✓');load()}).catch(function(e){toast(e.message,1)})}
-function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(r.date):r.date)+'</span><span>'+esc(r.memberName)+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
+function renderAttendance(rows){var box=$('#attendanceAdmin');if(box)box.innerHTML=rows.length?rows.map(function(r){return '<div class="report-row"><span>'+esc(window.KanoonApp&&window.KanoonApp.date?window.KanoonApp.date.format(r.date):r.date)+'</span><span>'+esc(r.memberName)+' · '+(r.prayer==='isha'?'عشاء':'مغرب')+'</span><span>'+esc(r.status)+'</span></div>'}).join(''):'<p class="muted">برای ماه جاری هنوز گزارشی ثبت نشده</p>'}
 function renderWarnings(rows){
  var box=$('#warningsAdmin');
  if(!box)return;
