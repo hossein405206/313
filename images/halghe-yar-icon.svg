@@ -1,0 +1,24 @@
+<!-- حلقه یار — minimal app icon; vector SVG, no typography -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="52" y1="32" x2="460" y2="484" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#123F3A"/>
+      <stop offset="1" stop-color="#092B2B"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="133" y1="126" x2="390" y2="390" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8E8B7"/>
+      <stop offset="1" stop-color="#D5AD61"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="145" stroke="url(#ring)" stroke-width="19"/>
+  <circle cx="256" cy="256" r="104" stroke="#F5F0DE" stroke-opacity=".24" stroke-width="2"/>
+  <path d="M256 151C313.99 151 361 198.01 361 256C361 313.99 313.99 361 256 361C198.01 361 151 313.99 151 256" stroke="#F5F0DE" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="256" cy="151" r="25" fill="#F8E8B7"/>
+  <circle cx="347" cy="309" r="25" fill="#F8E8B7"/>
+  <circle cx="165" cy="309" r="25" fill="#F8E8B7"/>
+  <circle cx="256" cy="151" r="9" fill="#123F3A"/>
+  <circle cx="347" cy="309" r="9" fill="#123F3A"/>
+  <circle cx="165" cy="309" r="9" fill="#123F3A"/>
+  <path d="M256 218L267 242L293 245L274 263L279 289L256 276L233 289L238 263L219 245L245 242L256 218Z" fill="#F8E8B7"/>
+</svg>
