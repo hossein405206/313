@@ -51,7 +51,7 @@ var HEADERS = {
   'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
   'کیف پول بازی': ['memberId','coins','owned','equippedHat','equippedOutfit','runs','updatedAt'],
   'ثبت‌نام‌ها': ['id','campId','firstName','lastName','fatherName','fatherPhone','phone','nationalCode','photoUrl','status','createdAt','updatedAt','receiptPhotoUrl','paymentStatus','receiptUploadToken'],
-  'حضورغیاب': ['date','memberId','memberName','status','note','officialCode','createdAt'],
+  'حضورغیاب': ['date','memberId','memberName','prayer','status','note','officialCode','createdAt'],
   'اخطارها': ['date','responsibility','memberId','memberName','reason','officialCode','createdAt'],
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
   'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt','category','audience'],
@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.40.0-event-target';
+var APP_VERSION = '4.41.0-dual-prayer-attendance';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -390,12 +390,14 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
       var memberName = String(row.memberName || '').trim();
       var identity = memberId ? 'id:' + memberId : 'name:' + normalizeAttendanceSearchText_(memberName);
       if (identity === 'name:') return;
-      // Use only one row per member/day; later duplicate rows replace earlier values.
-      byMemberAndDate[identity + '|' + date] = {
+      var prayer = String(row.prayer || 'maghrib');
+      // Keep a separate history item for each prayer on the same date.
+      byMemberAndDate[identity + '|' + date + '|' + prayer] = {
         identity: identity,
         memberId: memberId,
         memberName: memberName,
         date: date,
+        prayer: prayer,
         status: String(row.status || '').trim()
       };
     });
@@ -419,7 +421,7 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
         item.memberName = row.memberName;
         item.latestNameDate = row.date;
       }
-      item.history.push({date: row.date, status: row.status || 'ثبت‌نشده'});
+      item.history.push({date: row.date, prayer: row.prayer, status: row.status || 'ثبت‌نشده'});
     });
 
     var matches = [];
@@ -1673,13 +1675,18 @@ function resetMemberHistory(p) {
   };
 }
 function deleteMember(id) {
+  // Only deactivate the account. Attendance history is intentionally untouched.
   var sheet = getSheet('اعضا');
-  var rows = sheet.getDataRange().getValues();
-  for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === id) {
-      rows[i][8] = false;
-      sheet.getRange(i + 1, 1, 1, rows[i].length).setValues([rows[i]]);
-      return { ok: true };
+  var values = sheet.getDataRange().getValues();
+  if (!values.length) throw new Error('عضو پیدا نشد');
+  var headers = values[0].map(String);
+  var idCol = headers.indexOf('id');
+  var activeCol = headers.indexOf('active');
+  if (idCol < 0 || activeCol < 0) throw new Error('ساختار شیت اعضا معتبر نیست؛ سرستون‌ها را بررسی کن');
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][idCol]) === String(id)) {
+      sheet.getRange(i + 1, activeCol + 1).setValue(false);
+      return {ok:true, deactivated:true, attendanceHistoryPreserved:true};
     }
   }
   throw new Error('عضو پیدا نشد');
@@ -2661,6 +2668,7 @@ function attendanceForDate(date) {
       return {
         memberId: r.memberId,
         memberName: r.memberName,
+        prayer: String(r.prayer || 'maghrib'),
         status: r.status,
         note: r.note
       };
@@ -2688,6 +2696,7 @@ function attendanceForMonth(month) {
         date: attendanceDateKey_(r.date),
         memberId: r.memberId,
         memberName: r.memberName,
+        prayer: String(r.prayer || 'maghrib'),
         status: r.status,
         note: r.note
       };
@@ -2729,7 +2738,7 @@ function saveAttendanceBatch(p) {
   if (date !== currentDate()) throw new Error('ثبت حضور فقط برای امروز مجاز است');
   var records = Array.isArray(p.records) ? p.records : [];
   if (!records.length) throw new Error('رکوردی برای ذخیره وجود ندارد');
-  if (records.length > 500) throw new Error('تعداد رکوردهای حضور بیش از حد مجاز است');
+  if (records.length > 1000) throw new Error('تعداد رکوردهای حضور بیش از حد مجاز است');
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -2738,45 +2747,52 @@ function saveAttendanceBatch(p) {
 
     var sheet = getSheet('حضورغیاب');
     var activeMembers = getSheetObjects('اعضا').filter(function(m) { return truthy(m.active); });
-    if (records.length !== activeMembers.length) throw new Error('برای همه اعضای فعال باید وضعیت حضور ثبت شود');
+    if (records.length !== activeMembers.length * 2) throw new Error('برای هر عضو فعال باید وضعیت نماز مغرب و نماز عشاء جداگانه ثبت شود');
     var memberById = {};
     activeMembers.forEach(function(m) { memberById[String(m.id)] = m; });
     var seen = {};
     var now = nowIso();
     var values = [];
     var validStatuses = ['حاضر', 'موجه', 'غیبت'];
+    var validPrayers = ['maghrib', 'isha'];
 
     records.forEach(function(r) {
       if (!r || typeof r !== 'object') throw new Error('یکی از رکوردهای حضور نامعتبر است');
       var memberId = String(r.memberId || '').trim();
       if (!memberId || !memberById[memberId]) throw new Error('یکی از اعضا پیدا نشد یا غیرفعال است؛ فهرست را تازه‌سازی کن');
-      if (seen[memberId]) throw new Error('برای یک عضو بیش از یک وضعیت ارسال شده است');
-      seen[memberId] = true;
+      var prayer = String(r.prayer || '').trim();
+      if (validPrayers.indexOf(prayer) < 0) throw new Error('نماز انتخاب‌شده برای یکی از رکوردها معتبر نیست');
+      var uniqueKey = memberId + '|' + prayer;
+      if (seen[uniqueKey]) throw new Error('برای یک عضو و یک نماز بیش از یک وضعیت ارسال شده است');
+      seen[uniqueKey] = true;
       var status = String(r.status || '').trim();
       if (validStatuses.indexOf(status) < 0) throw new Error('وضعیت حضور یکی از اعضا معتبر نیست');
       var note = String(r.note || '').trim();
       if (note.length > 500) throw new Error('یادداشت حضور نباید بیشتر از ۵۰۰ نویسه باشد');
       var member = memberById[memberId];
       var recordName = String(member.name || [member.firstName, member.lastName].filter(Boolean).join(' ') || 'عضو').trim();
-      values.push([date, memberId, recordName, status, note, official.subject, now]);
+      values.push([date, memberId, recordName, prayer, status, note, official.subject, now]);
     });
 
     if (!values.length) throw new Error('رکورد معتبر وجود ندارد');
     var existingData = sheet.getDataRange().getValues();
     var headers = existingData.length ? existingData[0].map(String) : [];
-    var dateCol = headers.indexOf('date'), memberCol = headers.indexOf('memberId'), existingRows = {}, duplicateRows = [];
+    var dateCol = headers.indexOf('date'), memberCol = headers.indexOf('memberId'), prayerCol = headers.indexOf('prayer'), existingRows = {}, duplicateRows = [];
     // Compare normalized dates: Sheets may return a Date object, not the ISO string sent by the client.
     for (var er = 1; er < existingData.length; er++) {
       if (attendanceDateKey_(existingData[er][dateCol]) !== date) continue;
       var existingMemberId = String(existingData[er][memberCol] || '').trim();
       if (!existingMemberId) continue;
-      if (existingRows[existingMemberId] === undefined) existingRows[existingMemberId] = er + 1;
+      // Old rows without a prayer value are preserved as Maghrib records.
+      var existingPrayer = prayerCol >= 0 ? String(existingData[er][prayerCol] || 'maghrib').trim() : 'maghrib';
+      var existingKey = existingMemberId + '|' + existingPrayer;
+      if (existingRows[existingKey] === undefined) existingRows[existingKey] = er + 1;
       else duplicateRows.push(er + 1);
     }
     var added = 0, updated = 0;
     values.forEach(function(row) {
-      var rowNumber = existingRows[String(row[1])];
-      if (rowNumber) { sheet.getRange(rowNumber, 1, 1, 7).setValues([row]); updated++; }
+      var rowNumber = existingRows[String(row[1]) + '|' + String(row[3])];
+      if (rowNumber) { sheet.getRange(rowNumber, 1, 1, 8).setValues([row]); updated++; }
       else { sheet.appendRow(row); added++; }
     });
     // Remove any duplicate legacy rows for this date/member, keeping the first row updated above.
