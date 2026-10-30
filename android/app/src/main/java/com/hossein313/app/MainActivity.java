@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -15,6 +16,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -29,12 +31,19 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(Color.BLACK);
         getWindow().getDecorView().setSystemUiVisibility(0);
 
+        // Keep the system bars outside the WebView's layout area. On Android 15+
+        // (targetSdk 35), the app can be edge-to-edge by default, so apply the
+        // system-bar insets to a native container rather than to the WebView.
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.rgb(16, 26, 44));
+
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(16, 26, 44));
+        root.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // Android 15+ can draw app content behind system bars. Keep the website
-        // content inside the usable screen area so its header is not clipped.
-        webView.setOnApplyWindowInsetsListener((view, insets) -> {
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
             int topInset;
             int bottomInset;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -47,11 +56,16 @@ public class MainActivity extends Activity {
                 bottomInset = insets.getSystemWindowInsetBottom();
             }
             view.setPadding(0, topInset, 0, bottomInset);
-            return insets;
+
+            // Prevent the same insets from being applied a second time inside WebView.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                return WindowInsets.CONSUMED;
+            }
+            return insets.consumeSystemWindowInsets();
         });
 
-        setContentView(webView);
-        webView.requestApplyInsets();
+        setContentView(root);
+        root.requestApplyInsets();
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -90,10 +104,8 @@ public class MainActivity extends Activity {
     private boolean handleUrl(String url) {
         Uri uri = Uri.parse(url);
         String scheme = uri.getScheme() == null ? "" : uri.getScheme();
-        if ("https".equalsIgnoreCase(scheme) && SITE_HOST.equalsIgnoreCase(uri.getHost())) {
-            return false;
-        }
-        if ("http".equalsIgnoreCase(scheme) && SITE_HOST.equalsIgnoreCase(uri.getHost())) {
+        if (("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme))
+                && SITE_HOST.equalsIgnoreCase(uri.getHost())) {
             return false;
         }
         if ("mailto".equalsIgnoreCase(scheme) || "tel".equalsIgnoreCase(scheme)
