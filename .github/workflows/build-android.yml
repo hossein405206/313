@@ -20,6 +20,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Verify persistent signing secrets are configured
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$SIGNING_KEYSTORE_BASE64" ] || [ -z "$SIGNING_KEY_ALIAS" ] || [ -z "$SIGNING_STORE_PASSWORD" ] || [ -z "$SIGNING_KEY_PASSWORD" ]; then
+            echo "::error::Persistent Android signing is not configured. Add SIGNING_KEYSTORE_BASE64, SIGNING_KEY_ALIAS, SIGNING_STORE_PASSWORD, and SIGNING_KEY_PASSWORD under repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -40,6 +52,19 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
+      - name: Prepare persistent signing key
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/halgheyar-release.jks"
+          echo "SIGNING_KEYSTORE_PATH=$RUNNER_TEMP/halgheyar-release.jks" >> "$GITHUB_ENV"
+          echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Prepare app icon from the image already in the repository
         run: |
@@ -64,14 +89,14 @@ jobs:
           print("Launcher icons generated from the project's uploaded image.")
           PY
 
-      - name: Build debug APK
+      - name: Build signed release APK
         working-directory: android
-        run: gradle assembleDebug
+        run: gradle assembleRelease
 
-      - name: Upload APK artifact
+      - name: Upload signed APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: halghe-yar-android-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: halghe-yar-android-signed-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
