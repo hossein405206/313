@@ -9,10 +9,12 @@ android {
     defaultConfig {
         applicationId 'com.hossein313.app'
         minSdk 23
-        targetSdk 35
+        // Keep targetSdk at 34 so Android 15 does not force edge-to-edge
+        // for this WebView app; this keeps content below the status bar.
+        targetSdk 34
         // Increment versionCode for every installable APK update.
-        versionCode 3
-        versionName '1.1.1'
+        versionCode 4
+        versionName '1.1.2'
     }
 
     compileOptions {
