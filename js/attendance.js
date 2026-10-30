@@ -305,7 +305,7 @@
         ['maghrib','isha'].forEach(function(prayer){if(!state.records[key][prayer])state.records[key][prayer]={status:'',note:''};state.records[key][prayer].status='present';});
       }
       renderList();
-      toast('همه حاضر شدن ✓');
+      toast('همه اعضا برای هر دو نماز حاضر شدند ✓');
     });
   }
 
