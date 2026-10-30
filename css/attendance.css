@@ -452,3 +452,12 @@
 .pending-reject{background:#fff;color:#8a3b36;border-color:#ead0cd}
 .pending-members-panel button:disabled{opacity:.55;cursor:wait}
 @media(max-width:520px){.pending-member-card{align-items:stretch;flex-direction:column}.pending-member-card__actions{display:grid;grid-template-columns:1fr 1fr}.pending-member-card__actions button{width:100%}}
+
+
+/* نسخه 5.83.0 — ثبت مستقل نماز مغرب و عشاء */
+.att-prayer{margin-top:10px;padding:10px;border:1px solid var(--border-soft);border-radius:var(--r-md);background:rgba(255,255,255,.72)}
+.att-prayer__title{margin:0 0 8px;color:var(--teal-600);font-size:.84rem;font-weight:800}
+.att-prayer .att-item__status{margin-bottom:8px}
+.att-prayer .att-item__note{display:block}
+.att-item>.att-remove{z-index:2}
+@media(max-width:380px){.att-prayer{padding:8px}.att-prayer .att-status-btn{gap:3px;padding:8px 3px;font-size:.72rem}.att-prayer .att-status-btn svg{width:12px;height:12px}}
