@@ -5,18 +5,14 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowInsets;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -27,45 +23,16 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Use the normal non-edge-to-edge content area. With targetSdk 34,
+        // Android keeps the status/navigation bars outside the WebView area.
         getWindow().setStatusBarColor(Color.rgb(16, 26, 44));
         getWindow().setNavigationBarColor(Color.BLACK);
         getWindow().getDecorView().setSystemUiVisibility(0);
 
-        // Keep the system bars outside the WebView's layout area. On Android 15+
-        // (targetSdk 35), the app can be edge-to-edge by default, so apply the
-        // system-bar insets to a native container rather than to the WebView.
-        FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(16, 26, 44));
-
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(16, 26, 44));
-        root.addView(webView, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-
-        root.setOnApplyWindowInsetsListener((view, insets) -> {
-            int topInset;
-            int bottomInset;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                android.graphics.Insets systemBars = insets.getInsets(
-                        WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                topInset = systemBars.top;
-                bottomInset = systemBars.bottom;
-            } else {
-                topInset = insets.getSystemWindowInsetTop();
-                bottomInset = insets.getSystemWindowInsetBottom();
-            }
-            view.setPadding(0, topInset, 0, bottomInset);
-
-            // Prevent the same insets from being applied a second time inside WebView.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                return WindowInsets.CONSUMED;
-            }
-            return insets.consumeSystemWindowInsets();
-        });
-
-        setContentView(root);
-        root.requestApplyInsets();
+        setContentView(webView);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
