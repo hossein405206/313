@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.41.0-dual-prayer-attendance';
+var APP_VERSION = '4.42.0-security-profile';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -1327,7 +1327,7 @@ function b64Bytes(bytes) {
 var MEMBER_PASSWORD_KDF_ITERATIONS_ = 12000;
 function legacyMemberPasswordHash_(password,salt){ensureSecret();return b64Bytes(Utilities.computeHmacSha256Signature(String(salt)+':'+String(password),getSecret()));}
 function memberPasswordHash(password,salt){
-  var key=Utilities.newBlob(String(password)).getBytes(),sb=Utilities.newBlob(String(salt)).getBytes().concat([0,0,0,1]);
+  var key=String(password),sb=Utilities.newBlob(String(salt)).getBytes().concat([0,0,0,1]);
   var u=Utilities.computeHmacSha256Signature(sb,key),derived=u.slice();
   for(var i=1;i<MEMBER_PASSWORD_KDF_ITERATIONS_;i++){u=Utilities.computeHmacSha256Signature(u,key);for(var j=0;j<derived.length;j++)derived[j]=derived[j]^u[j];}
   return 'pbkdf2-sha256$'+MEMBER_PASSWORD_KDF_ITERATIONS_+'$'+b64Bytes(derived);
@@ -1337,7 +1337,7 @@ function verifyMemberPassword_(password,salt,hash){
   hash=String(hash||'');if(!salt||!hash)return false;
   if(hash.indexOf('pbkdf2-sha256$')===0){
     var p=hash.split('$'),n=Number(p[1]||0);if(p.length!==3||n<10000||n>50000)return false;
-    var key=Utilities.newBlob(String(password)).getBytes(),sb=Utilities.newBlob(String(salt)).getBytes().concat([0,0,0,1]);
+    var key=String(password),sb=Utilities.newBlob(String(salt)).getBytes().concat([0,0,0,1]);
     var u=Utilities.computeHmacSha256Signature(sb,key),d=u.slice();
     for(var i=1;i<n;i++){u=Utilities.computeHmacSha256Signature(u,key);for(var j=0;j<d.length;j++)d[j]=d[j]^u[j];}
     return constantTimeStringEqual_(b64Bytes(d),p[2]);
