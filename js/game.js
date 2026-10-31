@@ -31,13 +31,13 @@
   }
   function leaderboardEntry(x,rank){
     var me=member&&String(x.memberId)===String(member.id);
-    return '<div class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+faNum(rank)+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
+    return '<div role="button" tabindex="0" data-member-id="'+esc(x.memberId)+'" class="leader-row '+(x.registered?'is-registered':'is-unregistered')+(me?' me':'')+'"><span class="rank">'+faNum(rank)+'</span><span class="leader-name">'+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<span class="leader-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+memberBadgeMarkup(x)+'</span></span><span class="leader-score">'+faNum(x.score)+'</span></div>';
   }
   function podiumEntry(x,rank){
     var place=rank===1?'first':rank===2?'second':'third';
     var me=member&&String(x.memberId)===String(member.id);
     var crown=rank===1?'<span class="podium-crown" aria-label="رتبه اول">♛</span>':'';
-    return '<article class="podium-card podium-card--'+place+(me?' is-me':'')+'">'+crown+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<div class="podium-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+'</div>'+memberBadgeMarkup(x)+'<div class="podium-score">'+faNum(x.score)+' <small>امتیاز</small></div><div class="podium-step"><strong>'+faNum(rank)+'</strong></div></article>';
+    return '<article role="button" tabindex="0" data-member-id="'+esc(x.memberId)+'" class="podium-card podium-card--'+place+(me?' is-me':'')+'">'+crown+avatarMarkup(x.profileImage,x.playerName,x.roleKey)+'<div class="podium-player-name">'+esc(x.playerName)+(me?' <small>شما</small>':'')+'</div>'+memberBadgeMarkup(x)+'<div class="podium-score">'+faNum(x.score)+' <small>امتیاز</small></div><div class="podium-step"><strong>'+faNum(rank)+'</strong></div></article>';
   }
   // جدول هفتگی عمداً فهرست ساده می‌ماند؛ طراحی سکو فقط برای جدول تاریخی است.
   function renderBoard(list){
@@ -56,9 +56,35 @@
     var rest=list.slice(3).map(function(x,i){return leaderboardEntry(x,i+4);}).join('');
     allTimeBoard.innerHTML=podium+(rest?'<div class="leaderboard-rest">'+rest+'</div>':'');
   }
+  async function showPublicMemberProfile(memberId){
+    var modal=document.getElementById('memberPublicProfileModal');
+    if(!modal){
+      modal=document.createElement('div');modal.id='memberPublicProfileModal';modal.className='member-public-modal';modal.hidden=true;
+      modal.innerHTML='<div class="member-public-modal__backdrop" data-close-public-profile></div><section class="member-public-modal__card" role="dialog" aria-modal="true" aria-labelledby="memberPublicProfileName"><button type="button" class="member-public-modal__close" data-close-public-profile aria-label="بستن">×</button><div class="member-public-modal__avatar" id="memberPublicProfileAvatar"></div><h2 id="memberPublicProfileName">پروفایل عضو</h2><p class="member-public-modal__bio" id="memberPublicProfileBio"></p><p class="member-public-modal__status" id="memberPublicProfileStatus" role="status"></p></section>';
+      document.body.appendChild(modal);
+      modal.addEventListener('click',function(e){if(e.target.hasAttribute('data-close-public-profile'))modal.hidden=true;});
+    }
+    var nameEl=document.getElementById('memberPublicProfileName'),bioEl=document.getElementById('memberPublicProfileBio'),avatar=document.getElementById('memberPublicProfileAvatar'),status=document.getElementById('memberPublicProfileStatus');
+    modal.hidden=false;nameEl.textContent='در حال دریافت…';bioEl.textContent='';avatar.textContent='';status.textContent='';
+    try{
+      var result=await api().post({action:'getPublicMemberProfile',token:member.token,memberId:String(memberId)});
+      var p=result&&result.profile;if(!p)throw new Error('پروفایل دریافت نشد');
+      nameEl.textContent=p.displayName||'عضو';bioEl.textContent=p.bio||'این عضو هنوز بیوگرافی ننوشته است';
+      avatar.textContent=(p.displayName||'ع').trim().charAt(0)||'ع';
+      if(p.profileImage&&/^https:\/\//i.test(p.profileImage)){var img=document.createElement('img');img.src=p.profileImage;img.alt='عکس پروفایل';avatar.textContent='';avatar.appendChild(img);}
+    }catch(err){status.textContent=err.message||'دریافت پروفایل ناموفق بود';}
+  }
+  function bindPublicProfiles(){
+    [board,allTimeBoard].forEach(function(container){
+      if(!container)return;
+      container.addEventListener('click',function(e){var item=e.target.closest('[data-member-id]');if(item&&item.getAttribute('data-member-id'))showPublicMemberProfile(item.getAttribute('data-member-id'));});
+      container.addEventListener('keydown',function(e){if(e.key!=='Enter'&&e.key!==' ')return;var item=e.target.closest('[data-member-id]');if(item){e.preventDefault();showPublicMemberProfile(item.getAttribute('data-member-id'));}});
+    });
+  }
   async function boot(){
     if(!app()||!app().session||!api())return setTimeout(boot,80);
     member=app().session.getMember();
+    bindPublicProfiles();
     if(!member||!member.token){location.replace('login.html?return=game.html');return;}
     setButton('در حال بارگذاری بازی…',true);
     // جدول را هم‌زمان با بررسی عضویت دریافت کن تا تأخیر درخواست‌ها روی هم جمع نشود.

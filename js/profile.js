@@ -136,6 +136,7 @@
     var map = {
       infoFullName: fullName,
       infoNickname: member.nickname || 'ثبت نشده',
+      infoBio: member.bio || 'هنوز چیزی ننوشته‌ای',
       infoJoinDate: member.createdAt ? new Date(member.createdAt).toLocaleDateString('fa-IR') : 'ثبت نشده'
     };
 
@@ -302,7 +303,8 @@
     var fields = {
       editFirstName: m.firstName || '',
       editLastName: m.lastName || '',
-      editNickname: m.nickname || ''
+      editNickname: m.nickname || '',
+      editBio: m.bio || ''
     };
 
     var keys = Object.keys(fields);
@@ -347,7 +349,8 @@
         phone: state.member.phone,
         firstName: ($('#editFirstName') || {}).value || '',
         lastName: ($('#editLastName') || {}).value || '',
-        nickname: ($('#editNickname') || {}).value || ''
+        nickname: ($('#editNickname') || {}).value || '',
+        bio: ($('#editBio') || {}).value || ''
       };
 
       var keys = Object.keys(data);
