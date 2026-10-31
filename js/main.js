@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.83.0',
-    BACKEND_VERSION: '4.41.0-dual-prayer-attendance',
+    VERSION: '5.84.0',
+    BACKEND_VERSION: '4.42.0-security-profile',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
