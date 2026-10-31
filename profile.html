@@ -90,6 +90,10 @@
           <div class="info-row__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
           <div class="info-row__content"><small>تاریخ عضویت</small><strong id="infoJoinDate">—</strong></div>
         </div>
+        <div class="info-row">
+          <div class="info-row__icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg></div>
+          <div class="info-row__content"><small>درباره من</small><strong id="infoBio">—</strong></div>
+        </div>
       </section>
 
       <!-- ═══ دکمه ویرایش ═══ -->
@@ -135,6 +139,11 @@
           <input type="text" id="editNickname" class="form-control" maxlength="24" required placeholder="مثلاً حسین">
           <small class="form-help">این نام را همه در جدول رکوردها می‌بینند</small>
         </div>
+        <div class="form-group">
+          <label for="editBio">بیوگرافی کوتاه</label>
+          <textarea id="editBio" class="form-control" maxlength="180" rows="3" placeholder="چند جمله درباره خودت…"></textarea>
+          <small class="form-help">حداکثر ۱۸۰ نویسه؛ برای اعضای واردشده نمایش داده می‌شود</small>
+        </div>
 
         <button type="submit" class="btn-submit" id="saveEditBtn">ذخیره تغییرات</button>
 
@@ -143,7 +152,7 @@
     <nav class="bottom-nav"></nav>
   </div>
 
-  <script src="js/main.js?v=5.83.0" defer></script>
-  <script src="js/profile.js?v=5.83.0" defer></script>
+  <script src="js/main.js?v=5.84.0" defer></script>
+  <script src="js/profile.js?v=5.84.0" defer></script>
 </body>
   </html>
