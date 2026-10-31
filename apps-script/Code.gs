@@ -26,7 +26,7 @@ var CFG = {
   DRIVE_FOLDER_ID: '1D0UJh3swn-wXDfn0rGORpZh9hWqO00xd',
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
-  MEMBER_TOKEN_TTL_MS: 1000 * 60 * 60 * 48,
+  MEMBER_TOKEN_TTL_MS: 1000 * 60 * 60 * 24 * 365 * 100,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
   MASTER_COACH_NAME: 'مربی ارشد'
 };
@@ -1220,6 +1220,7 @@ function issueToken(role, subject, isMaster, permissions) {
     m: !!isMaster,
     p: permissions || (role === 'coach' ? allCoachPermissions() : {})
   };
+  if (role === 'member') PropertiesService.getScriptProperties().setProperty('MEMBER_LAST_ACTIVE_' + payload.n, String(Date.now()));
   var body = b64(JSON.stringify(payload));
   var sig = b64Bytes(Utilities.computeHmacSha256Signature(body, getSecret()));
   return body + '.' + sig;
@@ -1237,7 +1238,7 @@ function requireToken(token, roles) {
   try { payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString()); }
   catch (e) { throw new Error('نشست نامعتبر است'); }
 
-  if (!payload.exp || Date.now() > Number(payload.exp)) throw new Error('نشست منقضی شده');
+  if (payload.r !== 'member' && (!payload.exp || Date.now() > Number(payload.exp))) throw new Error('نشست منقضی شده');
   if(payload.r==='member'){
     var sid=String(payload.n||'');if(!/^[0-9a-f-]{20,50}$/i.test(sid))throw new Error('نشست قدیمی است؛ دوباره وارد شو');
     var props=PropertiesService.getScriptProperties(),key='MEMBER_LAST_ACTIVE_'+sid,now=Date.now(),last=Number(props.getProperty(key)||0);
