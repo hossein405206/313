@@ -26,7 +26,7 @@ var CFG = {
   DRIVE_FOLDER_ID: '1D0UJh3swn-wXDfn0rGORpZh9hWqO00xd',
   TIMEZONE: 'Asia/Tehran',
   TOKEN_TTL_MS: 1000 * 60 * 60 * 12,
-  MEMBER_TOKEN_TTL_MS: 1000 * 60 * 60 * 24 * 365 * 100,
+  MEMBER_TOKEN_TTL_MS: 1000 * 60 * 60 * 48,
   DEFAULT_GAME_PRIZE: 'به بیشترین رکورد هفته جایزه داده می شود',
   MASTER_COACH_NAME: 'مربی ارشد'
 };
@@ -45,7 +45,7 @@ var HEADERS = {
   'تنظیمات': ['key','value'],
   'مربیان': ['code','name','phone','active','role','permissions','createdAt','updatedAt'],
   'مسئولین': ['code','name','role','active','createdAt','phone'],
-  'اعضا': ['id','firstName','lastName','name','phone','nickname','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage','approvalStatus','approvedAt','approvedBy'],
+  'اعضا': ['id','firstName','lastName','name','phone','nickname','bio','profileCompleted','bestScore','active','createdAt','passwordSalt','passwordHash','profileImage','approvalStatus','approvedAt','approvedBy'],
   'رویدادها': ['id','title','description','imageUrl','imageId','label','date','active','sort','createdAt','updatedAt','targetPage'],
   'گزارش فعالیت‌ها': ['id','title','description','date','imageIds','active','createdAt','updatedAt','createdBy'],
   'اردوها': ['id','title','status','createdAt','cardNumber','cost','registrationDeadline','capacity'],
@@ -249,7 +249,7 @@ function isPostOnlyAuthenticatedReadAction_(action) {
   return [
     'listSystemErrors', 'listFeedback', 'listActivityReportsManage',
     'listCoaches', 'listOfficialsManage', 'getRingRegistration',
-    'getMyGameRole', 'getGameWallet', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
+    'getMyGameRole', 'getGameWallet', 'getPublicMemberProfile', 'listMembers', 'getAttendanceToday', 'getAttendanceForDate',
     'getAttendanceMemberHistory', 'listMonthlyAttendance', 'listWarnings', 'listRegistrations', 'listCampPaymentReceipts',
     'getDashboard'
   ].indexOf(String(action || '')) >= 0;
@@ -309,6 +309,7 @@ function handleGet(p, allowPostOnlyAuthenticatedRead) {
 
   if (action === 'getCampConsentUrl') return {ok:true,url:getSetting('campConsentUrl')};
   if (action === 'getGameWallet') return getGameWallet_(p);
+  if (action === 'getPublicMemberProfile') return getPublicMemberProfile_(p);
 
 
   if (action === 'getMyGameRole') {
@@ -522,7 +523,7 @@ function handlePost(p) {
   var action = String(p.action || '');
   if (isPostOnlyAuthenticatedReadAction_(action)) return handleGet(p, true);
 
-  if (action === 'memberAuth') { return memberAuth(p); }
+  if (action === 'memberAuth') { return withLoginThrottle_('member', p.phone, function(){ return memberAuth(p); }); }
   if (action === 'approveMember') return approvePendingMember_(p);
   if (action === 'rejectPendingMember') return rejectPendingMember_(p);
   if (action === 'listPendingMembers') {
@@ -558,7 +559,7 @@ function handlePost(p) {
   }
   if (action === 'saveRingRegistration') return saveRingRegistration(p);
   if (action === 'registerMember') { throw new Error('برای ثبت‌نام و ورود از فرم شماره همراه و گذرواژه استفاده کن'); }
-  if (action === 'loginCoach') { return loginCoach(p); }
+  if (action === 'loginCoach') { return withLoginThrottle_('coach', p.phone, function(){ return loginCoach(p); }); }
   if (action === 'addCoach') { return addCoach(p); }
   if (action === 'listCoaches') {
     var coachAuth = requireToken(p.token, ['coach']);
@@ -799,7 +800,7 @@ function loginCoach(p){
       var ownerSalt = String(owner && owner.passwordSalt || '');
       var ownerHash = String(owner && owner.passwordHash || '');
       if(owner && truthy(owner.active) && ownerSalt && ownerHash &&
-         memberPasswordHash(ownerPassword, ownerSalt) === ownerHash){
+         verifyMemberPassword_(ownerPassword, ownerSalt, ownerHash)){
         var props = PropertiesService.getScriptProperties();
         var effectiveCode = (masterConfig.phone === phone && masterCode)
           ? masterConfig.code
@@ -1200,6 +1201,15 @@ function officialPublic(o) {
   return { code: o.code, name: o.name, role: o.role };
 }
 
+function withLoginThrottle_(kind,identifier,callback){
+  var normalized=kind==='coach'?normalizeIranMobile_(identifier||''):normalizeIranDigits(String(identifier||'').trim()).replace(/\s+/g,'');
+  var digest=b64Bytes(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,kind+':'+normalized)).replace(/[^A-Za-z0-9_-]/g,'').slice(0,32);
+  var key='login_fail_'+kind+'_'+digest,cache=CacheService.getScriptCache(),lock=LockService.getScriptLock();
+  lock.waitLock(5000);try{if(Number(cache.get(key)||0)>=5)throw new Error('تلاش‌های ورود بیش از حد مجاز است؛ ۱۵ دقیقه دیگر دوباره امتحان کن');}finally{lock.releaseLock();}
+  try{var result=callback();cache.remove(key);return result;}
+  catch(err){lock.waitLock(5000);try{cache.put(key,String(Number(cache.get(key)||0)+1),900);}finally{lock.releaseLock();}throw err;}
+}
+
 function issueToken(role, subject, isMaster, permissions) {
   ensureSecret();
   var payload = {
@@ -1227,9 +1237,13 @@ function requireToken(token, roles) {
   try { payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString()); }
   catch (e) { throw new Error('نشست نامعتبر است'); }
 
-  // Member sessions intentionally persist; staff sessions remain time-limited.
-  // Existing signed member tokens continue to work after their old 12-hour exp.
-  if (payload.r !== 'member' && (!payload.exp || Date.now() > Number(payload.exp))) throw new Error('نشست منقضی شده');
+  if (!payload.exp || Date.now() > Number(payload.exp)) throw new Error('نشست منقضی شده');
+  if(payload.r==='member'){
+    var sid=String(payload.n||'');if(!/^[0-9a-f-]{20,50}$/i.test(sid))throw new Error('نشست قدیمی است؛ دوباره وارد شو');
+    var props=PropertiesService.getScriptProperties(),key='MEMBER_LAST_ACTIVE_'+sid,now=Date.now(),last=Number(props.getProperty(key)||0);
+    if(last&&now-last>48*60*60*1000){props.deleteProperty(key);throw new Error('نشست به دلیل ۴۸ ساعت عدم فعالیت منقضی شده؛ دوباره وارد شو');}
+    props.setProperty(key,String(now));
+  }
   if (roles.indexOf(payload.r) < 0) throw new Error('دسترسی کافی نیست');
 
   // Persistent member tokens must still respect the account's current active status.
@@ -1301,10 +1315,27 @@ function b64Bytes(bytes) {
 /* Member auth                                                                */
 /* -------------------------------------------------------------------------- */
 
-function memberPasswordHash(password, salt) {
-  ensureSecret();
-  return b64Bytes(Utilities.computeHmacSha256Signature(String(salt) + ':' + String(password), getSecret()));
+var MEMBER_PASSWORD_KDF_ITERATIONS_ = 12000;
+function legacyMemberPasswordHash_(password,salt){ensureSecret();return b64Bytes(Utilities.computeHmacSha256Signature(String(salt)+':'+String(password),getSecret()));}
+function memberPasswordHash(password,salt){
+  var key=Utilities.newBlob(String(password)).getBytes(),sb=Utilities.newBlob(String(salt)).getBytes().concat([0,0,0,1]);
+  var u=Utilities.computeHmacSha256Signature(sb,key),derived=u.slice();
+  for(var i=1;i<MEMBER_PASSWORD_KDF_ITERATIONS_;i++){u=Utilities.computeHmacSha256Signature(u,key);for(var j=0;j<derived.length;j++)derived[j]=derived[j]^u[j];}
+  return 'pbkdf2-sha256$'+MEMBER_PASSWORD_KDF_ITERATIONS_+'$'+b64Bytes(derived);
 }
+function constantTimeStringEqual_(a,b){a=String(a||'');b=String(b||'');var d=a.length^b.length,m=Math.max(a.length,b.length);for(var i=0;i<m;i++)d|=(a.charCodeAt(i)||0)^(b.charCodeAt(i)||0);return d===0;}
+function verifyMemberPassword_(password,salt,hash){
+  hash=String(hash||'');if(!salt||!hash)return false;
+  if(hash.indexOf('pbkdf2-sha256$')===0){
+    var p=hash.split('$'),n=Number(p[1]||0);if(p.length!==3||n<10000||n>50000)return false;
+    var key=Utilities.newBlob(String(password)).getBytes(),sb=Utilities.newBlob(String(salt)).getBytes().concat([0,0,0,1]);
+    var u=Utilities.computeHmacSha256Signature(sb,key),d=u.slice();
+    for(var i=1;i<n;i++){u=Utilities.computeHmacSha256Signature(u,key);for(var j=0;j<d.length;j++)d[j]=d[j]^u[j];}
+    return constantTimeStringEqual_(b64Bytes(d),p[2]);
+  }
+  return constantTimeStringEqual_(legacyMemberPasswordHash_(password,salt),hash);
+}
+function isLegacyMemberPasswordHash_(hash){return String(hash||'').indexOf('pbkdf2-sha256$')!==0;}
 
 function validateMemberPassword(password) {
   var value = String(password == null ? '' : password);
@@ -1371,10 +1402,12 @@ function memberAuth(p) {
       // ساخت حساب سایت نیازی به تأیید ندارد؛ تأیید جداگانه فقط برای عضویت در حلقه است.
       var legacySalt = String(existing.passwordSalt || '');
       var legacyHash = String(existing.passwordHash || '');
-      if (!legacyHash || !legacySalt || memberPasswordHash(password, legacySalt) !== legacyHash) {
+      if (!legacyHash || !legacySalt || !verifyMemberPassword_(password, legacySalt, legacyHash)) {
         throw new Error('شماره همراه یا گذرواژه اشتباه است');
       }
-      activateMemberAccount_(existing.id, fullName, legacySalt, legacyHash);
+      if (isLegacyMemberPasswordHash_(legacyHash)) setMemberPassword(existing.id, password);
+      var upgraded = findMemberByPhone(phone, true);
+      activateMemberAccount_(existing.id, fullName, upgraded.passwordSalt, upgraded.passwordHash);
       existing = findMemberByPhone(phone, true);
       return {ok:true, member:publicMember(existing), token:issueToken('member', phone), existing:true, passwordInitialized:false};
     }
@@ -1384,9 +1417,10 @@ function memberAuth(p) {
     var storedSalt = String(existing.passwordSalt || '');
 
     if (storedHash) {
-      if (!storedSalt || memberPasswordHash(password, storedSalt) !== storedHash) {
+      if (!storedSalt || !verifyMemberPassword_(password, storedSalt, storedHash)) {
         throw new Error('شماره همراه یا گذرواژه اشتباه است');
       }
+      if (isLegacyMemberPasswordHash_(storedHash)) { setMemberPassword(existing.id, password); existing = findMemberByPhone(phone, true); }
       // اگر حساب قبلاً گذرواژه دارد، شماره همراه شناسه اصلی است؛ نام ارسالی نقشی در ورود ندارد.
     } else {
       // حساب‌های قدیمی پیش از اضافه شدن گذرواژه: فقط یک‌بار با نام ثبت‌شده فعال می‌شوند.
@@ -1522,6 +1556,17 @@ function addMemberInternal(o) {
   return row;
 }
 
+function getPublicMemberProfile_(p){
+  requireToken(String(p.token||''),['member']);
+  var id=String(p.memberId||'').trim();if(!id||id.length>100)throw new Error('شناسه عضو معتبر نیست');
+  var rows=getSheetObjects('اعضا');
+  for(var i=0;i<rows.length;i++){var r=rows[i];if(String(r.id||'')!==id)continue;
+    if(!truthy(r.active)||['pending','rejected'].indexOf(String(r.approvalStatus||'').toLowerCase())>=0)throw new Error('پروفایل این عضو در دسترس نیست');
+    return {ok:true,profile:{id:String(r.id||''),displayName:String(r.nickname||'عضو'),profileImage:String(r.profileImage||''),bio:String(r.bio||'').slice(0,180)}};
+  }
+  throw new Error('پروفایل عضو پیدا نشد');
+}
+
 function updateMember(p) {
   var auth = requireToken(String(p.token || ''), ['member']);
   var phone = String(auth.subject || '');
@@ -1545,14 +1590,17 @@ function updateMember(p) {
     var firstName = String(p.firstName || '').trim();
     var lastName = String(p.lastName || '').trim();
     var nickname = String(p.nickname || '').trim();
+    var bio = String(p.bio || '').trim();
     if (!firstName || !lastName || !nickname) throw new Error('نام، نام خانوادگی و نام نمایشی الزامی است');
     if (firstName.length > 60 || lastName.length > 80) throw new Error('نام یا نام خانوادگی بیش از حد طولانی است');
     if (nickname.length > 24) throw new Error('نام نمایشی حداکثر ۲۴ نویسه باشد');
+    if (bio.length > 180) throw new Error('بیوگرافی حداکثر ۱۸۰ نویسه باشد');
 
     row[idx.firstName] = firstName;
     row[idx.lastName] = lastName;
     row[idx.name] = (firstName + ' ' + lastName).trim();
     row[idx.nickname] = nickname;
+    if (idx.bio !== undefined) row[idx.bio] = bio;
     row[idx.profileCompleted] = true;
     sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
 
@@ -1943,6 +1991,8 @@ function publicMember(r) {
     name: r.name,
     phone: r.phone,
     nickname: r.nickname || '',
+    bio: String(r.bio || ''),
+    bio: String(r.bio || ''),
     profileCompleted: truthy(r.profileCompleted),
     bestScore: Number(r.bestScore || 0),
     profileImage: r.profileImage || '',
