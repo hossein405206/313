@@ -801,6 +801,7 @@ function loginCoach(p){
       var ownerHash = String(owner && owner.passwordHash || '');
       if(owner && truthy(owner.active) && ownerSalt && ownerHash &&
          verifyMemberPassword_(ownerPassword, ownerSalt, ownerHash)){
+        if (isLegacyMemberPasswordHash_(ownerHash)) setMemberPassword(owner.id, ownerPassword);
         var props = PropertiesService.getScriptProperties();
         var effectiveCode = (masterConfig.phone === phone && masterCode)
           ? masterConfig.code
@@ -1220,7 +1221,14 @@ function issueToken(role, subject, isMaster, permissions) {
     m: !!isMaster,
     p: permissions || (role === 'coach' ? allCoachPermissions() : {})
   };
-  if (role === 'member') PropertiesService.getScriptProperties().setProperty('MEMBER_LAST_ACTIVE_' + payload.n, String(Date.now()));
+  if (role === 'member') {
+    var sessionProps = PropertiesService.getScriptProperties(), sessionNow = Date.now(), savedSessions = sessionProps.getProperties();
+    Object.keys(savedSessions).forEach(function(k) {
+      if (k.indexOf('MEMBER_LAST_ACTIVE_') !== 0) return;
+      if (sessionNow - Number(savedSessions[k] || 0) > 48 * 60 * 60 * 1000) sessionProps.deleteProperty(k);
+    });
+    sessionProps.setProperty('MEMBER_LAST_ACTIVE_' + payload.n, String(sessionNow));
+  }
   var body = b64(JSON.stringify(payload));
   var sig = b64Bytes(Utilities.computeHmacSha256Signature(body, getSecret()));
   return body + '.' + sig;
@@ -1992,7 +2000,6 @@ function publicMember(r) {
     name: r.name,
     phone: r.phone,
     nickname: r.nickname || '',
-    bio: String(r.bio || ''),
     bio: String(r.bio || ''),
     profileCompleted: truthy(r.profileCompleted),
     bestScore: Number(r.bestScore || 0),
