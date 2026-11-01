@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.42.0-security-profile';
+var APP_VERSION = '4.43.0-game-fixes';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -3160,7 +3160,9 @@ if (score <= weeklyBest) {
 
 // رکورد هفتگی با امتیاز بهتر به‌روز می‌شود؛ رکورد تاریخی فقط هنگام شکستن بهترین قبلی تغییر می‌کند.
 if (score > lifetimeBest) {
-  memberSheet.getRange(memberRow, 8).setValue(score);
+  var bestScoreColumn = HEADERS['اعضا'].indexOf('bestScore') + 1;
+  if (bestScoreColumn < 1) throw new Error('ستون رکورد تاریخی در شیت اعضا پیدا نشد');
+  memberSheet.getRange(memberRow, bestScoreColumn).setValue(score);
   lifetimeBest = score;
 }
 
