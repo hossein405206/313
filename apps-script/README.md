@@ -119,7 +119,7 @@ DRIVE_FOLDER_ID: 'ID_FOLDER'
 
 ## Endpoint فعلی سایت
 
-`https://script.google.com/macros/s/AKfycbwQu_bIijvel7wu1898AZVlWMKavL00egnJc6-eTT3HiWxxjOo54-LKUblvLNLZOCO9/exec`
+`https://script.google.com/macros/s/AKfycbzI6-Csz0Fk8qixHiWTYOHrCGJq8W-7X2lWID6n5qkQOSLYGXC6-Jwixs7Bf38PunC0/exec`
 
 این همان Web App endpoint است که در `js/main.js` تنظیم شده است. پس از تغییر `Code.gs`، Deployment فعلی را ویرایش و نسخه جدید را Deploy کن؛ تغییر فایل GitHub به‌تنهایی کد منتشرشده Google Apps Script را تغییر نمی‌دهد.
 
