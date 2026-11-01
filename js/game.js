@@ -366,7 +366,19 @@
     if(submitting||!member||!member.token)return;
     submitting=true;setButton('در حال بررسی رکورد…',true);
     try{
-      var response=await api().post({action:'submitGameScore',token:member.token,score:score,runId:runId});
+      var payload={action:'submitGameScore',token:member.token,score:score,runId:runId};
+      var response=null,lastError=null;
+      // شناسهٔ ثابت هر دور باعث می‌شود تلاش مجدد، سکهٔ تکراری ایجاد نکند.
+      for(var attempt=0;attempt<3;attempt++){
+        try{response=await api().post(payload);lastError=null;break;}
+        catch(requestError){
+          lastError=requestError;
+          var retryable=/ارتباط با سرور|خطای سرور|پاسخ سرور نامعتبر/.test(String(requestError&&requestError.message||''));
+          if(!retryable||attempt===2)throw requestError;
+          await new Promise(function(resolve){setTimeout(resolve,650*(attempt+1));});
+        }
+      }
+      if(lastError||!response)throw lastError||new Error('پاسخ ثبت رکورد دریافت نشد');
       if(response.wallet){wallet=response.wallet;renderWallet();}
       renderBoard(response.leaderboard||[]);
       renderAllTimeBoard(response.allTimeLeaderboard||[]);
@@ -390,7 +402,7 @@
         say('رکورد این دور از بهترین رکورد هفتگی‌ات بیشتر نشد؛ رکورد ثبت‌شده‌ات '+faNum(weeklyBest)+' است.');
       }
     }catch(e){
-      say('رکورد این دور ذخیره نشد. لطفاً اتصال اینترنت را بررسی کن و دوباره تلاش کن.');
+      say('ثبت رکورد پس از چند تلاش ناموفق ماند. اینترنت ممکن است وصل باشد؛ وضعیت سرور را بررسی کن و دوباره تلاش کن.');
       toast(e.message||'ثبت رکورد ناموفق بود',true);
     }finally{
       submitting=false;
