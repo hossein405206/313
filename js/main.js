@@ -11,13 +11,13 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   var CONFIG = {
-    API_URL: 'https://script.google.com/macros/s/AKfycbwQu_bIijvel7wu1898AZVlWMKavL00egnJc6-eTT3HiWxxjOo54-LKUblvLNLZOCO9/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbzI6-Csz0Fk8qixHiWTYOHrCGJq8W-7X2lWID6n5qkQOSLYGXC6-Jwixs7Bf38PunC0/exec',
     CAROUSEL_INTERVAL: 4500,
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.84.0',
-    BACKEND_VERSION: '4.42.0-security-profile',
+    VERSION: '5.85.0',
+    BACKEND_VERSION: '4.43.0-game-fixes',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
@@ -185,7 +185,7 @@
         res = await fetch(url);
       } catch (err) {
         Logger.error('Network:', err);
-        throw new Error('اتصال به سرور برقرار نشد');
+        throw new Error('ارتباط با سرور برقرار نشد؛ ممکن است سرور موقتاً در دسترس نباشد یا اتصال شبکه مشکل داشته باشد.');
       }
       if (!res.ok) throw new Error('خطای سرور: ' + res.status);
       return Api._parse(res, params && params.action);
@@ -203,7 +203,7 @@
         });
       } catch (err) {
         Logger.error('Network:', err);
-        throw new Error('اتصال به سرور برقرار نشد. اینترنت رو چک کن');
+        throw new Error('ارتباط با سرور برقرار نشد؛ ممکن است سرور موقتاً در دسترس نباشد یا اتصال شبکه مشکل داشته باشد.');
       }
       if (!res.ok) throw new Error('خطای سرور: ' + res.status);
       return Api._parse(res, payload && payload.action);
