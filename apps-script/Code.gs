@@ -654,7 +654,8 @@ function handlePost(p) {
   }
 
   if (action === 'deleteMember') {
-    requireToken(p.token, ['attendance']);
+    var memberDeleteAuth = requireToken(p.token, ['coach']);
+    if (!memberDeleteAuth.isMaster) throw new Error('غیرفعال‌کردن حساب اعضا فقط با دسترسی مالک اصلی امکان‌پذیر است');
     return deleteMember(String(p.id || ''));
   }
   if (action === 'resetMemberHistory') return resetMemberHistory(p);
@@ -1732,7 +1733,7 @@ function resetMemberHistory(p) {
   };
 }
 function deleteMember(id) {
-  // Only deactivate the account. Attendance history is intentionally untouched.
+  // Defense in depth: never allow attendance-only staff to deactivate member accounts.
   var sheet = getSheet('اعضا');
   var values = sheet.getDataRange().getValues();
   if (!values.length) throw new Error('عضو پیدا نشد');
