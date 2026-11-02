@@ -16,7 +16,7 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.85.0',
+    VERSION: '5.86.0',
     BACKEND_VERSION: '4.43.0-game-fixes',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
