@@ -5,9 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0F6B62">
   <title>ثبت‌نام در حلقه | حلقه شهید هادی ذوالفقاری</title>
-  <link rel="stylesheet" href="css/style.css?v=5.86.0">
+  <link rel="stylesheet" href="css/style.css?v=5.88.0">
   <style>
     .ring-register-intro{background:linear-gradient(135deg,#eaf6f2,#f8f4e9);border:1px solid #d4e9e2;border-radius:18px;padding:16px;margin:12px 0 22px;line-height:1.9}
+    #ringRegisterForm{display:grid;gap:12px;padding:clamp(15px,4vw,22px);border:1px solid #e5ece9;border-radius:22px;background:linear-gradient(180deg,#fff 0%,#fbfdfc 100%);box-shadow:0 12px 34px rgba(24,54,49,.055)}
+    #ringRegisterForm .form-section-title{margin:0 0 2px;padding-bottom:10px;border-bottom:1px solid #edf1ef;color:#164f49;font-size:1rem}
+    #ringRegisterForm .form-group{margin:0}
+    #ringRegisterForm .form-control{min-height:48px;border:1px solid #dce7e2;border-radius:13px;background:#fff;transition:border-color .18s,box-shadow .18s}
+    #ringRegisterForm .form-control:focus{border-color:#299987;box-shadow:0 0 0 4px rgba(41,153,135,.1);outline:0}
+    #ringRegisterForm label{display:block;margin-bottom:7px;color:#334d48;font-size:.78rem;font-weight:800}
+    #ringRegisterForm .field-hint{display:block;margin-top:6px;color:#7a8983;font-size:.65rem;line-height:1.8}
+    #ringRegisterForm .ring-register-submit{min-height:50px;border-radius:14px;font-weight:900;box-shadow:0 8px 18px rgba(15,107,98,.14)}
+    .ring-register-account{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-color:#cfe5dd;background:linear-gradient(120deg,#f1faf6,#fff);box-shadow:0 8px 22px rgba(15,107,98,.05)}
+    .ring-register-account strong{font-size:.88rem;color:#174e47}
+    @media(max-width:420px){#ringRegisterForm{padding:14px;border-radius:18px}.ring-register-account{align-items:flex-start;flex-direction:column;gap:5px}}
     .ring-register-intro strong{display:block;color:#0f6b62;margin-bottom:4px}
     .ring-register-status{display:none;border-radius:14px;padding:12px 14px;margin:14px 0;font-weight:700;line-height:1.8}
     .ring-register-status.show{display:block}
