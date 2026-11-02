@@ -533,7 +533,7 @@ function handlePost(p) {
   if (action === 'listRingRegistrations') {
     var ringListAuth = requireToken(p.token, ['coach']);
     requireCoachPermission(p.token, 'registrations');
-    var ringRows = getSheetObjects('ثبت‌نام حلقه').sort(byNewest);
+    var ringRows = ensureRingRegistrationMemberIdentity_().sort(byNewest);
     return {ok:true, items:ringRows.map(function(r){return {
       id:String(r.id||''), memberId:String(r.memberId||''), firstName:String(r.firstName||''), lastName:String(r.lastName||''), phone:String(r.phone||''),
       nationalCode:String(r.nationalCode||''), birthDate:ringRegistrationDate(r.birthDate),
@@ -1867,6 +1867,36 @@ function getRingRegistrationByPhone(phone) {
   return null;
 }
 
+function ensureRingRegistrationMemberIdentity_() {
+  var members = getSheetObjects('اعضا');
+  var byPhone = {};
+  members.forEach(function(m) {
+    var phone = normalizeMemberPhone(m.phone);
+    if (phone) byPhone[phone] = m;
+  });
+  var sheet = getSheet('ثبت‌نام حلقه');
+  var rows = getSheetObjects('ثبت‌نام حلقه');
+  var headers = HEADERS['ثبت‌نام حلقه'];
+  var idCol = headers.indexOf('memberId') + 1;
+  var firstCol = headers.indexOf('firstName') + 1;
+  var lastCol = headers.indexOf('lastName') + 1;
+  rows.forEach(function(row, index) {
+    var member = byPhone[normalizeMemberPhone(row.phone)];
+    if (!member) return;
+    var changed = false;
+    if (!row.memberId && member.id) { row.memberId = String(member.id); changed = true; }
+    if (!row.firstName && member.firstName) { row.firstName = String(member.firstName); changed = true; }
+    if (!row.lastName && member.lastName) { row.lastName = String(member.lastName); changed = true; }
+    if (changed) {
+      var rowNumber = index + 2;
+      if (idCol) sheet.getRange(rowNumber, idCol).setValue(row.memberId || '');
+      if (firstCol) sheet.getRange(rowNumber, firstCol).setValue(row.firstName || '');
+      if (lastCol) sheet.getRange(rowNumber, lastCol).setValue(row.lastName || '');
+    }
+  });
+  return rows;
+}
+
 function ringRegistrationDate(value) {
   if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
     return Utilities.formatDate(value, CFG.TIMEZONE, 'yyyy-MM-dd');
@@ -2926,7 +2956,7 @@ function getRecentSiteMembers_() {
     .map(function(r){ return {id:String(r.id||''),name:String(r.name||((r.firstName||'')+' '+(r.lastName||'')).trim()),phone:String(r.phone||''),createdAt:String(r.createdAt||'')}; });
 }
 function getPendingRingRegistrations_() {
-  return getSheetObjects('ثبت‌نام حلقه')
+  return ensureRingRegistrationMemberIdentity_()
     .filter(function(r){ return String(r.status||'در انتظار تایید') === 'در انتظار تایید'; })
     .sort(function(a,b){ return String(a.createdAt||'').localeCompare(String(b.createdAt||'')); })
     .map(function(r){ return {id:String(r.id||''),memberId:String(r.memberId||''),firstName:String(r.firstName||''),lastName:String(r.lastName||''),phone:String(r.phone||''),nationalCode:String(r.nationalCode||''),birthDate:ringRegistrationDate(r.birthDate),fatherName:String(r.fatherName||''),fatherPhone:String(r.fatherPhone||''),address:String(r.address||''),school:String(r.school||''),grade:String(r.grade||''),guardianName:String(r.guardianName||''),emergencyPhone:String(r.emergencyPhone||''),status:String(r.status||'در انتظار تایید'),createdAt:String(r.createdAt||'')}; });
