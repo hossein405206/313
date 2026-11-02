@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.86.0',
-    BACKEND_VERSION: '4.43.0-game-fixes',
+    VERSION: '5.87.0',
+    BACKEND_VERSION: '4.44.0-member-deactivation-guard',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
