@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.43.0-game-fixes';
+var APP_VERSION = '4.44.0-member-deactivation-guard';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
