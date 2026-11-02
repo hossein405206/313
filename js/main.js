@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.87.0',
-    BACKEND_VERSION: '4.44.0-member-deactivation-guard',
+    VERSION: '5.88.0',
+    BACKEND_VERSION: '4.45.0-ring-registration-identity',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
