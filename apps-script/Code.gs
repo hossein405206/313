@@ -56,7 +56,7 @@ var HEADERS = {
   'بازی': ['weekKey','memberId','playerName','score','updatedAt'],
   'برنامه': ['id','day','title','time','location','active','sort','createdAt','updatedAt','category','audience'],
   'بازخوردها': ['id','name','phone','category','message','status','createdAt'],
-  'ثبت‌نام حلقه': ['id','memberId','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt'],
+  'ثبت‌نام حلقه': ['id','memberId','firstName','lastName','phone','nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','guardianName','emergencyPhone','status','createdAt','updatedAt'],
   'گزارش خطاها': ['timestamp','requestId','method','action','category','message','stack']
 };
 
@@ -64,7 +64,7 @@ var HEADERS = {
 /* HTTP                                                                      */
 /* -------------------------------------------------------------------------- */
 
-var APP_VERSION = '4.44.0-member-deactivation-guard';
+var APP_VERSION = '4.45.0-ring-registration-identity';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -535,8 +535,8 @@ function handlePost(p) {
     requireCoachPermission(p.token, 'registrations');
     var ringRows = getSheetObjects('ثبت‌نام حلقه').sort(byNewest);
     return {ok:true, items:ringRows.map(function(r){return {
-      id:String(r.id||''), memberId:String(r.memberId||''), phone:String(r.phone||''),
-      nationalCode:String(r.nationalCode||''), birthDate:String(r.birthDate||''),
+      id:String(r.id||''), memberId:String(r.memberId||''), firstName:String(r.firstName||''), lastName:String(r.lastName||''), phone:String(r.phone||''),
+      nationalCode:String(r.nationalCode||''), birthDate:ringRegistrationDate(r.birthDate),
       fatherName:String(r.fatherName||''), fatherPhone:String(r.fatherPhone||''),
       address:String(r.address||''), school:String(r.school||''), grade:String(r.grade||''),
       guardianName:String(r.guardianName||''), emergencyPhone:String(r.emergencyPhone||''),
@@ -1883,6 +1883,9 @@ function getRingRegistration(p) {
     registered:true,
     item:{
       id:String(registration.id || ''),
+      firstName:String(registration.firstName || ''),
+      lastName:String(registration.lastName || ''),
+      memberId:String(registration.memberId || ''),
       nationalCode:String(registration.nationalCode || ''),
       birthDate:ringRegistrationDate(registration.birthDate),
       fatherName:String(registration.fatherName || ''),
@@ -1953,8 +1956,10 @@ function saveRingRegistration(p) {
   var sheet = getSheet('ثبت‌نام حلقه');
   var existingRow = findRingRegistrationRow(sheet, phone);
   var existing = {
-    id: existingRow ? String(sheet.getRange(existingRow, 1).getValue() || '') : uid('RING'),
+    id: existingRow ? String(sheet.getRange(existingRow, HEADERS['ثبت‌نام حلقه'].indexOf('id') + 1).getValue() || '') : uid('RING'),
     memberId: String(member.id || ''),
+    firstName: String(member.firstName || ''),
+    lastName: String(member.lastName || ''),
     phone: phone,
     nationalCode: nationalCode,
     birthDate: birthDate,
@@ -1966,7 +1971,7 @@ function saveRingRegistration(p) {
     guardianName: guardianName,
     emergencyPhone: emergencyPhone,
     status: 'در انتظار تایید',
-    createdAt: existingRow ? String(sheet.getRange(existingRow, 14).getValue() || nowIso()) : nowIso(),
+    createdAt: existingRow ? String(sheet.getRange(existingRow, HEADERS['ثبت‌نام حلقه'].indexOf('createdAt') + 1).getValue() || nowIso()) : nowIso(),
     updatedAt: nowIso()
   };
   var row = rowToArray('ثبت‌نام حلقه', existing);
@@ -1974,7 +1979,8 @@ function saveRingRegistration(p) {
   else sheet.appendRow(row);
 
   return { ok:true, registered:true, pendingApproval:true, message:'درخواست عضویت در حلقه ثبت شد و پس از بررسی مسئول حلقه اعلام نتیجه می‌شود.', item:{
-    id:existing.id, nationalCode:nationalCode, birthDate:birthDate, fatherName:fatherName,
+    id:existing.id, memberId:existing.memberId, firstName:existing.firstName, lastName:existing.lastName,
+    nationalCode:nationalCode, birthDate:birthDate, fatherName:fatherName,
     fatherPhone:fatherPhone, address:address, school:school, grade:grade,
     guardianName:guardianName, emergencyPhone:emergencyPhone, status:existing.status
   }};
@@ -2923,7 +2929,7 @@ function getPendingRingRegistrations_() {
   return getSheetObjects('ثبت‌نام حلقه')
     .filter(function(r){ return String(r.status||'در انتظار تایید') === 'در انتظار تایید'; })
     .sort(function(a,b){ return String(a.createdAt||'').localeCompare(String(b.createdAt||'')); })
-    .map(function(r){ return {id:String(r.id||''),memberId:String(r.memberId||''),phone:String(r.phone||''),nationalCode:String(r.nationalCode||''),birthDate:String(r.birthDate||''),fatherName:String(r.fatherName||''),fatherPhone:String(r.fatherPhone||''),address:String(r.address||''),school:String(r.school||''),grade:String(r.grade||''),guardianName:String(r.guardianName||''),emergencyPhone:String(r.emergencyPhone||''),status:String(r.status||'در انتظار تایید'),createdAt:String(r.createdAt||'')}; });
+    .map(function(r){ return {id:String(r.id||''),memberId:String(r.memberId||''),firstName:String(r.firstName||''),lastName:String(r.lastName||''),phone:String(r.phone||''),nationalCode:String(r.nationalCode||''),birthDate:ringRegistrationDate(r.birthDate),fatherName:String(r.fatherName||''),fatherPhone:String(r.fatherPhone||''),address:String(r.address||''),school:String(r.school||''),grade:String(r.grade||''),guardianName:String(r.guardianName||''),emergencyPhone:String(r.emergencyPhone||''),status:String(r.status||'در انتظار تایید'),createdAt:String(r.createdAt||'')}; });
 }
 
 function dashboardData(auth) {
