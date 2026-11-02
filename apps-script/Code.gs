@@ -1880,7 +1880,7 @@ function ensureRingRegistrationMemberIdentity_() {
   var idCol = headers.indexOf('memberId') + 1;
   var firstCol = headers.indexOf('firstName') + 1;
   var lastCol = headers.indexOf('lastName') + 1;
-  rows.forEach(function(row, index) {
+  rows.forEach(function(row) {
     var member = byPhone[normalizeMemberPhone(row.phone)];
     if (!member) return;
     var changed = false;
@@ -1888,7 +1888,8 @@ function ensureRingRegistrationMemberIdentity_() {
     if (!row.firstName && member.firstName) { row.firstName = String(member.firstName); changed = true; }
     if (!row.lastName && member.lastName) { row.lastName = String(member.lastName); changed = true; }
     if (changed) {
-      var rowNumber = index + 2;
+      var rowNumber = findRingRegistrationRow(sheet, row.phone);
+      if (!rowNumber) return;
       if (idCol) sheet.getRange(rowNumber, idCol).setValue(row.memberId || '');
       if (firstCol) sheet.getRange(rowNumber, firstCol).setValue(row.firstName || '');
       if (lastCol) sheet.getRange(rowNumber, lastCol).setValue(row.lastName || '');
