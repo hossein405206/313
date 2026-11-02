@@ -206,9 +206,12 @@ function renderRecentMembers(list){
 function renderRingRegs(list){
  var box=$('#ringMembershipAdmin');if(!box)return;
  box.innerHTML=list.length?list.map(function(r){
-  var detail='شماره: '+esc(r.phone)+' · مدرسه: '+esc(r.school)+' · پایه: '+esc(r.grade)+' · کد ملی: '+esc(r.nationalCode)+' · وضعیت: '+esc(r.status||'در انتظار تایید');
-  var more='پدر/سرپرست: '+esc(r.guardianName||r.fatherName)+' · تماس اضطراری: '+esc(r.emergencyPhone||r.fatherPhone)+' · نشانی: '+esc(r.address);
-  return '<article class="admin-item"><div class="admin-item-main"><strong>'+esc(r.phone)+' — درخواست عضویت در حلقه</strong><small>'+detail+'</small><small>'+more+'</small></div><div class="admin-actions"><button type="button" data-ring-ok="'+esc(r.id)+'">تأیید عضویت</button><button type="button" class="danger" data-ring-no="'+esc(r.id)+'">رد درخواست</button></div></article>';
+  var fullName=[r.firstName,r.lastName].filter(Boolean).join(' ').trim()||'نام در حساب ثبت نشده';
+  var detail='شماره عضو: '+esc(r.phone)+' · مدرسه: '+esc(r.school)+' · پایه: '+esc(r.grade)+' · وضعیت: '+esc(r.status||'در انتظار تایید');
+  var personal='کد ملی: '+esc(r.nationalCode)+' · تولد: '+esc(r.birthDate||'ثبت نشده')+' · شناسه عضو: '+esc(r.memberId||'—');
+  var family='پدر/سرپرست: '+esc(r.guardianName||r.fatherName)+' · تماس پدر: '+esc(r.fatherPhone)+' · تماس اضطراری: '+esc(r.emergencyPhone||r.fatherPhone);
+  var more='نشانی: '+esc(r.address);
+  return '<article class="admin-item ring-review-card"><div class="admin-item-main"><div class="ring-review-heading"><strong>'+esc(fullName)+'</strong><span class="ring-review-status">'+esc(r.status||'در انتظار تایید')+'</span></div><small>'+detail+'</small><small>'+personal+'</small><small>'+family+'</small><small>'+more+'</small></div><div class="admin-actions"><button type="button" data-ring-ok="'+esc(r.id)+'">تأیید عضویت</button><button type="button" class="danger" data-ring-no="'+esc(r.id)+'">رد درخواست</button></div></article>';
  }).join(''):'<div class="empty"><p>درخواست عضویت در حلقه‌ای برای بررسی وجود ندارد.</p></div>';
  box.querySelectorAll('[data-ring-ok]').forEach(function(b){b.onclick=function(){setRingRegStatus(b.dataset.ringOk,'تایید شد',b)}});
  box.querySelectorAll('[data-ring-no]').forEach(function(b){b.onclick=function(){setRingRegStatus(b.dataset.ringNo,'رد شد',b)}});
