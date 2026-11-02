@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0F6B62">
   <title>ثبت‌نام در حلقه | حلقه شهید هادی ذوالفقاری</title>
-  <link rel="stylesheet" href="css/style.css?v=5.88.0">
+  <link rel="stylesheet" href="css/style.css?v=5.89.0">
   <style>
     .ring-register-intro{background:linear-gradient(135deg,#eaf6f2,#f8f4e9);border:1px solid #d4e9e2;border-radius:18px;padding:16px;margin:12px 0 22px;line-height:1.9}
     #ringRegisterForm{display:grid;gap:12px;padding:clamp(15px,4vw,22px);border:1px solid #e5ece9;border-radius:22px;background:linear-gradient(180deg,#fff 0%,#fbfdfc 100%);box-shadow:0 12px 34px rgba(24,54,49,.055)}
@@ -85,6 +85,25 @@
     #jalaliBackStep{white-space:nowrap}
     @media(max-width:360px){.jalali-picker__years{grid-template-columns:repeat(3,minmax(0,1fr))}.jalali-picker__months{grid-template-columns:repeat(2,minmax(0,1fr))}.jalali-picker__choice{min-height:40px;font-size:.76rem}}
     
+    /* Persistent registration states */
+    .page{position:relative;isolation:isolate}
+    .registration-state-card[hidden]{display:none!important}
+    .registration-state-card{position:absolute;z-index:5;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(100% - 28px,440px);padding:clamp(22px,5vw,32px);display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;border:1px solid rgba(255,255,255,.8);border-radius:26px;background:rgba(255,255,255,.94);box-shadow:0 24px 70px rgba(8,49,44,.2),0 4px 14px rgba(8,49,44,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);animation:registrationCardIn .35s cubic-bezier(.2,.8,.2,1) both}
+    .registration-state-icon{width:66px;height:66px;display:grid;place-items:center;border-radius:22px;background:linear-gradient(145deg,#e7f7f1,#d7eee7);color:#0f7668;font-size:1.9rem;box-shadow:inset 0 1px 0 #fff}
+    .registration-state-message{margin:0;color:#173e39;font-size:clamp(.96rem,3.5vw,1.12rem);font-weight:900;line-height:2}
+    .registration-state-status{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid #e2ebe7;border-radius:15px;background:#f7faf8;color:#63736e;font-size:.76rem}
+    .registration-state-status strong{color:#a16a12;font-size:.82rem;font-weight:900}
+    .page.registration-pending> :not(.registration-state-card),.page.registration-incomplete> :not(.registration-state-card){filter:blur(13px);opacity:.16;pointer-events:none;user-select:none;transition:filter .25s,opacity .25s}
+    .page.registration-pending,.page.registration-incomplete{min-height:570px}
+    .page.registration-approved{min-height:460px;display:grid;place-items:center}
+    .page.registration-approved> :not(.registration-state-card){display:none!important}
+    .page.registration-approved .registration-state-card{position:relative;inset:auto;transform:none;width:min(100%,460px);border-color:#cfe9df;background:linear-gradient(150deg,rgba(255,255,255,.98),rgba(239,250,245,.97))}
+    .page.registration-approved .registration-state-icon{background:linear-gradient(145deg,#dff7e9,#c8efdb);color:#16804b}
+    .page.registration-approved .registration-state-status{display:none}
+    .page.registration-incomplete .registration-state-status strong{color:#b45309}
+    @keyframes registrationCardIn{from{opacity:0;transform:translate(-50%,-46%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    @media(max-width:480px){.registration-state-card{border-radius:22px;padding:23px 18px}.page.registration-pending,.page.registration-incomplete{min-height:540px}}
+    @media(prefers-reduced-motion:reduce){.registration-state-card{animation:none}}
   </style>
   <link rel="stylesheet" href="css/islamic-design.css?v=5.86.0">
 </head>
@@ -150,6 +169,11 @@
         
         <button type="submit" class="btn-submit ring-register-submit" id="ringRegisterSubmit">ثبت‌نام در حلقه</button>
       </form>
+      <section id="ringRegistrationState" class="registration-state-card" aria-live="polite" hidden>
+        <div class="registration-state-icon" aria-hidden="true"><span id="ringRegistrationStateIcon">⌛</span></div>
+        <p id="ringRegistrationStateMessage" class="registration-state-message">شما قبلا ثبت نام کردید لطفا منتظر باشید تا توسط مربیان تایید شوید</p>
+        <div id="ringRegistrationStateStatus" class="registration-state-status"><span>وضعیت ثبت‌نام</span><strong id="ringRegistrationStateLabel">در صف بررسی</strong></div>
+      </section>
     </main>
     <nav class="bottom-nav" aria-label="ناوبری اصلی"></nav>
   </div>
@@ -370,6 +394,29 @@
       ['nationalCode','fatherName','fatherPhone','address','school','grade','emergencyPhone'].forEach(function(k){set(k,item[k]||'');});
       set('birthDate',toPersianDigits(birthDateToJalali(item.birthDate)));
     }
+    function renderRegistrationState(item){
+      if(!item)return;
+      var page=document.querySelector('main.page'),card=$('ringRegistrationState');
+      var required=['nationalCode','birthDate','fatherName','fatherPhone','address','school','grade','emergencyPhone'];
+      var missing=required.some(function(key){return !String(item[key]||'').trim();});
+      var state=String(item.status||'در انتظار تایید');
+      var approved=state==='تایید شد';
+      var incomplete=!approved&&(state==='رد شد'||missing);
+      page.classList.remove('registration-pending','registration-incomplete','registration-approved');
+      card.hidden=false;
+      $('ringRegistrationStateStatus').hidden=approved;
+      if(approved){
+        page.classList.add('registration-approved');
+        $('ringRegistrationStateIcon').textContent='✓';
+        $('ringRegistrationStateMessage').textContent='شما قبلا در حلقه ثبتنام کردید';
+      }else{
+        page.classList.add(incomplete?'registration-incomplete':'registration-pending');
+        $('ringRegistrationStateIcon').textContent=incomplete?'!':'⌛';
+        $('ringRegistrationStateMessage').textContent='شما قبلا ثبت نام کردید لطفا منتظر باشید تا توسط مربیان تایید شوید';
+        $('ringRegistrationStateLabel').textContent=incomplete?'اطلاعات ناقص':'در صف بررسی';
+      }
+    }
+
     function boot(){
       if(!window.KanoonApp||!window.KanoonApp.session||!window.KanoonApp.api){setTimeout(boot,80);return;}
       member=window.KanoonApp.session.getMember();
@@ -379,8 +426,10 @@
       $('ringRegisterPhone').textContent=member.phone||'';
       set('firstName',member.firstName||'');set('lastName',member.lastName||'');
       window.KanoonApp.api.post({action:'getRingRegistration',token:member.token}).then(function(res){
-        if(res.registered&&res.item){alreadyRegistered=true;fill(res.item);show('ثبت‌نام حلقه برای این حساب وجود دارد؛ در صورت نیاز اطلاعات را اصلاح و دوباره ذخیره کن.','success');button.textContent='ذخیره تغییرات ثبت‌نام';}
-        else if(new URLSearchParams(location.search).get('required')) show('برای ورود به بازی، ابتدا فرم ثبت‌نام در حلقه را کامل کن.','info');
+        if(res.registered&&res.item){
+          alreadyRegistered=true;
+          renderRegistrationState(res.item);
+        } else if(new URLSearchParams(location.search).get('required')) show('برای ورود به بازی، ابتدا فرم ثبت‌نام در حلقه را کامل کن.','info');
       }).catch(function(err){show(err.message||'دریافت وضعیت عضویت ناموفق بود.','error');});
     }
     form.addEventListener('submit',async function(e){
@@ -403,15 +452,9 @@
       button.disabled=true;button.textContent='در حال ثبت...';
       try{
         var res=await window.KanoonApp.api.post(data);
-        if(!alreadyRegistered){
-          alreadyRegistered=true;
-          show(res.message||'درخواست عضویت در حلقه ثبت شد و پس از بررسی مسئول حلقه اعلام نتیجه می‌شود.','success');
-          button.textContent='ذخیره تغییرات ثبت‌نام';
-          window.scrollTo({top:0,behavior:'smooth'});
-          return;
-        }
-        show(res.message||'اطلاعات عضویت با موفقیت به‌روزرسانی شد.','success');
-        button.textContent='ذخیره تغییرات ثبت‌نام';
+        alreadyRegistered=true;
+        renderRegistrationState(res.item||Object.assign({},data,{status:'در انتظار تایید'}));
+        window.scrollTo({top:0,behavior:'smooth'});
       }catch(err){
         var mapped=serverErrorField(err.message);
         if(mapped){markFieldError(mapped[0],mapped[1]);}
