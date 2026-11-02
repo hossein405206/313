@@ -87,13 +87,14 @@
     
     /* Persistent registration states */
     .page{position:relative;isolation:isolate}
-    .registration-state-card[hidden]{display:none!important}
+    .registration-state-card[hidden],.registration-state-status[hidden]{display:none!important}
     .registration-state-card{position:absolute;z-index:5;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(100% - 28px,440px);padding:clamp(22px,5vw,32px);display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;border:1px solid rgba(255,255,255,.8);border-radius:26px;background:rgba(255,255,255,.94);box-shadow:0 24px 70px rgba(8,49,44,.2),0 4px 14px rgba(8,49,44,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);animation:registrationCardIn .35s cubic-bezier(.2,.8,.2,1) both}
     .registration-state-icon{width:66px;height:66px;display:grid;place-items:center;border-radius:22px;background:linear-gradient(145deg,#e7f7f1,#d7eee7);color:#0f7668;font-size:1.9rem;box-shadow:inset 0 1px 0 #fff}
     .registration-state-message{margin:0;color:#173e39;font-size:clamp(.96rem,3.5vw,1.12rem);font-weight:900;line-height:2}
     .registration-state-status{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid #e2ebe7;border-radius:15px;background:#f7faf8;color:#63736e;font-size:.76rem}
     .registration-state-status strong{color:#a16a12;font-size:.82rem;font-weight:900}
-    .page.registration-pending> :not(.registration-state-card),.page.registration-incomplete> :not(.registration-state-card){filter:blur(13px);opacity:.16;pointer-events:none;user-select:none;transition:filter .25s,opacity .25s}
+    .page.registration-pending> :not(.registration-state-card),.page.registration-incomplete> :not(.registration-state-card){filter:blur(16px);opacity:.07;pointer-events:none;user-select:none;transition:filter .25s,opacity .25s}
+    .page.registration-pending:before,.page.registration-incomplete:before{content:'';position:absolute;z-index:3;inset:0;border-radius:20px;background:rgba(242,248,245,.46);pointer-events:none}
     .page.registration-pending,.page.registration-incomplete{min-height:570px}
     .page.registration-approved{min-height:460px;display:grid;place-items:center}
     .page.registration-approved> :not(.registration-state-card){display:none!important}
@@ -401,7 +402,7 @@
       var missing=required.some(function(key){return !String(item[key]||'').trim();});
       var state=String(item.status||'در انتظار تایید');
       var approved=state==='تایید شد';
-      var incomplete=!approved&&(state==='رد شد'||missing);
+      var incomplete=!approved&&(state==='رد شد'||state==='اطلاعات ناقص'||missing);
       page.classList.remove('registration-pending','registration-incomplete','registration-approved');
       card.hidden=false;
       $('ringRegistrationStateStatus').hidden=approved;
