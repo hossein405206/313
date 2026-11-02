@@ -429,3 +429,15 @@ body:has(.coach-page) .app-container{background:transparent}
 
 
 /* v5.79.0 — حفظ نمودار برای مربیان؛ پنهان‌سازی صریح برای مسئول اردو در js/coach.js. */
+
+
+/* Ring membership review — clear identity and readable details */
+.ring-review-card{align-items:flex-start;gap:14px;padding:16px;border:1px solid rgba(15,107,98,.13);background:linear-gradient(145deg,#fff 0%,#f8fbfa 100%);box-shadow:0 8px 22px rgba(20,48,64,.045)}
+.ring-review-card .admin-item-main{min-width:0;display:grid;gap:7px}
+.ring-review-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ring-review-heading>strong{font-size:.9rem!important;color:#173b3a!important;font-weight:900}
+.ring-review-status{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#fff4d9;color:#8a6414;font-size:.58rem;font-weight:800}
+.ring-review-card .admin-item-main small{font-size:.62rem;line-height:1.9;white-space:normal;overflow-wrap:anywhere;color:#64736f}
+.ring-review-card .admin-actions{flex-wrap:wrap;align-self:center}
+.ring-review-card .admin-actions button{min-height:36px;padding:8px 11px;border-radius:10px;font-size:.62rem}
+@media(max-width:520px){.ring-review-card{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.ring-review-card .admin-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.ring-review-heading>strong{font-size:.82rem!important}}
