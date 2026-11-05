@@ -1453,7 +1453,17 @@ function memberAuthUnlocked_(p) {
         throw new Error('این حساب قدیمی هنوز گذرواژه ندارد. برای فعال‌سازی اولیه، یک‌بار نام ثبت‌شده را دقیق وارد کن؛ بعد از آن فقط شماره و گذرواژه لازم است.');
       }
       setMemberPassword(existing.id, password);
-      existing = findMemberByPhone(phone, true);
+      var pendingSheet = getSheet('اعضا');
+      var pendingRow = findRow(pendingSheet, 'id', existing.id);
+      if (!pendingRow) throw new Error('حساب عضو پیدا نشد');
+      var pendingHeaders = pendingSheet.getDataRange().getValues()[0].map(String);
+      var pendingValues = pendingSheet.getRange(pendingRow, 1, 1, pendingHeaders.length).getValues()[0];
+      pendingValues[pendingHeaders.indexOf('active')] = false;
+      pendingValues[pendingHeaders.indexOf('approvalStatus')] = 'pending';
+      if (pendingHeaders.indexOf('approvedAt') >= 0) pendingValues[pendingHeaders.indexOf('approvedAt')] = '';
+      if (pendingHeaders.indexOf('approvedBy') >= 0) pendingValues[pendingHeaders.indexOf('approvedBy')] = '';
+      pendingSheet.getRange(pendingRow, 1, 1, pendingValues.length).setValues([pendingValues]);
+      return {ok:true,pendingApproval:true,message:'برای فعال‌سازی حساب قدیمی، مسئول حلقه باید هویت و شماره همراهت را حضوری بررسی کند.'};
     }
 
     return {
