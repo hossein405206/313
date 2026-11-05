@@ -16,8 +16,8 @@
     TOAST_DURATION: 3200,
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     DEBUG: false,
-    VERSION: '5.90.0',
-    BACKEND_VERSION: '4.45.0-ring-registration-identity',
+    VERSION: '5.91.0',
+    BACKEND_VERSION: '4.46.0-security-hardening',
     BACKEND_COMPATIBLE_VERSIONS: []
   };
 
@@ -164,6 +164,9 @@
      Api — لایه‌ی ارتباط با Apps Script
      ══════════════════════════════════════════════════════════════════════ */
 
+  var backendVersionPromise = null;
+  var backendVersionReady = false;
+  var backendVersionError = '';
   var Api = {
     _buildUrl: function (params) {
       var parts = [];
@@ -177,6 +180,10 @@
     },
 
     get: async function (params) {
+      if (params && params.action !== 'ping' && backendVersionPromise) {
+        var compatible = await backendVersionPromise;
+        if (!compatible) throw new Error(backendVersionError || 'نسخهٔ بک‌اند با این صفحه سازگار نیست.');
+      }
       var url = Api._buildUrl(params);
       Logger.info('GET', url);
 
@@ -192,6 +199,10 @@
     },
 
     post: async function (payload) {
+      if (payload && payload.action !== 'ping' && backendVersionPromise) {
+        var compatible = await backendVersionPromise;
+        if (!compatible) throw new Error(backendVersionError || 'نسخهٔ بک‌اند با این صفحه سازگار نیست.');
+      }
       Logger.info('POST', payload.action);
 
       var res;
@@ -1181,6 +1192,23 @@
     init: function () {
       Logger.info('نسخه ' + this.version + ' در حال راه‌اندازی...');
       Logger.info('API_URL:', CONFIG.API_URL);
+      backendVersionPromise = Api.checkBackendVersion().then(function () {
+        backendVersionReady = true;
+        return true;
+      }).catch(function (err) {
+        backendVersionReady = false;
+        backendVersionError = err && err.message ? err.message : 'نسخهٔ بک‌اند قابل تأیید نیست.';
+        var banner = document.getElementById('backendVersionWarning');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.id = 'backendVersionWarning';
+          banner.setAttribute('role', 'alert');
+          banner.style.cssText = 'position:relative;z-index:99999;padding:14px 16px;background:#8b1e1e;color:#fff;text-align:center;font:700 13px/1.9 Vazirmatn,sans-serif';
+          document.body.insertBefore(banner, document.body.firstChild);
+        }
+        banner.textContent = backendVersionError + ' تا هماهنگ‌شدن نسخه‌ها، درخواست‌های سامانه متوقف شده‌اند.';
+        return false;
+      });
 
       App._safe('Navigation',   function () { Navigation(); });
       App._safe('HeaderAuth',   function () { HeaderAuth(); });
