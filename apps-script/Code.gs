@@ -1531,6 +1531,12 @@ function verifyLoginCode() {
 /* -------------------------------------------------------------------------- */
 
 function addMember(p) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try { return addMemberUnlocked_(p); }
+  finally { lock.releaseLock(); }
+}
+function addMemberUnlocked_(p) {
   // حضور و غیاب فقط به نام عضو نیاز دارد؛ ورودی قدیمی نیز برای سازگاری پشتیبانی می‌شود.
   var fullName = String(p.name || '').trim();
   var first = String(p.firstName || '').trim();
