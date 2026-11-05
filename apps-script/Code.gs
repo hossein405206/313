@@ -1346,7 +1346,13 @@ function verifyMemberPassword_(password,salt,hash){
   }
   return constantTimeStringEqual_(legacyMemberPasswordHash_(password,salt),hash);
 }
-function isLegacyMemberPasswordHash_(hash){return String(hash||'').indexOf('pbkdf2-sha256
+function isLegacyMemberPasswordHash_(hash){return String(hash||'').indexOf('pbkdf2-sha256$')!==0;}
+function needsMemberPasswordRehash_(hash){
+  hash=String(hash||'');
+  if(isLegacyMemberPasswordHash_(hash))return true;
+  var parts=hash.split('$');
+  return parts.length!==3||Number(parts[1]||0)<MEMBER_PASSWORD_KDF_ITERATIONS_;
+}
 
 function validateMemberPassword(password) {
   var value = String(password == null ? '' : password);
