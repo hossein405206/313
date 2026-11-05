@@ -429,6 +429,7 @@
       window.KanoonApp.api.post({action:'getRingRegistration',token:member.token}).then(function(res){
         if(res.registered&&res.item){
           alreadyRegistered=true;
+          fill(res.item);
           renderRegistrationState(res.item);
         } else if(new URLSearchParams(location.search).get('required')) show('برای ورود به بازی، ابتدا فرم ثبت‌نام در حلقه را کامل کن.','info');
       }).catch(function(err){show(err.message||'دریافت وضعیت عضویت ناموفق بود.','error');});
