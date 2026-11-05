@@ -198,36 +198,36 @@
   if(shopModal)shopModal.querySelectorAll('[data-close-game-shop]').forEach(function(el){el.addEventListener('click',function(){setShopOpen(false);});});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shopModal&&!shopModal.hidden)setShopOpen(false);});
 
-  async function startReady(){
+  function startReady(){
     if(state==='playing'||submitting||preparing)return;
+    if(raf)cancelAnimationFrame(raf);
+    raf=0;lastFrame=0;runId='';runToken='';
+    state='ready';score=0;worldTime=0;pipes=[];particles=[];
+    bird={x:88,y:H*.48,vy:0,r:13,wing:0};
+    scoreEl.textContent=faNum(0);
+    setButton('بازی آماده است',false);
+    say('بازی آماده است.');
+    draw();
+  }
+  async function beginPlaying(){
+    if(state!=='ready'||preparing)return;
     preparing=true;setButton('در حال دریافت مجوز بازی…',true);
     try{
       var ticket=await api().post({action:'startGameRun',token:member.token});
       runId=String(ticket.runId||'');runToken=String(ticket.runToken||'');
       if(!runId||!runToken)throw new Error('مجوز معتبر برای شروع بازی دریافت نشد');
-      if(raf)cancelAnimationFrame(raf);
-      raf=0;lastFrame=0;
-      state='ready';score=0;worldTime=0;pipes=[];particles=[];
-      bird={x:88,y:H*.48,vy:0,r:13,wing:0};
-      scoreEl.textContent=faNum(0);
-      setButton('بازی آماده است',false);
-      say('بازی آماده است.');
-      draw();
+      state='playing';lastFrame=0;
+      spawnPipe(W+26);
+      bird.vy=-390;bird.wing=1;
+      emitFeathers();
+      setButton('در حال بازی…',true);
+      say('برای پرواز روی صفحه بزن یا کلید فاصله را فشار بده.');
+      raf=requestAnimationFrame(loop);
     }catch(err){
-      setButton('شروع بازی',false);
+      state='ready';setButton('بازی آماده است',false);
       say(err.message||'دریافت مجوز شروع بازی ناموفق بود.');
       toast(err.message||'شروع بازی ناموفق بود',true);
     }finally{preparing=false;}
-  }
-  function beginPlaying(){
-    if(state!=='ready')return;
-    state='playing';lastFrame=0;
-    spawnPipe(W+26);
-    bird.vy=-390;bird.wing=1;
-    emitFeathers();
-    setButton('در حال بازی…',true);
-    say('برای پرواز روی صفحه بزن یا کلید فاصله را فشار بده.');
-    raf=requestAnimationFrame(loop);
   }
   function flap(){
     if(state==='ready'){beginPlaying();return;}
