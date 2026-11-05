@@ -1406,6 +1406,16 @@ function activateMemberAccount_(memberId, fullName, salt, hash) {
 function memberAuth(p) {
   var phone = normalizeIranDigits(String(p.phone || '').trim()).replace(/\s+/g, '');
   if (!/^09\d{9}$/.test(phone)) throw new Error('شماره همراه نامعتبر است');
+  var existing = findMemberByPhone(phone, true);
+  // ورودهای عادی با گذرواژهٔ ثبت‌شده به قفل سراسری نیاز ندارند؛
+  // قفل فقط دور بررسی و ساخت حساب/فعال‌سازی اولیه نگه داشته می‌شود.
+  if (existing && String(existing.passwordHash || '')) {
+    var matchesExisting = getSheetObjects('اعضا').filter(function(row) {
+      return normalizeMemberPhone(row.phone) === phone;
+    });
+    if (matchesExisting.length > 1) throw new Error('برای این شماره چند حساب ثبت شده است؛ مسئول سامانه باید موارد تکراری را بررسی کند.');
+    return memberAuthUnlocked_(p);
+  }
   var lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
