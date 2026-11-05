@@ -8,7 +8,7 @@
   var W=420,H=560,FLOOR=H-48,state='idle',raf=0,lastFrame=0,score=0,member=null,weekKey='';
   var bird={x:88,y:H*.48,vy:0,r:13,wing:0},pipes=[],particles=[],worldTime=0;
   var clouds=[{x:55,y:82,s:.8},{x:305,y:128,s:.65},{x:190,y:48,s:.52}];
-  var best=0,weeklyBest=0,submitting=false,runId='',wallet=null,shopCategory='hat';
+  var best=0,weeklyBest=0,submitting=false,preparing=false,runId='',runToken='',wallet=null,shopCategory='hat';
   function app(){return window.KanoonApp;}
   function api(){return app()&&app().api;}
   function toast(text,error){var t=app()&&app().toast;if(t)(error?t.error:t.success)(text);}
@@ -198,16 +198,26 @@
   if(shopModal)shopModal.querySelectorAll('[data-close-game-shop]').forEach(function(el){el.addEventListener('click',function(){setShopOpen(false);});});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shopModal&&!shopModal.hidden)setShopOpen(false);});
 
-  function startReady(){
-    if(state==='playing'||submitting)return;
-    if(raf)cancelAnimationFrame(raf);
-    raf=0;lastFrame=0;
-    state='ready';score=0;worldTime=0;pipes=[];particles=[];runId='run_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
-    bird={x:88,y:H*.48,vy:0,r:13,wing:0};
-    scoreEl.textContent=faNum(0);
-    setButton('بازی آماده است',false);
-    say('بازی آماده است.');
-    draw();
+  async function startReady(){
+    if(state==='playing'||submitting||preparing)return;
+    preparing=true;setButton('در حال دریافت مجوز بازی…',true);
+    try{
+      var ticket=await api().post({action:'startGameRun',token:member.token});
+      runId=String(ticket.runId||'');runToken=String(ticket.runToken||'');
+      if(!runId||!runToken)throw new Error('مجوز معتبر برای شروع بازی دریافت نشد');
+      if(raf)cancelAnimationFrame(raf);
+      raf=0;lastFrame=0;
+      state='ready';score=0;worldTime=0;pipes=[];particles=[];
+      bird={x:88,y:H*.48,vy:0,r:13,wing:0};
+      scoreEl.textContent=faNum(0);
+      setButton('بازی آماده است',false);
+      say('بازی آماده است.');
+      draw();
+    }catch(err){
+      setButton('شروع بازی',false);
+      say(err.message||'دریافت مجوز شروع بازی ناموفق بود.');
+      toast(err.message||'شروع بازی ناموفق بود',true);
+    }finally{preparing=false;}
   }
   function beginPlaying(){
     if(state!=='ready')return;
@@ -366,7 +376,7 @@
     if(submitting||!member||!member.token)return;
     submitting=true;setButton('در حال بررسی رکورد…',true);
     try{
-      var payload={action:'submitGameScore',token:member.token,score:score,runId:runId};
+      var payload={action:'submitGameScore',token:member.token,score:score,runToken:runToken};
       var response=null,lastError=null;
       // شناسهٔ ثابت هر دور باعث می‌شود تلاش مجدد، سکهٔ تکراری ایجاد نکند.
       for(var attempt=0;attempt<3;attempt++){
